@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
 import { CalendarCheck, Search, Filter } from 'lucide-react';
+import Modal from '../../components/ui/Modal';
+import Select from '../../components/ui/Select';
 
 const AttendanceDashboard = () => {
   const [attendance, setAttendance] = useState<any[]>([]);
@@ -22,6 +24,8 @@ const AttendanceDashboard = () => {
   useEffect(() => {
     fetchAttendance();
   }, [date, statusFilter]);
+
+
 
   const fetchAttendance = async () => {
     setLoading(true);
@@ -98,17 +102,18 @@ const AttendanceDashboard = () => {
             onChange={(e) => setDate(e.target.value)}
             className="input-dark w-full sm:w-48"
           />
-          <select
+          <Select
             value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="input-dark w-full sm:w-40"
-          >
-            <option value="">All Status</option>
-            <option value="present">Present</option>
-            <option value="absent">Absent</option>
-            <option value="late">Late</option>
-            <option value="half-day">Half Day</option>
-          </select>
+            onChange={setStatusFilter}
+            placeholder="All Status"
+            options={[
+              { value: 'present', label: 'Present' },
+              { value: 'absent', label: 'Absent' },
+              { value: 'late', label: 'Late' },
+              { value: 'half-day', label: 'Half Day' },
+            ]}
+            className="w-full sm:w-40"
+          />
         </div>
       </div>
 
@@ -172,24 +177,21 @@ const AttendanceDashboard = () => {
 
       {/* Mark Attendance Modal */}
       {showMarkModal && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+        <Modal onClose={() => setShowMarkModal(false)}>
           <div className="glass-card p-6 w-full max-w-md space-y-4">
             <h3 className="text-lg font-semibold text-white">Mark Attendance</h3>
 
             <div>
               <label className="block text-sm font-medium text-dark-300 mb-1.5">Employee</label>
-              <select
+              <Select
                 value={markForm.userId}
-                onChange={(e) => setMarkForm({ ...markForm, userId: e.target.value })}
-                className="input-dark"
-              >
-                <option value="">Select Employee</option>
-                {employees.map((emp: any) => (
-                  <option key={emp._id} value={emp._id}>
-                    {emp.name} ({emp.employeeId})
-                  </option>
-                ))}
-              </select>
+                onChange={(v) => setMarkForm({ ...markForm, userId: v })}
+                placeholder="Select Employee"
+                options={employees.map((emp: any) => ({
+                  value: emp._id,
+                  label: `${emp.name} (${emp.employeeId})`,
+                }))}
+              />
             </div>
 
             <div>
@@ -204,16 +206,16 @@ const AttendanceDashboard = () => {
 
             <div>
               <label className="block text-sm font-medium text-dark-300 mb-1.5">Status</label>
-              <select
+              <Select
                 value={markForm.status}
-                onChange={(e) => setMarkForm({ ...markForm, status: e.target.value })}
-                className="input-dark"
-              >
-                <option value="present">Present</option>
-                <option value="absent">Absent</option>
-                <option value="late">Late</option>
-                <option value="half-day">Half Day</option>
-              </select>
+                onChange={(v) => setMarkForm({ ...markForm, status: v })}
+                options={[
+                  { value: 'present', label: 'Present' },
+                  { value: 'absent', label: 'Absent' },
+                  { value: 'late', label: 'Late' },
+                  { value: 'half-day', label: 'Half Day' },
+                ]}
+              />
             </div>
 
             <div>
@@ -239,7 +241,7 @@ const AttendanceDashboard = () => {
               </button>
             </div>
           </div>
-        </div>
+        </Modal>
       )}
     </div>
   );

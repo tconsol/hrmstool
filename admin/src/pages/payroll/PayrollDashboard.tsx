@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
 import { Wallet, DollarSign, ChevronLeft, ChevronRight } from 'lucide-react';
+import Modal from '../../components/ui/Modal';
+import Select from '../../components/ui/Select';
 
 const PayrollDashboard = () => {
   const [payrolls, setPayrolls] = useState<any[]>([]);
@@ -23,6 +25,8 @@ const PayrollDashboard = () => {
     fetchPayrolls();
     fetchSummary();
   }, [month, year, page]);
+
+
 
   const fetchPayrolls = async () => {
     setLoading(true);
@@ -123,18 +127,24 @@ const PayrollDashboard = () => {
       {/* Month/Year Filter */}
       <div className="glass-card p-4">
         <div className="flex gap-3">
-          <select value={month} onChange={(e) => { setMonth(Number(e.target.value)); setPage(1); }} className="input-dark w-40">
-            {Array.from({ length: 12 }, (_, i) => (
-              <option key={i + 1} value={i + 1}>
-                {new Date(2000, i).toLocaleString('default', { month: 'long' })}
-              </option>
-            ))}
-          </select>
-          <select value={year} onChange={(e) => { setYear(Number(e.target.value)); setPage(1); }} className="input-dark w-32">
-            {Array.from({ length: 5 }, (_, i) => now.getFullYear() - 2 + i).map((y) => (
-              <option key={y} value={y}>{y}</option>
-            ))}
-          </select>
+          <Select
+            value={String(month)}
+            onChange={(v) => { setMonth(Number(v)); setPage(1); }}
+            options={Array.from({ length: 12 }, (_, i) => ({
+              value: String(i + 1),
+              label: new Date(2000, i).toLocaleString('default', { month: 'long' }),
+            }))}
+            className="w-40"
+          />
+          <Select
+            value={String(year)}
+            onChange={(v) => { setYear(Number(v)); setPage(1); }}
+            options={Array.from({ length: 5 }, (_, i) => now.getFullYear() - 2 + i).map(y => ({
+              value: String(y),
+              label: String(y),
+            }))}
+            className="w-32"
+          />
         </div>
       </div>
 
@@ -220,7 +230,7 @@ const PayrollDashboard = () => {
 
       {/* Generate Payroll Modal */}
       {showGenerate && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+        <Modal onClose={() => setShowGenerate(false)}>
           <div className="glass-card p-6 w-full max-w-md space-y-4">
             <h3 className="text-lg font-semibold text-white">Generate Monthly Payroll</h3>
             <p className="text-sm text-dark-400">
@@ -230,21 +240,25 @@ const PayrollDashboard = () => {
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="block text-sm font-medium text-dark-300 mb-1.5">Month</label>
-                <select value={genMonth} onChange={(e) => setGenMonth(Number(e.target.value))} className="input-dark">
-                  {Array.from({ length: 12 }, (_, i) => (
-                    <option key={i + 1} value={i + 1}>
-                      {new Date(2000, i).toLocaleString('default', { month: 'long' })}
-                    </option>
-                  ))}
-                </select>
+                <Select
+                  value={String(genMonth)}
+                  onChange={(v) => setGenMonth(Number(v))}
+                  options={Array.from({ length: 12 }, (_, i) => ({
+                    value: String(i + 1),
+                    label: new Date(2000, i).toLocaleString('default', { month: 'long' }),
+                  }))}
+                />
               </div>
               <div>
                 <label className="block text-sm font-medium text-dark-300 mb-1.5">Year</label>
-                <select value={genYear} onChange={(e) => setGenYear(Number(e.target.value))} className="input-dark">
-                  {Array.from({ length: 5 }, (_, i) => now.getFullYear() - 2 + i).map((y) => (
-                    <option key={y} value={y}>{y}</option>
-                  ))}
-                </select>
+                <Select
+                  value={String(genYear)}
+                  onChange={(v) => setGenYear(Number(v))}
+                  options={Array.from({ length: 5 }, (_, i) => now.getFullYear() - 2 + i).map(y => ({
+                    value: String(y),
+                    label: String(y),
+                  }))}
+                />
               </div>
             </div>
 
@@ -258,7 +272,7 @@ const PayrollDashboard = () => {
               </button>
             </div>
           </div>
-        </div>
+        </Modal>
       )}
     </div>
   );

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
 import { Download, Wallet } from 'lucide-react';
+import Select from '../../components/ui/Select';
 
 const MySalary = () => {
   const [payrolls, setPayrolls] = useState<any[]>([]);
@@ -106,11 +107,15 @@ const MySalary = () => {
 
       {/* Year Filter */}
       <div className="glass-card p-4">
-        <select value={year} onChange={(e) => setYear(Number(e.target.value))} className="input-dark w-32">
-          {Array.from({ length: 5 }, (_, i) => now.getFullYear() - 2 + i).map((y) => (
-            <option key={y} value={y}>{y}</option>
-          ))}
-        </select>
+        <Select
+          value={String(year)}
+          onChange={(v) => setYear(Number(v))}
+          options={Array.from({ length: 5 }, (_, i) => now.getFullYear() - 2 + i).map(y => ({
+            value: String(y),
+            label: String(y),
+          }))}
+          className="w-32"
+        />
       </div>
 
       {/* Salary History */}

@@ -13,6 +13,7 @@ import {
   ChevronRight,
 } from 'lucide-react';
 import type { User } from '../../types';
+import Select from '../../components/ui/Select';
 
 const EmployeeList = () => {
   const [employees, setEmployees] = useState<User[]>([]);
@@ -101,25 +102,23 @@ const EmployeeList = () => {
               className="input-dark pl-10"
             />
           </div>
-          <select
+          <Select
             value={statusFilter}
-            onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
-            className="input-dark w-full sm:w-40"
-          >
-            <option value="">All Status</option>
-            <option value="active">Active</option>
-            <option value="inactive">Inactive</option>
-          </select>
-          <select
+            onChange={(v) => { setStatusFilter(v); setPage(1); }}
+            placeholder="All Status"
+            options={[
+              { value: 'active', label: 'Active' },
+              { value: 'inactive', label: 'Inactive' },
+            ]}
+            className="w-full sm:w-40"
+          />
+          <Select
             value={departmentFilter}
-            onChange={(e) => { setDepartmentFilter(e.target.value); setPage(1); }}
-            className="input-dark w-full sm:w-48"
-          >
-            <option value="">All Departments</option>
-            {departments.map((dept) => (
-              <option key={dept} value={dept}>{dept}</option>
-            ))}
-          </select>
+            onChange={(v) => { setDepartmentFilter(v); setPage(1); }}
+            placeholder="All Departments"
+            options={departments.map(d => ({ value: d, label: d }))}
+            className="w-full sm:w-48"
+          />
         </div>
       </div>
 

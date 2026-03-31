@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
 import { Check, X, ChevronLeft, ChevronRight } from 'lucide-react';
+import Modal from '../../components/ui/Modal';
 
 const LeaveRequests = () => {
   const [leaves, setLeaves] = useState<any[]>([]);
@@ -19,6 +20,8 @@ const LeaveRequests = () => {
   useEffect(() => {
     fetchLeaves();
   }, [statusFilter, page]);
+
+
 
   const fetchLeaves = async () => {
     setLoading(true);
@@ -195,7 +198,7 @@ const LeaveRequests = () => {
 
       {/* Remarks Modal */}
       {showRemarks && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+        <Modal onClose={() => setShowRemarks(false)}>
           <div className="glass-card p-6 w-full max-w-md space-y-4">
             <h3 className="text-lg font-semibold text-white">
               {action === 'approved' ? 'Approve' : 'Reject'} Leave
@@ -222,7 +225,7 @@ const LeaveRequests = () => {
               </button>
             </div>
           </div>
-        </div>
+        </Modal>
       )}
     </div>
   );

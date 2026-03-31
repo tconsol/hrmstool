@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
 import { CalendarCheck, LogIn, LogOut } from 'lucide-react';
+import Select from '../../components/ui/Select';
 
 const MyAttendance = () => {
   const [attendance, setAttendance] = useState<any[]>([]);
@@ -157,18 +158,24 @@ const MyAttendance = () => {
       {/* Month/Year Filter */}
       <div className="glass-card p-4">
         <div className="flex gap-3">
-          <select value={month} onChange={(e) => setMonth(Number(e.target.value))} className="input-dark w-40">
-            {Array.from({ length: 12 }, (_, i) => (
-              <option key={i + 1} value={i + 1}>
-                {new Date(2000, i).toLocaleString('default', { month: 'long' })}
-              </option>
-            ))}
-          </select>
-          <select value={year} onChange={(e) => setYear(Number(e.target.value))} className="input-dark w-32">
-            {Array.from({ length: 5 }, (_, i) => now.getFullYear() - 2 + i).map((y) => (
-              <option key={y} value={y}>{y}</option>
-            ))}
-          </select>
+          <Select
+            value={String(month)}
+            onChange={(v) => setMonth(Number(v))}
+            options={Array.from({ length: 12 }, (_, i) => ({
+              value: String(i + 1),
+              label: new Date(2000, i).toLocaleString('default', { month: 'long' }),
+            }))}
+            className="w-40"
+          />
+          <Select
+            value={String(year)}
+            onChange={(v) => setYear(Number(v))}
+            options={Array.from({ length: 5 }, (_, i) => now.getFullYear() - 2 + i).map(y => ({
+              value: String(y),
+              label: String(y),
+            }))}
+            className="w-32"
+          />
         </div>
       </div>
 

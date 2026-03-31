@@ -1,6 +1,7 @@
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useNotifications } from '../../context/NotificationContext';
+import { useEffect } from 'react';
 import {
   LayoutDashboard,
   Users,
@@ -21,6 +22,20 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
   const { user } = useAuth();
   const { unreadCount } = useNotifications();
   const isHR = user?.role === 'hr';
+
+  useEffect(() => {
+    if (isOpen) {
+      document.body.classList.add('modal-open');
+      document.documentElement.classList.add('modal-open');
+    } else {
+      document.body.classList.remove('modal-open');
+      document.documentElement.classList.remove('modal-open');
+    }
+    return () => {
+      document.body.classList.remove('modal-open');
+      document.documentElement.classList.remove('modal-open');
+    };
+  }, [isOpen]);
 
   const hrLinks = [
     { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -47,7 +62,7 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
       {/* Mobile overlay */}
       {isOpen && (
         <div
-          className="fixed inset-0 bg-black/60 z-40 lg:hidden"
+          className="modal-overlay z-40 lg:hidden"
           onClick={onClose}
         />
       )}

@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
 import { ArrowLeft, Save } from 'lucide-react';
+import Select from '../../components/ui/Select';
 
 const EmployeeForm = () => {
   const { id } = useParams();
@@ -166,10 +167,14 @@ const EmployeeForm = () => {
 
           <div>
             <label className="block text-sm font-medium text-dark-300 mb-1.5">Role</label>
-            <select name="role" value={form.role} onChange={handleChange} className="input-dark">
-              <option value="employee">Employee</option>
-              <option value="hr">HR / Admin</option>
-            </select>
+            <Select
+              value={form.role}
+              onChange={(v) => setForm({ ...form, role: v })}
+              options={[
+                { value: 'employee', label: 'Employee' },
+                { value: 'hr', label: 'HR / Admin' },
+              ]}
+            />
           </div>
 
           <div>

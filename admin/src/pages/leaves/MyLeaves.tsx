@@ -2,6 +2,8 @@ import { useState, useEffect, FormEvent } from 'react';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
 import { Plus, CalendarOff } from 'lucide-react';
+import Modal from '../../components/ui/Modal';
+import Select from '../../components/ui/Select';
 
 const MyLeaves = () => {
   const [leaves, setLeaves] = useState<any[]>([]);
@@ -20,6 +22,8 @@ const MyLeaves = () => {
   useEffect(() => {
     fetchLeaves();
   }, []);
+
+
 
   const fetchLeaves = async () => {
     setLoading(true);
@@ -143,21 +147,21 @@ const MyLeaves = () => {
 
       {/* Apply Leave Modal */}
       {showApply && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+        <Modal onClose={() => setShowApply(false)}>
           <form onSubmit={handleApply} className="glass-card p-6 w-full max-w-md space-y-4">
             <h3 className="text-lg font-semibold text-white">Apply for Leave</h3>
 
             <div>
               <label className="block text-sm font-medium text-dark-300 mb-1.5">Leave Type</label>
-              <select
+              <Select
                 value={form.leaveType}
-                onChange={(e) => setForm({ ...form, leaveType: e.target.value })}
-                className="input-dark"
-              >
-                <option value="casual">Casual Leave ({leaveBalance.casual} remaining)</option>
-                <option value="sick">Sick Leave ({leaveBalance.sick} remaining)</option>
-                <option value="paid">Paid Leave ({leaveBalance.paid} remaining)</option>
-              </select>
+                onChange={(v) => setForm({ ...form, leaveType: v })}
+                options={[
+                  { value: 'casual', label: `Casual Leave (${leaveBalance.casual} remaining)` },
+                  { value: 'sick', label: `Sick Leave (${leaveBalance.sick} remaining)` },
+                  { value: 'paid', label: `Paid Leave (${leaveBalance.paid} remaining)` },
+                ]}
+              />
             </div>
 
             <div className="grid grid-cols-2 gap-3">
@@ -206,7 +210,7 @@ const MyLeaves = () => {
               </button>
             </div>
           </form>
-        </div>
+        </Modal>
       )}
     </div>
   );
