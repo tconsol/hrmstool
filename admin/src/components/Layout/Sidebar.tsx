@@ -1,5 +1,6 @@
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { useNotifications } from '../../context/NotificationContext';
 import {
   LayoutDashboard,
   Users,
@@ -7,6 +8,7 @@ import {
   CalendarOff,
   Wallet,
   UserCircle,
+  Bell,
   X,
 } from 'lucide-react';
 
@@ -17,6 +19,7 @@ interface SidebarProps {
 
 const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
   const { user } = useAuth();
+  const { unreadCount } = useNotifications();
   const isHR = user?.role === 'hr';
 
   const hrLinks = [
@@ -25,6 +28,7 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
     { to: '/attendance', label: 'Attendance', icon: CalendarCheck },
     { to: '/leaves', label: 'Leave Requests', icon: CalendarOff },
     { to: '/payroll', label: 'Payroll', icon: Wallet },
+    { to: '/notifications', label: 'Notifications', icon: Bell, badge: unreadCount },
   ];
 
   const employeeLinks = [
@@ -33,6 +37,7 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
     { to: '/my-leaves', label: 'My Leaves', icon: CalendarOff },
     { to: '/my-salary', label: 'My Salary', icon: Wallet },
     { to: '/profile', label: 'My Profile', icon: UserCircle },
+    { to: '/notifications', label: 'Notifications', icon: Bell, badge: unreadCount },
   ];
 
   const links = isHR ? hrLinks : employeeLinks;
@@ -88,7 +93,12 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
               }
             >
               <link.icon size={20} />
-              <span className="text-sm font-medium">{link.label}</span>
+              <span className="text-sm font-medium flex-1">{link.label}</span>
+              {link.badge != null && link.badge > 0 && (
+                <span className="ml-auto px-1.5 py-0.5 min-w-[20px] text-center bg-red-500 text-white text-[10px] font-bold rounded-full">
+                  {link.badge > 99 ? '99+' : link.badge}
+                </span>
+              )}
             </NavLink>
           ))}
         </nav>
@@ -103,3 +113,4 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
 };
 
 export default Sidebar;
+

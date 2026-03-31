@@ -1,5 +1,31 @@
 const Leave = require('../models/Leave');
 const User = require('../models/User');
+const Notification = require('../models/Notification');
+const { getIO } = require('../utils/socket');
+
+/**
+ * Create a notification and emit it via Socket.IO to the recipient's room.
+ */
+const createAndEmitNotification = async ({ recipient, sender, type, title, message, data = {} }) => {
+  try {
+    const notification = await Notification.create({ recipient, sender, type, title, message, data });
+    const populated = await notification.populate('sender', 'name employeeId');
+    
+    console.log('✓ Notification created:', notification._id);
+    
+    try {
+      getIO().to(`user_${recipient}`).emit('notification', populated);
+      console.log('✓ Notification emitted to user:', recipient);
+    } catch (sockErr) {
+      console.warn('⚠ Socket.IO emit error (may be starting):', sockErr.message);
+    }
+    
+    return notification;
+  } catch (err) {
+    console.error('✗ Failed to create notification:', err.message);
+    throw err;
+  }
+};
 
 exports.applyLeave = async (req, res) => {
   try {
@@ -44,8 +70,36 @@ exports.applyLeave = async (req, res) => {
     });
 
     await leave.save();
+
+    // Notify all HR users that an employee applied for leave
+    try {
+      const hrUsers = await User.find({ role: 'hr', isActive: true }).select('_id');
+      const applicant = await User.findById(req.user._id).select('name employeeId department');
+      
+      console.log(`📋 Leave applied by ${applicant.name}, notifying ${hrUsers.length} HR users`);
+      
+      await Promise.all(
+        hrUsers.map((hr) =>
+          createAndEmitNotification({
+            recipient: hr._id,
+            sender: req.user._id,
+            type: 'leave_applied',
+            title: 'New Leave Application',
+            message: `${applicant.name} applied for ${leaveType} leave from ${start.toDateString()} to ${end.toDateString()} (${totalDays} day${totalDays > 1 ? 's' : ''}).`,
+            data: { leaveId: leave._id, employeeId: applicant.employeeId, department: applicant.department },
+          })
+        )
+      );
+      
+      console.log('✓ All notifications sent');
+    } catch (notifErr) {
+      console.error('✗ Error sending notifications:', notifErr.message);
+      // Don't fail the response, but log the error
+    }
+
     res.status(201).json(leave);
   } catch (error) {
+    console.error('✗ Error in applyLeave:', error);
     res.status(500).json({ error: 'Failed to apply leave' });
   }
 };
@@ -135,8 +189,25 @@ exports.updateLeaveStatus = async (req, res) => {
       });
     }
 
+    // Notify the employee of the decision
+    try {
+      const approver = await User.findById(req.user._id).select('name');
+      await createAndEmitNotification({
+        recipient: leave.user,
+        sender: req.user._id,
+        type: status === 'approved' ? 'leave_approved' : 'leave_rejected',
+        title: `Leave Request ${status === 'approved' ? 'Approved' : 'Rejected'}`,
+        message: `Your ${leave.leaveType} leave request (${new Date(leave.startDate).toDateString()} – ${new Date(leave.endDate).toDateString()}) has been ${status} by ${approver.name}.${remarks ? ` Remark: ${remarks}` : ''}`,
+        data: { leaveId: leave._id, status },
+      });
+      console.log(`✓ Notification sent to employee ${leave.user} for leave ${status}`);
+    } catch (notifErr) {
+      console.error('✗ Error notifying employee:', notifErr.message);
+    }
+
     res.json(leave);
   } catch (error) {
+    console.error('✗ Error in updateLeaveStatus:', error);
     res.status(500).json({ error: 'Failed to update leave status' });
   }
 };

@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider } from './context/AuthContext';
+import { NotificationProvider } from './context/NotificationContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import Layout from './components/Layout/Layout';
 import Login from './pages/Login';
@@ -14,13 +15,15 @@ import MyLeaves from './pages/leaves/MyLeaves';
 import PayrollDashboard from './pages/payroll/PayrollDashboard';
 import MySalary from './pages/payroll/MySalary';
 import MyProfile from './pages/profile/MyProfile';
+import NotificationsPage from './pages/notifications/NotificationsPage';
 
 function App() {
   return (
     <AuthProvider>
-      <BrowserRouter>
-        <Routes>
-          <Route path="/login" element={<Login />} />
+      <NotificationProvider>
+        <BrowserRouter>
+          <Routes>
+            <Route path="/login" element={<Login />} />
 
           <Route
             element={
@@ -86,6 +89,9 @@ function App() {
             <Route path="/my-leaves" element={<MyLeaves />} />
             <Route path="/my-salary" element={<MySalary />} />
             <Route path="/profile" element={<MyProfile />} />
+
+            {/* Notifications — all roles */}
+            <Route path="/notifications" element={<NotificationsPage />} />
           </Route>
 
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
@@ -108,6 +114,7 @@ function App() {
           },
         }}
       />
+    </NotificationProvider>
     </AuthProvider>
   );
 }

@@ -1,10 +1,13 @@
 require('dotenv').config();
+const http = require('http');
 const express = require('express');
+const { Server } = require('socket.io');
 const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
 const rateLimit = require('express-rate-limit');
 const connectDB = require('./config/db');
+const { setIO } = require('./utils/socket');
 
 const authRoutes = require('./routes/auth');
 const employeeRoutes = require('./routes/employees');
@@ -12,11 +15,35 @@ const attendanceRoutes = require('./routes/attendance');
 const leaveRoutes = require('./routes/leaves');
 const payrollRoutes = require('./routes/payroll');
 const dashboardRoutes = require('./routes/dashboard');
+const notificationRoutes = require('./routes/notifications');
+const debugRoutes = require('./routes/debug');
 
 const app = express();
+const server = http.createServer(app);
 
 // Connect to MongoDB
 connectDB();
+
+// Socket.IO
+const io = new Server(server, {
+  cors: {
+    origin: process.env.CLIENT_URL || 'http://localhost:5173',
+    credentials: true,
+  },
+});
+
+setIO(io);
+
+io.on('connection', (socket) => {
+  const userId = socket.handshake.auth.userId;
+  if (userId) {
+    socket.join(`user_${userId}`);
+  }
+
+  socket.on('disconnect', () => {
+    // cleanup handled automatically by socket.io
+  });
+});
 
 // Security middleware
 app.use(helmet());
@@ -52,6 +79,8 @@ app.use('/api/attendance', attendanceRoutes);
 app.use('/api/leaves', leaveRoutes);
 app.use('/api/payroll', payrollRoutes);
 app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/notifications', notificationRoutes);
+app.use('/api/debug', debugRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {
@@ -74,6 +103,6 @@ app.use((err, req, res, next) => {
 });
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
+server.listen(PORT, () => {
   console.log(`HRMS Server running on port ${PORT}`);
 });
