@@ -1,0 +1,227 @@
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import api from '../../services/api';
+import toast from 'react-hot-toast';
+import {
+  Plus,
+  Search,
+  Filter,
+  UserCheck,
+  UserX,
+  Edit,
+  ChevronLeft,
+  ChevronRight,
+} from 'lucide-react';
+import type { User } from '../../types';
+
+const EmployeeList = () => {
+  const [employees, setEmployees] = useState<User[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
+  const [departmentFilter, setDepartmentFilter] = useState('');
+  const [departments, setDepartments] = useState<string[]>([]);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    fetchEmployees();
+  }, [page, search, statusFilter, departmentFilter]);
+
+  useEffect(() => {
+    fetchDepartments();
+  }, []);
+
+  const fetchDepartments = async () => {
+    try {
+      const { data } = await api.get('/employees/departments');
+      setDepartments(data);
+    } catch (error) {
+      console.error('Failed to fetch departments');
+    }
+  };
+
+  const fetchEmployees = async () => {
+    setLoading(true);
+    try {
+      const params = new URLSearchParams();
+      params.set('page', String(page));
+      params.set('limit', '10');
+      if (search) params.set('search', search);
+      if (statusFilter) params.set('status', statusFilter);
+      if (departmentFilter) params.set('department', departmentFilter);
+
+      const { data } = await api.get(`/employees?${params.toString()}`);
+      setEmployees(data.employees);
+      setTotalPages(data.pages);
+    } catch (error) {
+      toast.error('Failed to fetch employees');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleToggleStatus = async (id: string) => {
+    try {
+      await api.patch(`/employees/${id}/toggle-status`);
+      toast.success('Status updated');
+      fetchEmployees();
+    } catch (error) {
+      toast.error('Failed to update status');
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-white">Employees</h1>
+          <p className="text-dark-400 text-sm mt-1">Manage your team members</p>
+        </div>
+        <button
+          onClick={() => navigate('/employees/add')}
+          className="btn-primary flex items-center gap-2"
+        >
+          <Plus size={18} />
+          Add Employee
+        </button>
+      </div>
+
+      {/* Filters */}
+      <div className="glass-card p-4">
+        <div className="flex flex-col sm:flex-row gap-3">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-dark-400" size={18} />
+            <input
+              type="text"
+              placeholder="Search by name, email, or ID..."
+              value={search}
+              onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+              className="input-dark pl-10"
+            />
+          </div>
+          <select
+            value={statusFilter}
+            onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
+            className="input-dark w-full sm:w-40"
+          >
+            <option value="">All Status</option>
+            <option value="active">Active</option>
+            <option value="inactive">Inactive</option>
+          </select>
+          <select
+            value={departmentFilter}
+            onChange={(e) => { setDepartmentFilter(e.target.value); setPage(1); }}
+            className="input-dark w-full sm:w-48"
+          >
+            <option value="">All Departments</option>
+            {departments.map((dept) => (
+              <option key={dept} value={dept}>{dept}</option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      {/* Table */}
+      {loading ? (
+        <div className="flex items-center justify-center h-40">
+          <div className="w-8 h-8 border-2 border-brand-500 border-t-transparent rounded-full animate-spin" />
+        </div>
+      ) : (
+        <div className="glass-card overflow-hidden">
+          <div className="table-container">
+            <table className="table-dark">
+              <thead>
+                <tr>
+                  <th>Employee</th>
+                  <th className="hidden md:table-cell">Department</th>
+                  <th className="hidden lg:table-cell">Designation</th>
+                  <th className="hidden sm:table-cell">Salary</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {employees.map((emp) => (
+                  <tr key={emp._id}>
+                    <td>
+                      <div>
+                        <p className="font-medium text-white">{emp.name}</p>
+                        <p className="text-xs text-dark-400">{emp.employeeId} • {emp.email}</p>
+                      </div>
+                    </td>
+                    <td className="hidden md:table-cell">{emp.department || 'N/A'}</td>
+                    <td className="hidden lg:table-cell">{emp.designation || 'N/A'}</td>
+                    <td className="hidden sm:table-cell">₹{emp.salary?.toLocaleString()}</td>
+                    <td>
+                      <span className={emp.status === 'active' ? 'badge-success' : 'badge-danger'}>
+                        {emp.status}
+                      </span>
+                    </td>
+                    <td>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => navigate(`/employees/edit/${emp._id}`)}
+                          className="p-1.5 hover:bg-dark-700/50 rounded-lg text-dark-400 hover:text-brand-400 transition-colors"
+                          title="Edit"
+                        >
+                          <Edit size={16} />
+                        </button>
+                        <button
+                          onClick={() => handleToggleStatus(emp._id)}
+                          className={`p-1.5 hover:bg-dark-700/50 rounded-lg transition-colors ${
+                            emp.status === 'active'
+                              ? 'text-dark-400 hover:text-red-400'
+                              : 'text-dark-400 hover:text-emerald-400'
+                          }`}
+                          title={emp.status === 'active' ? 'Deactivate' : 'Activate'}
+                        >
+                          {emp.status === 'active' ? <UserX size={16} /> : <UserCheck size={16} />}
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+                {employees.length === 0 && (
+                  <tr>
+                    <td colSpan={6} className="text-center py-8 text-dark-500">
+                      No employees found
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-between px-4 py-3 border-t border-dark-700/50">
+              <p className="text-sm text-dark-400">
+                Page {page} of {totalPages}
+              </p>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setPage(Math.max(1, page - 1))}
+                  disabled={page === 1}
+                  className="btn-secondary p-2 disabled:opacity-30"
+                >
+                  <ChevronLeft size={16} />
+                </button>
+                <button
+                  onClick={() => setPage(Math.min(totalPages, page + 1))}
+                  disabled={page === totalPages}
+                  className="btn-secondary p-2 disabled:opacity-30"
+                >
+                  <ChevronRight size={16} />
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default EmployeeList;
