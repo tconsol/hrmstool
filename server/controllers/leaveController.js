@@ -73,7 +73,7 @@ exports.applyLeave = async (req, res) => {
 
     // Notify all HR users that an employee applied for leave
     try {
-      const hrUsers = await User.find({ role: 'hr', isActive: true }).select('_id');
+      const hrUsers = await User.find({ role: 'hr', status: 'active' }).select('_id');
       const applicant = await User.findById(req.user._id).select('name employeeId department');
       
       console.log(`📋 Leave applied by ${applicant.name}, notifying ${hrUsers.length} HR users`);

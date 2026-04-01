@@ -10,6 +10,7 @@ import {
   Wallet,
   UserCircle,
   Bell,
+  CalendarDays,
   X,
 } from 'lucide-react';
 
@@ -43,6 +44,7 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
     { to: '/attendance', label: 'Attendance', icon: CalendarCheck },
     { to: '/leaves', label: 'Leave Requests', icon: CalendarOff },
     { to: '/payroll', label: 'Payroll', icon: Wallet },
+    { to: '/calendar', label: 'Calendar', icon: CalendarDays },
     { to: '/notifications', label: 'Notifications', icon: Bell, badge: unreadCount },
   ];
 
@@ -52,6 +54,7 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
     { to: '/my-leaves', label: 'My Leaves', icon: CalendarOff },
     { to: '/my-salary', label: 'My Salary', icon: Wallet },
     { to: '/profile', label: 'My Profile', icon: UserCircle },
+    { to: '/calendar', label: 'Calendar', icon: CalendarDays },
     { to: '/notifications', label: 'Notifications', icon: Bell, badge: unreadCount },
   ];
 

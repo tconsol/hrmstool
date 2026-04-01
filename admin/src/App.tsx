@@ -16,6 +16,7 @@ import PayrollDashboard from './pages/payroll/PayrollDashboard';
 import MySalary from './pages/payroll/MySalary';
 import MyProfile from './pages/profile/MyProfile';
 import NotificationsPage from './pages/notifications/NotificationsPage';
+import CompanyCalendar from './pages/calendar/CompanyCalendar';
 
 function App() {
   return (
@@ -92,6 +93,9 @@ function App() {
 
             {/* Notifications — all roles */}
             <Route path="/notifications" element={<NotificationsPage />} />
+
+            {/* Calendar — all roles, HR can edit */}
+            <Route path="/calendar" element={<CompanyCalendar />} />
           </Route>
 
           <Route path="*" element={<Navigate to="/dashboard" replace />} />

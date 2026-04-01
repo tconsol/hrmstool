@@ -5,7 +5,6 @@ const { Server } = require('socket.io');
 const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
-const rateLimit = require('express-rate-limit');
 const connectDB = require('./config/db');
 const { setIO } = require('./utils/socket');
 
@@ -16,6 +15,7 @@ const leaveRoutes = require('./routes/leaves');
 const payrollRoutes = require('./routes/payroll');
 const dashboardRoutes = require('./routes/dashboard');
 const notificationRoutes = require('./routes/notifications');
+const calendarRoutes = require('./routes/calendar');
 const debugRoutes = require('./routes/debug');
 
 const app = express();
@@ -52,14 +52,6 @@ app.use(cors({
   credentials: true,
 }));
 
-// Rate limiting
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 100,
-  message: { error: 'Too many requests, please try again later.' },
-});
-app.use('/api/', limiter);
-
 // Body parsing
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
@@ -80,6 +72,7 @@ app.use('/api/leaves', leaveRoutes);
 app.use('/api/payroll', payrollRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/calendar', calendarRoutes);
 app.use('/api/debug', debugRoutes);
 
 // Health check
