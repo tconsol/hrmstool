@@ -4,7 +4,7 @@ const { getHRDashboard, getEmployeeDashboard } = require('../controllers/dashboa
 
 router.use(auth);
 
-router.get('/hr', authorize('hr'), getHRDashboard);
+router.get('/hr', authorize('hr', 'manager', 'ceo'), getHRDashboard);
 router.get('/employee', getEmployeeDashboard);
 
 module.exports = router;

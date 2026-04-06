@@ -14,10 +14,10 @@ router.use(auth);
 router.post('/apply', applyLeave);
 router.get('/my', getMyLeaves);
 router.get('/balance', getLeaveBalance);
-router.get('/balance/:userId', authorize('hr'), getLeaveBalance);
+router.get('/balance/:userId', authorize('hr', 'manager', 'ceo'), getLeaveBalance);
 
-// HR routes
-router.get('/all', authorize('hr'), getAllLeaves);
-router.patch('/:id/status', authorize('hr'), updateLeaveStatus);
+// Management routes
+router.get('/all', authorize('hr', 'manager', 'ceo'), getAllLeaves);
+router.patch('/:id/status', authorize('hr', 'manager', 'ceo'), updateLeaveStatus);
 
 module.exports = router;

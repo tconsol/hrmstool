@@ -11,6 +11,23 @@ import {
 } from 'lucide-react';
 import type { EmployeeDashboard as EmployeeDashData } from '../../types';
 
+const useElapsed = (checkIn: string | null | undefined, checkOut: string | null | undefined) => {
+  const [elapsed, setElapsed] = useState('');
+  useEffect(() => {
+    if (!checkIn || checkOut) { setElapsed(''); return; }
+    const update = () => {
+      const diff = Date.now() - new Date(checkIn).getTime();
+      const hrs = Math.floor(diff / 3600000);
+      const mins = Math.floor((diff % 3600000) / 60000);
+      setElapsed(`${hrs}h ${mins}m`);
+    };
+    update();
+    const id = setInterval(update, 30000);
+    return () => clearInterval(id);
+  }, [checkIn, checkOut]);
+  return elapsed;
+};
+
 const EmployeeDashboard = () => {
   const [data, setData] = useState<EmployeeDashData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -67,6 +84,7 @@ const EmployeeDashboard = () => {
 
   const hasCheckedIn = data?.todayAttendance?.checkIn;
   const hasCheckedOut = data?.todayAttendance?.checkOut;
+  const liveElapsed = useElapsed(data?.todayAttendance?.checkIn, data?.todayAttendance?.checkOut);
 
   return (
     <div className="space-y-6">
@@ -96,6 +114,11 @@ const EmployeeDashboard = () => {
                 Check-in: {new Date(data!.todayAttendance!.checkIn!).toLocaleTimeString()}
                 {hasCheckedOut &&
                   ` • Check-out: ${new Date(data!.todayAttendance!.checkOut!).toLocaleTimeString()}`}
+                {!hasCheckedOut && liveElapsed && (
+                  <span className="inline-flex items-center gap-1 ml-2 text-brand-400 animate-pulse">
+                    <Clock size={12} /> {liveElapsed} elapsed
+                  </span>
+                )}
               </p>
             )}
           </div>

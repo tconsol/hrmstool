@@ -5,135 +5,194 @@ const MONTHS = [
   'July', 'August', 'September', 'October', 'November', 'December',
 ];
 
-const generatePayslipPDF = (payroll) => {
+/**
+ * @param {object} payroll  - populated payroll document
+ * @param {boolean} bw      - true = black & white, false = colour (default)
+ */
+const generatePayslipPDF = (payroll, bw = false) => {
   return new Promise((resolve, reject) => {
-    const doc = new PDFDocument({ size: 'A4', margin: 50 });
+    const doc = new PDFDocument({ size: 'A4', margin: 0 });
     const buffers = [];
-
-    doc.on('data', (chunk) => buffers.push(chunk));
-    doc.on('end', () => resolve(Buffer.concat(buffers)));
+    doc.on('data', c => buffers.push(c));
+    doc.on('end',  () => resolve(Buffer.concat(buffers)));
     doc.on('error', reject);
 
     const emp = payroll.user;
+    const M   = 42;   // left / right margin
+    const PW  = 595;  // page width
+    const CW  = PW - M * 2;  // content width  (511)
 
-    // Header
-    doc.fontSize(20).font('Helvetica-Bold').text('HRMS PAYSLIP', { align: 'center' });
-    doc.moveDown(0.5);
-    doc.fontSize(12).font('Helvetica').text(
-      `For the month of ${MONTHS[payroll.month - 1]} ${payroll.year}`,
-      { align: 'center' }
-    );
+    // ── Palette ────────────────────────────────────────────────
+    const C = {
+      headerBg:   bw ? '#111111' : '#1e3a8a',
+      headerSub:  bw ? '#aaaaaa' : '#93c5fd',
+      sectionLbl: bw ? '#000000' : '#1e3a8a',
+      earnLbl:    bw ? '#000000' : '#166534',
+      dedLbl:     bw ? '#000000' : '#9b1c1c',
+      netBg:      bw ? '#f0f0f0' : '#eff6ff',
+      netBorder:  bw ? '#333333' : '#2563eb',
+      netAmt:     bw ? '#000000' : '#166534',
+      statusPaid: bw ? '#000000' : '#166534',
+      statusPend: bw ? '#555555' : '#92400e',
+      divider:    '#d1d5db',
+      text:       '#111111',
+      muted:      '#555555',
+      rowAlt:     '#f9fafb',
+    };
 
-    doc.moveDown();
-    doc.moveTo(50, doc.y).lineTo(545, doc.y).stroke();
-    doc.moveDown();
+    const fmt  = n => `Rs. ${Number(n || 0).toLocaleString('en-IN')}`;
+    const LH   = 17; // line height
+    let   y    = 0;
 
-    // Employee Details
-    doc.fontSize(11).font('Helvetica-Bold').text('Employee Details');
-    doc.moveDown(0.5);
-    doc.font('Helvetica').fontSize(10);
+    // ── HEADER ─────────────────────────────────────────────────
+    doc.fillColor(C.headerBg).rect(0, y, PW, 58).fill();
+    doc.fontSize(22).font('Helvetica-Bold').fillColor('#ffffff')
+       .text('HRMS  PAYSLIP', M, y + 14);
+    doc.fontSize(10).font('Helvetica').fillColor(C.headerSub)
+       .text(`${MONTHS[payroll.month - 1]} ${payroll.year}`, M, y + 16, { width: CW, align: 'right' });
+    doc.fontSize(7.5).fillColor(C.headerSub)
+       .text(`Ref: ${emp.employeeId}   |   Generated: ${new Date().toLocaleDateString('en-IN')}`,
+             M, y + 33, { width: CW, align: 'right' });
+    y = 58;
 
-    const leftCol = 50;
-    const rightCol = 300;
-    let y = doc.y;
+    // ── EMPLOYEE INFORMATION ────────────────────────────────────
+    y += 14;
+    doc.fontSize(7).font('Helvetica-Bold').fillColor(C.sectionLbl)
+       .text('EMPLOYEE INFORMATION', M, y);
+    y += 9;
+    doc.lineWidth(0.8).strokeColor(C.sectionLbl).moveTo(M, y).lineTo(M + CW, y).stroke();
+    y += 9;
 
-    doc.text(`Employee ID: ${emp.employeeId}`, leftCol, y);
-    doc.text(`Department: ${emp.department || 'N/A'}`, rightCol, y);
-    y += 18;
-    doc.text(`Name: ${emp.name}`, leftCol, y);
-    doc.text(`Designation: ${emp.designation || 'N/A'}`, rightCol, y);
-    y += 18;
-    doc.text(`Email: ${emp.email}`, leftCol, y);
-    doc.text(`Joining Date: ${emp.joiningDate ? new Date(emp.joiningDate).toLocaleDateString() : 'N/A'}`, rightCol, y);
+    const empRows = [
+      ['Employee ID',  emp.employeeId,                        'Department',   emp.department || 'N/A'],
+      ['Name',         emp.name,                              'Designation',  emp.designation || 'N/A'],
+      ['Email',        emp.email,                             'Joining Date', emp.joiningDate
+                                                                              ? new Date(emp.joiningDate).toLocaleDateString('en-IN')
+                                                                              : 'N/A'],
+    ];
+    const lw = 78; // label column width
+    const c1 = M, c1v = M + lw;
+    const c2 = M + 268, c2v = M + 268 + lw;
+    const valW = 168;
 
-    doc.moveDown(2);
-    doc.moveTo(50, doc.y).lineTo(545, doc.y).stroke();
-    doc.moveDown();
-
-    // Earnings
-    doc.fontSize(11).font('Helvetica-Bold').text('Earnings');
-    doc.moveDown(0.5);
-    doc.fontSize(10).font('Helvetica');
-
-    y = doc.y;
-    doc.text('Base Salary', leftCol, y);
-    doc.text(`₹${payroll.baseSalary.toLocaleString()}`, rightCol, y);
-
-    if (payroll.totalBonuses > 0) {
-      y += 18;
-      doc.text('Performance Bonus', leftCol, y);
-      doc.text(`₹${payroll.bonuses.performance.toLocaleString()}`, rightCol, y);
-      y += 18;
-      doc.text('Festival Bonus', leftCol, y);
-      doc.text(`₹${payroll.bonuses.festival.toLocaleString()}`, rightCol, y);
-      y += 18;
-      doc.text('Other Bonus', leftCol, y);
-      doc.text(`₹${payroll.bonuses.other.toLocaleString()}`, rightCol, y);
+    for (const [l1, v1, l2, v2] of empRows) {
+      doc.fontSize(8).font('Helvetica').fillColor(C.muted).text(l1 + ':', c1, y, { width: lw, lineBreak: false });
+      doc.font('Helvetica-Bold').fillColor(C.text).text(v1, c1v, y, { width: valW, lineBreak: false });
+      doc.font('Helvetica').fillColor(C.muted).text(l2 + ':', c2, y, { width: lw, lineBreak: false });
+      doc.font('Helvetica-Bold').fillColor(C.text).text(v2, c2v, y, { width: valW, lineBreak: false });
+      y += LH;
     }
 
-    doc.moveDown(2);
-    doc.moveTo(50, doc.y).lineTo(545, doc.y).stroke();
-    doc.moveDown();
+    y += 10;
+    doc.lineWidth(0.5).strokeColor(C.divider).moveTo(M, y).lineTo(M + CW, y).stroke();
+    y += 13;
 
-    // Deductions
-    doc.fontSize(11).font('Helvetica-Bold').text('Deductions');
-    doc.moveDown(0.5);
-    doc.fontSize(10).font('Helvetica');
+    // ── EARNINGS  /  DEDUCTIONS  (two-column table) ─────────────
+    const halfW = (CW - 8) / 2;  // ~251 each
+    const eX = M,          eAmtX = M + halfW - 88;
+    const dX = M + halfW + 8,  dAmtX = dX + halfW - 88;
 
-    y = doc.y;
-    doc.text('Leave Deduction', leftCol, y);
-    doc.text(`₹${payroll.deductions.leave.toLocaleString()}`, rightCol, y);
-    y += 18;
-    doc.text('Tax Deduction', leftCol, y);
-    doc.text(`₹${payroll.deductions.tax.toLocaleString()}`, rightCol, y);
-    y += 18;
-    doc.text('Other Deductions', leftCol, y);
-    doc.text(`₹${payroll.deductions.other.toLocaleString()}`, rightCol, y);
+    // Column headers
+    doc.fontSize(8).font('Helvetica-Bold').fillColor(C.earnLbl)
+       .text('EARNINGS', eX, y);
+    doc.fillColor(C.dedLbl)
+       .text('DEDUCTIONS', dX, y);
+    y += 7;
+    doc.lineWidth(1).strokeColor(C.earnLbl).moveTo(eX, y).lineTo(eX + halfW, y).stroke();
+    doc.strokeColor(C.dedLbl).moveTo(dX, y).lineTo(dX + halfW, y).stroke();
+    y += 8;
 
-    doc.moveDown(2);
-    doc.moveTo(50, doc.y).lineTo(545, doc.y).stroke();
-    doc.moveDown();
+    // Helper to draw one row on left or right
+    const drawRow = (label, amount, labelX, amtX, amtColor, rowY, alt) => {
+      if (alt) {
+        doc.fillColor(C.rowAlt).rect(labelX === eX ? M : dX, rowY - 2, halfW, LH + 1).fill();
+      }
+      doc.fontSize(8).font('Helvetica').fillColor(C.muted)
+         .text(label, labelX, rowY, { width: halfW - 92, lineBreak: false });
+      doc.font('Helvetica-Bold').fillColor(amtColor)
+         .text(amount, amtX, rowY, { width: 88, align: 'right', lineBreak: false });
+    };
 
-    // Summary
-    doc.fontSize(11).font('Helvetica-Bold').text('Summary');
-    doc.moveDown(0.5);
-    doc.fontSize(10).font('Helvetica');
+    // Build rows
+    const baseSalary = Number(payroll.baseSalary) || 0;
+    const grossEarnings = baseSalary + (payroll.totalBonuses || 0);
+    const earnRows = [['Base Salary', baseSalary]];
+    if ((payroll.bonuses?.performance || 0) > 0) earnRows.push(['Performance Bonus', payroll.bonuses.performance]);
+    if ((payroll.bonuses?.festival    || 0) > 0) earnRows.push(['Festival Bonus',    payroll.bonuses.festival]);
+    if ((payroll.bonuses?.other       || 0) > 0) earnRows.push(['Other Bonus',       payroll.bonuses.other]);
 
-    y = doc.y;
-    doc.text('Total Earnings', leftCol, y);
-    doc.text(`₹${(payroll.baseSalary + payroll.totalBonuses).toLocaleString()}`, rightCol, y);
-    y += 18;
-    doc.text('Total Deductions', leftCol, y);
-    doc.text(`₹${payroll.totalDeductions.toLocaleString()}`, rightCol, y);
+    const dedRows = [
+      ['Tax Deduction',   payroll.deductions?.tax   || 0],
+      ['Leave Deduction', payroll.deductions?.leave || 0],
+      ['Other Deductions',payroll.deductions?.other || 0],
+    ];
 
-    doc.moveDown(2);
-    doc.moveTo(50, doc.y).lineTo(545, doc.y).stroke();
-    doc.moveDown();
+    const maxRows = Math.max(earnRows.length, dedRows.length);
+    for (let i = 0; i < maxRows; i++) {
+      const alt = i % 2 === 1;
+      if (earnRows[i]) drawRow(earnRows[i][0], fmt(earnRows[i][1]), eX, eAmtX, C.earnLbl, y, alt);
+      if (dedRows[i])  drawRow(dedRows[i][0],  fmt(dedRows[i][1]),  dX, dAmtX, C.dedLbl,  y, alt);
+      y += LH;
+    }
 
-    // Net Salary
-    doc.fontSize(14).font('Helvetica-Bold');
-    y = doc.y;
-    doc.text('Net Salary', leftCol, y);
-    doc.text(`₹${payroll.netSalary.toLocaleString()}`, rightCol, y);
+    // Subtotal rows
+    y += 5;
+    doc.lineWidth(0.5).strokeColor(C.divider).moveTo(eX, y).lineTo(eX + halfW, y).stroke();
+    doc.strokeColor(C.divider).moveTo(dX, y).lineTo(dX + halfW, y).stroke();
+    y += 6;
 
-    doc.moveDown(2);
-    doc.fontSize(10).font('Helvetica').text(
-      `Payment Status: ${payroll.paymentStatus.toUpperCase()}`,
-      { align: 'center' }
-    );
+    doc.fontSize(8.5).font('Helvetica-Bold').fillColor(C.text).text('Gross Earnings', eX, y, { lineBreak: false });
+    doc.fillColor(C.earnLbl).text(fmt(grossEarnings), eAmtX, y, { width: 88, align: 'right', lineBreak: false });
+    doc.fillColor(C.text).text('Total Deductions', dX, y, { lineBreak: false });
+    doc.fillColor(C.dedLbl).text(fmt(payroll.totalDeductions), dAmtX, y, { width: 88, align: 'right', lineBreak: false });
+    y += 16;
 
+    // ── NET SALARY BOX ─────────────────────────────────────────
+    doc.lineWidth(1).strokeColor(C.netBorder).moveTo(M, y).lineTo(M + CW, y).stroke();
+    y += 2;
+    const netH = 46;
+    doc.fillColor(C.netBg).rect(M, y, CW, netH).fill();
+    doc.lineWidth(1).strokeColor(C.netBorder).rect(M, y, CW, netH).stroke();
+
+    doc.fontSize(13).font('Helvetica-Bold').fillColor(C.sectionLbl)
+       .text('NET SALARY', M + 14, y + 13);
+    doc.fontSize(22).font('Helvetica-Bold').fillColor(C.netAmt)
+       .text(fmt(payroll.netSalary), M + 14, y + 9, { width: CW - 28, align: 'right' });
+    y += netH + 14;
+
+    // ── PAYMENT INFORMATION ────────────────────────────────────
+    doc.lineWidth(0.5).strokeColor(C.divider).moveTo(M, y).lineTo(M + CW, y).stroke();
+    y += 10;
+
+    doc.fontSize(7).font('Helvetica-Bold').fillColor(C.sectionLbl)
+       .text('PAYMENT INFORMATION', M, y);
+    y += 10;
+
+    const paymentStatus = payroll.paymentStatus || 'unknown';
+    const statusColor = paymentStatus === 'paid' ? C.statusPaid : C.statusPend;
+    const statusLabel = paymentStatus && paymentStatus.length > 0 
+      ? paymentStatus.charAt(0).toUpperCase() + paymentStatus.slice(1)
+      : 'Unknown';
+    
+
+    doc.fontSize(9.5).font('Helvetica-Bold').fillColor(statusColor)
+       .text(`Status: ${statusLabel}`, M, y);
     if (payroll.paymentDate) {
-      doc.text(
-        `Payment Date: ${new Date(payroll.paymentDate).toLocaleDateString()}`,
-        { align: 'center' }
-      );
+      doc.fontSize(9).font('Helvetica').fillColor(C.text)
+         .text(`Payment Date: ${new Date(payroll.paymentDate).toLocaleDateString('en-IN')}`,
+               M + 170, y, { lineBreak: false });
     }
+    y += 28;
 
-    doc.moveDown(3);
-    doc.fontSize(8).text('This is a system-generated payslip and does not require a signature.', {
-      align: 'center',
-      color: '#666',
-    });
+    // ── FOOTER ─────────────────────────────────────────────────
+    doc.lineWidth(0.5).strokeColor(C.divider).moveTo(M, y).lineTo(M + CW, y).stroke();
+    y += 10;
+    doc.fontSize(7.5).font('Helvetica').fillColor('#888888')
+       .text('This is a system-generated payslip. For queries, contact your HR department.',
+             M, y, { width: CW, align: 'center' });
+    doc.fontSize(6.5).fillColor('#aaaaaa')
+       .text(`Confidential — For Official Use Only  |  ${bw ? 'Black & White copy' : 'Colour copy'}`,
+             M, y + 14, { width: CW, align: 'center' });
 
     doc.end();
   });

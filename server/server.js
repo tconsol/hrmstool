@@ -17,6 +17,7 @@ const dashboardRoutes = require('./routes/dashboard');
 const notificationRoutes = require('./routes/notifications');
 const calendarRoutes = require('./routes/calendar');
 const debugRoutes = require('./routes/debug');
+const documentRoutes = require('./routes/documents');
 
 const app = express();
 const server = http.createServer(app);
@@ -74,6 +75,7 @@ app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/calendar', calendarRoutes);
 app.use('/api/debug', debugRoutes);
+app.use('/api/documents', documentRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {

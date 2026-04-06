@@ -4,10 +4,26 @@ export interface User {
   name: string;
   email: string;
   phone: string;
-  role: 'hr' | 'employee';
+  role: 'hr' | 'manager' | 'ceo' | 'employee';
   department: string;
   designation: string;
   salary: number;
+  ctc: {
+    annualCTC: number;
+    basic: number;
+    hra: number;
+    specialAllowance: number;
+    conveyanceAllowance: number;
+    medicalAllowance: number;
+    lta: number;
+    epfEmployer: number;
+    gratuity: number;
+    insurance: number;
+    variablePay: number;
+    foodCoupons: number;
+    transportAllowance: number;
+    internetReimbursement: number;
+  };
   joiningDate: string;
   address: string;
   avatar: string;

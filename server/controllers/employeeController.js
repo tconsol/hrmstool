@@ -10,7 +10,7 @@ exports.addEmployeeValidation = [
   body('department').optional().trim(),
   body('designation').optional().trim(),
   body('salary').optional().isNumeric().withMessage('Salary must be a number'),
-  body('role').optional().isIn(['hr', 'employee']).withMessage('Invalid role'),
+  body('role').optional().isIn(['hr', 'manager', 'ceo', 'employee']).withMessage('Invalid role'),
 ];
 
 exports.updateEmployeeValidation = [
@@ -20,7 +20,7 @@ exports.updateEmployeeValidation = [
   body('department').optional().trim(),
   body('designation').optional().trim(),
   body('salary').optional().isNumeric().withMessage('Salary must be a number'),
-  body('role').optional().isIn(['hr', 'employee']).withMessage('Invalid role'),
+  body('role').optional().isIn(['hr', 'manager', 'ceo', 'employee']).withMessage('Invalid role'),
 ];
 
 exports.getEmployees = async (req, res) => {

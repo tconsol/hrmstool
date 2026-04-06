@@ -1,7 +1,7 @@
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useNotifications } from '../../context/NotificationContext';
-import { useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import {
   LayoutDashboard,
   Users,
@@ -12,17 +12,50 @@ import {
   Bell,
   CalendarDays,
   X,
+  ChevronLeft,
+  ChevronRight,
+  ChevronDown,
+  FileText,
+  Briefcase,
+  User,
 } from 'lucide-react';
 
 interface SidebarProps {
   isOpen: boolean;
   onClose: () => void;
+  isCollapsed?: boolean;
+  onToggleCollapse?: () => void;
 }
 
-const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
+interface LinkItem {
+  to: string;
+  label: string;
+  icon: any;
+  badge?: number;
+}
+
+interface LinkGroup {
+  label: string;
+  icon: any;
+  links: LinkItem[];
+}
+
+type SidebarItem = LinkItem | LinkGroup;
+
+function isGroup(item: SidebarItem): item is LinkGroup {
+  return 'links' in item;
+}
+
+const Sidebar = ({ isOpen, onClose, isCollapsed = false, onToggleCollapse }: SidebarProps) => {
   const { user } = useAuth();
   const { unreadCount } = useNotifications();
-  const isHR = user?.role === 'hr';
+  const isManagement = ['hr', 'manager', 'ceo'].includes(user?.role ?? '');
+  const isHROnly = user?.role === 'hr';
+  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({ 'My Space': true });
+
+  const toggleGroup = (label: string) => {
+    setOpenGroups(prev => ({ ...prev, [label]: !prev[label] }));
+  };
 
   useEffect(() => {
     if (isOpen) {
@@ -38,27 +71,98 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
     };
   }, [isOpen]);
 
-  const hrLinks = [
+  const hrItems: SidebarItem[] = [
     { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { to: '/employees', label: 'Employees', icon: Users },
-    { to: '/attendance', label: 'Attendance', icon: CalendarCheck },
-    { to: '/leaves', label: 'Leave Requests', icon: CalendarOff },
-    { to: '/payroll', label: 'Payroll', icon: Wallet },
+    {
+      label: 'Management',
+      icon: Briefcase,
+      links: [
+        { to: '/employees', label: 'Employees', icon: Users },
+        { to: '/attendance', label: 'Attendance', icon: CalendarCheck },
+        { to: '/leaves', label: 'Leave Requests', icon: CalendarOff },
+        { to: '/payroll', label: 'Payroll', icon: Wallet },
+        { to: '/documents', label: 'Documents', icon: FileText },
+      ],
+    },
+    {
+      label: 'My Space',
+      icon: User,
+      links: [
+        { to: '/my-attendance', label: 'My Attendance', icon: CalendarCheck },
+        { to: '/my-leaves', label: 'My Leaves', icon: CalendarOff },
+        { to: '/my-salary', label: 'My Salary', icon: Wallet },
+        { to: '/profile', label: 'My Profile', icon: UserCircle },
+      ],
+    },
     { to: '/calendar', label: 'Calendar', icon: CalendarDays },
     { to: '/notifications', label: 'Notifications', icon: Bell, badge: unreadCount },
   ];
 
-  const employeeLinks = [
+  const managerItems: SidebarItem[] = [
+    { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    {
+      label: 'Management',
+      icon: Briefcase,
+      links: [
+        { to: '/employees', label: 'Employees', icon: Users },
+        { to: '/attendance', label: 'Attendance', icon: CalendarCheck },
+        { to: '/leaves', label: 'Leave Requests', icon: CalendarOff },
+        { to: '/payroll', label: 'Payroll', icon: Wallet },
+      ],
+    },
+    {
+      label: 'My Space',
+      icon: User,
+      links: [
+        { to: '/my-attendance', label: 'My Attendance', icon: CalendarCheck },
+        { to: '/my-leaves', label: 'My Leaves', icon: CalendarOff },
+        { to: '/my-salary', label: 'My Salary', icon: Wallet },
+        { to: '/profile', label: 'My Profile', icon: UserCircle },
+      ],
+    },
+    { to: '/calendar', label: 'Calendar', icon: CalendarDays },
+    { to: '/notifications', label: 'Notifications', icon: Bell, badge: unreadCount },
+  ];
+
+  const employeeItems: SidebarItem[] = [
     { to: '/dashboard', label: 'My Dashboard', icon: LayoutDashboard },
-    { to: '/my-attendance', label: 'My Attendance', icon: CalendarCheck },
-    { to: '/my-leaves', label: 'My Leaves', icon: CalendarOff },
-    { to: '/my-salary', label: 'My Salary', icon: Wallet },
-    { to: '/profile', label: 'My Profile', icon: UserCircle },
+    {
+      label: 'My Space',
+      icon: User,
+      links: [
+        { to: '/my-attendance', label: 'My Attendance', icon: CalendarCheck },
+        { to: '/my-leaves', label: 'My Leaves', icon: CalendarOff },
+        { to: '/my-salary', label: 'My Salary', icon: Wallet },
+        { to: '/profile', label: 'My Profile', icon: UserCircle },
+      ],
+    },
     { to: '/calendar', label: 'Calendar', icon: CalendarDays },
     { to: '/notifications', label: 'Notifications', icon: Bell, badge: unreadCount },
   ];
 
-  const links = isHR ? hrLinks : employeeLinks;
+  let items: SidebarItem[] = employeeItems;
+  if (user?.role === 'hr') items = hrItems;
+  else if (isManagement) items = managerItems;
+
+  const renderLink = (link: LinkItem, indent = false) => (
+    <NavLink
+      key={link.to}
+      to={link.to}
+      onClick={onClose}
+      className={({ isActive }) =>
+        `sidebar-link ${isActive ? 'active' : ''} ${isCollapsed ? 'justify-center p-3' : ''} ${indent && !isCollapsed ? 'pl-10' : ''}`
+      }
+      title={isCollapsed ? link.label : undefined}
+    >
+      <link.icon size={18} />
+      {!isCollapsed && <span className="text-sm font-medium flex-1">{link.label}</span>}
+      {!isCollapsed && link.badge != null && link.badge > 0 && (
+        <span className="ml-auto px-1.5 py-0.5 min-w-[20px] text-center bg-red-500 text-white text-[10px] font-bold rounded-full">
+          {link.badge > 99 ? '99+' : link.badge}
+        </span>
+      )}
+    </NavLink>
+  );
 
   return (
     <>
@@ -72,58 +176,75 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
 
       {/* Sidebar */}
       <aside
-        className={`fixed top-0 left-0 h-full w-64 bg-dark-800 border-r border-dark-700/50 z-50 
-        transform transition-transform duration-300 ease-in-out
+        className={`fixed top-0 left-0 h-full bg-dark-800 border-r border-dark-700/50 z-50 
+        transform transition-all duration-300 ease-in-out flex flex-col
         ${isOpen ? 'translate-x-0' : '-translate-x-full'}
-        lg:translate-x-0 lg:static lg:z-auto`}
+        lg:translate-x-0 lg:static lg:z-auto 
+        ${isCollapsed ? 'w-20' : 'w-64'}`}
       >
         {/* Logo */}
-        <div className="flex items-center justify-between h-16 px-6 border-b border-dark-700/50">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-brand-600 rounded-lg flex items-center justify-center">
+        <div className="flex items-center justify-between h-16 px-6 border-b border-dark-700/50 flex-shrink-0">
+          <div className={`flex items-center ${isCollapsed ? 'flex-col' : 'gap-3'}`}>
+            <div className="w-8 h-8 bg-brand-600 rounded-lg flex items-center justify-center flex-shrink-0">
               <span className="text-white font-bold text-sm">HR</span>
             </div>
-            <span className="text-lg font-bold text-white">HRMS</span>
+            {!isCollapsed && <span className="text-lg font-bold text-white">HRMS</span>}
           </div>
-          <button
-            onClick={onClose}
-            className="lg:hidden text-dark-400 hover:text-white transition-colors"
-          >
-            <X size={20} />
-          </button>
-        </div>
-
-        {/* User info */}
-        <div className="px-6 py-4 border-b border-dark-700/50">
-          <p className="text-sm font-medium text-white truncate">{user?.name}</p>
-          <p className="text-xs text-dark-400 mt-0.5 capitalize">{user?.role} • {user?.department || 'N/A'}</p>
-        </div>
-
-        {/* Navigation */}
-        <nav className="px-3 py-4 space-y-1">
-          {links.map((link) => (
-            <NavLink
-              key={link.to}
-              to={link.to}
-              onClick={onClose}
-              className={({ isActive }) =>
-                `sidebar-link ${isActive ? 'active' : ''}`
-              }
+          <div className="flex items-center gap-1">
+            <button
+              onClick={onToggleCollapse}
+              className="hidden lg:flex p-1.5 hover:bg-dark-700/50 rounded-lg text-dark-400 hover:text-white transition-colors"
+              title={isCollapsed ? 'Expand' : 'Collapse'}
             >
-              <link.icon size={20} />
-              <span className="text-sm font-medium flex-1">{link.label}</span>
-              {link.badge != null && link.badge > 0 && (
-                <span className="ml-auto px-1.5 py-0.5 min-w-[20px] text-center bg-red-500 text-white text-[10px] font-bold rounded-full">
-                  {link.badge > 99 ? '99+' : link.badge}
-                </span>
-              )}
-            </NavLink>
-          ))}
+              {isCollapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
+            </button>
+            <button
+              onClick={onClose}
+              className="lg:hidden p-1.5 hover:bg-dark-700/50 rounded-lg text-dark-400 hover:text-white transition-colors"
+            >
+              <X size={20} />
+            </button>
+          </div>
+        </div>
+
+        {/* Navigation — scrollable */}
+        <nav className={`flex-1 overflow-y-auto overflow-x-hidden ${isCollapsed ? 'px-2 py-4' : 'px-3 py-4'} space-y-1`}>
+          {items.map((item, idx) => {
+            if (isGroup(item)) {
+              const expanded = openGroups[item.label] ?? false;
+              if (isCollapsed) {
+                // In collapsed mode, show sub-links as individual icons
+                return item.links.map(link => renderLink(link));
+              }
+              return (
+                <div key={item.label}>
+                  {idx > 0 && <div className="my-2 border-t border-dark-700/40" />}
+                  <button
+                    onClick={() => toggleGroup(item.label)}
+                    className="sidebar-link w-full justify-between"
+                  >
+                    <div className="flex items-center gap-3">
+                      <item.icon size={18} />
+                      <span className="text-sm font-medium">{item.label}</span>
+                    </div>
+                    <ChevronDown
+                      size={14}
+                      className={`text-dark-500 transition-transform duration-200 ${expanded ? 'rotate-180' : ''}`}
+                    />
+                  </button>
+                  <div className={`overflow-hidden transition-all duration-200 ${expanded ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'}`}>
+                    {item.links.map(link => renderLink(link, true))}
+                  </div>
+                </div>
+              );
+            }
+            return renderLink(item as LinkItem);
+          })}
         </nav>
 
         {/* Bottom section */}
-        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-dark-700/50">
-          <p className="text-xs text-dark-500 text-center">HRMS v1.0.0</p>
+        <div className={`flex-shrink-0 p-4 border-t border-dark-700/50 ${isCollapsed ? 'text-center' : ''}`}>
+          <p className="text-xs text-dark-500 text-center">{isCollapsed ? 'v1' : 'HRMS v1.0.0'}</p>
         </div>
       </aside>
     </>

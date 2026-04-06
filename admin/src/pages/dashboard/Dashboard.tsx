@@ -4,7 +4,7 @@ import EmployeeDashboard from './EmployeeDashboard';
 
 const Dashboard = () => {
   const { user } = useAuth();
-  return user?.role === 'hr' ? <HRDashboard /> : <EmployeeDashboard />;
+  return ['hr', 'manager', 'ceo'].includes(user?.role ?? '') ? <HRDashboard /> : <EmployeeDashboard />;
 };
 
 export default Dashboard;

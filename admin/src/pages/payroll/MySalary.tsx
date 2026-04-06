@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
-import { Download, Wallet } from 'lucide-react';
+import { Download, Wallet, Palette, Printer } from 'lucide-react';
 import Select from '../../components/ui/Select';
 
 const MySalary = () => {
@@ -9,6 +9,28 @@ const MySalary = () => {
   const [loading, setLoading] = useState(true);
   const now = new Date();
   const [year, setYear] = useState(now.getFullYear());
+
+  // Download picker state: which row is awaiting choice
+  const [pickerFor, setPickerFor] = useState<string | null>(null);
+  const pickerRef = useRef<HTMLDivElement>(null);
+
+  // Close picker on click outside
+  useEffect(() => {
+    if (!pickerFor) return;
+    
+    const handleClickOutside = (e: MouseEvent | TouchEvent) => {
+      if (pickerRef.current && !pickerRef.current.contains(e.target as Node)) {
+        setPickerFor(null);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('touchstart', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('touchstart', handleClickOutside);
+    };
+  }, [pickerFor]);
 
   useEffect(() => {
     fetchPayrolls();
@@ -26,21 +48,23 @@ const MySalary = () => {
     }
   };
 
-  const handleDownload = async (id: string, month: number, yr: number) => {
+  const handleDownload = async (id: string, month: number, yr: number, bw: boolean) => {
     try {
-      const response = await api.get(`/payroll/payslip/${id}`, {
+      const response = await api.get(`/payroll/payslip/${id}?bw=${bw}`, {
         responseType: 'blob',
       });
       const blob = new Blob([response.data], { type: 'application/pdf' });
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = `payslip_${month}_${yr}.pdf`;
+      link.download = `payslip_${month}_${yr}${bw ? '_bw' : ''}.pdf`;
       link.click();
       window.URL.revokeObjectURL(url);
-      toast.success('Payslip downloaded!');
+      toast.success(`Payslip downloaded (${bw ? 'B&W' : 'Color'})`);
     } catch (error) {
       toast.error('Failed to download payslip');
+    } finally {
+      setPickerFor(null);
     }
   };
 
@@ -94,13 +118,32 @@ const MySalary = () => {
               <p>Leave Deduction: ₹{payrolls[0].deductions?.leave?.toLocaleString()}</p>
               <p>Tax: ₹{payrolls[0].deductions?.tax?.toLocaleString()}</p>
             </div>
-            <button
-              onClick={() => handleDownload(payrolls[0]._id, payrolls[0].month, payrolls[0].year)}
-              className="btn-primary flex items-center gap-2"
-            >
-              <Download size={18} />
-              Download Payslip
-            </button>
+            <div className="relative" ref={pickerFor === payrolls[0]._id ? pickerRef : undefined}>
+              <button
+                onClick={() => setPickerFor(pickerFor === payrolls[0]._id ? null : payrolls[0]._id)}
+                className="btn-primary flex items-center gap-2"
+              >
+                <Download size={18} />
+                Download Payslip
+              </button>
+              {pickerFor === payrolls[0]._id && (
+                <div className="absolute right-0 bottom-full mb-2 bg-dark-800 border border-dark-600 rounded-xl shadow-2xl p-3 flex flex-col gap-2 min-w-[180px] z-50">
+                  <p className="text-xs text-dark-400 font-medium mb-1">Choose format</p>
+                  <button
+                    onClick={() => handleDownload(payrolls[0]._id, payrolls[0].month, payrolls[0].year, false)}
+                    className="flex items-center gap-2 px-3 py-2 rounded-lg bg-brand-600 hover:bg-brand-500 text-white text-sm font-medium transition-colors"
+                  >
+                    <Palette size={15} /> Color PDF
+                  </button>
+                  <button
+                    onClick={() => handleDownload(payrolls[0]._id, payrolls[0].month, payrolls[0].year, true)}
+                    className="flex items-center gap-2 px-3 py-2 rounded-lg bg-dark-700 hover:bg-dark-600 text-white text-sm font-medium transition-colors"
+                  >
+                    <Printer size={15} /> Black &amp; White
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}
@@ -150,13 +193,32 @@ const MySalary = () => {
                       <span className={getPaymentBadge(p.paymentStatus)}>{p.paymentStatus}</span>
                     </td>
                     <td>
-                      <button
-                        onClick={() => handleDownload(p._id, p.month, p.year)}
-                        className="p-1.5 hover:bg-dark-700/50 rounded-lg text-dark-400 hover:text-brand-400 transition-colors"
-                        title="Download Payslip"
-                      >
-                        <Download size={16} />
-                      </button>
+                      <div className="relative" ref={pickerFor === p._id ? pickerRef : undefined}>
+                        <button
+                          onClick={() => setPickerFor(pickerFor === p._id ? null : p._id)}
+                          className="p-1.5 hover:bg-dark-700/50 rounded-lg text-dark-400 hover:text-brand-400 transition-colors"
+                          title="Download Payslip"
+                        >
+                          <Download size={16} />
+                        </button>
+                        {pickerFor === p._id && (
+                          <div className="absolute right-0 bottom-full mb-2 bg-dark-800 border border-dark-600 rounded-xl shadow-2xl p-3 flex flex-col gap-2 min-w-[170px] z-50">
+                            <p className="text-xs text-dark-400 font-medium mb-1">Choose format</p>
+                            <button
+                              onClick={() => handleDownload(p._id, p.month, p.year, false)}
+                              className="flex items-center gap-2 px-3 py-2 rounded-lg bg-brand-600 hover:bg-brand-500 text-white text-xs font-medium transition-colors"
+                            >
+                              <Palette size={13} /> Color PDF
+                            </button>
+                            <button
+                              onClick={() => handleDownload(p._id, p.month, p.year, true)}
+                              className="flex items-center gap-2 px-3 py-2 rounded-lg bg-dark-700 hover:bg-dark-600 text-white text-xs font-medium transition-colors"
+                            >
+                              <Printer size={13} /> Black &amp; White
+                            </button>
+                          </div>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))}

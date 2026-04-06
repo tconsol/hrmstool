@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import type { User } from '../../types';
 import Select from '../../components/ui/Select';
+import { useAuth } from '../../context/AuthContext';
 
 const EmployeeList = () => {
   const [employees, setEmployees] = useState<User[]>([]);
@@ -25,6 +26,8 @@ const EmployeeList = () => {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const isHR = user?.role === 'hr';
 
   useEffect(() => {
     fetchEmployees();
@@ -83,6 +86,7 @@ const EmployeeList = () => {
         <button
           onClick={() => navigate('/employees/add')}
           className="btn-primary flex items-center gap-2"
+          style={{ display: isHR ? undefined : 'none' }}
         >
           <Plus size={18} />
           Add Employee
@@ -160,24 +164,29 @@ const EmployeeList = () => {
                     </td>
                     <td>
                       <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => navigate(`/employees/edit/${emp._id}`)}
-                          className="p-1.5 hover:bg-dark-700/50 rounded-lg text-dark-400 hover:text-brand-400 transition-colors"
-                          title="Edit"
-                        >
-                          <Edit size={16} />
-                        </button>
-                        <button
-                          onClick={() => handleToggleStatus(emp._id)}
-                          className={`p-1.5 hover:bg-dark-700/50 rounded-lg transition-colors ${
-                            emp.status === 'active'
-                              ? 'text-dark-400 hover:text-red-400'
-                              : 'text-dark-400 hover:text-emerald-400'
-                          }`}
-                          title={emp.status === 'active' ? 'Deactivate' : 'Activate'}
-                        >
-                          {emp.status === 'active' ? <UserX size={16} /> : <UserCheck size={16} />}
-                        </button>
+                        {isHR && (
+                          <>
+                            <button
+                              onClick={() => navigate(`/employees/edit/${emp._id}`)}
+                              className="p-1.5 hover:bg-dark-700/50 rounded-lg text-dark-400 hover:text-brand-400 transition-colors"
+                              title="Edit"
+                            >
+                              <Edit size={16} />
+                            </button>
+                            <button
+                              onClick={() => handleToggleStatus(emp._id)}
+                              className={`p-1.5 hover:bg-dark-700/50 rounded-lg transition-colors ${
+                                emp.status === 'active'
+                                  ? 'text-dark-400 hover:text-red-400'
+                                  : 'text-dark-400 hover:text-emerald-400'
+                              }`}
+                              title={emp.status === 'active' ? 'Deactivate' : 'Activate'}
+                            >
+                              {emp.status === 'active' ? <UserX size={16} /> : <UserCheck size={16} />}
+                            </button>
+                          </>
+                        )}
+                        {!isHR && <span className="text-xs text-dark-500">—</span>}
                       </div>
                     </td>
                   </tr>

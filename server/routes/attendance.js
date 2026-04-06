@@ -18,9 +18,9 @@ router.post('/check-out', checkOut);
 router.get('/my', getMyAttendance);
 router.get('/today', getTodayStatus);
 
-// HR routes
-router.get('/all', authorize('hr'), getAllAttendance);
+// Management routes
+router.get('/all', authorize('hr', 'manager', 'ceo'), getAllAttendance);
 router.post('/mark', authorize('hr'), markAttendance);
-router.get('/summary', authorize('hr'), getAttendanceSummary);
+router.get('/summary', authorize('hr', 'manager', 'ceo'), getAttendanceSummary);
 
 module.exports = router;

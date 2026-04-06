@@ -17,6 +17,8 @@ import MySalary from './pages/payroll/MySalary';
 import MyProfile from './pages/profile/MyProfile';
 import NotificationsPage from './pages/notifications/NotificationsPage';
 import CompanyCalendar from './pages/calendar/CompanyCalendar';
+import DocumentList from './pages/documents/DocumentList';
+import DocumentCreate from './pages/documents/DocumentCreate';
 
 function App() {
   return (
@@ -35,11 +37,11 @@ function App() {
           >
             <Route path="/dashboard" element={<Dashboard />} />
 
-            {/* HR Routes */}
+            {/* Management Routes (hr, manager, ceo) */}
             <Route
               path="/employees"
               element={
-                <ProtectedRoute roles={['hr']}>
+                <ProtectedRoute roles={['hr', 'manager', 'ceo']}>
                   <EmployeeList />
                 </ProtectedRoute>
               }
@@ -63,7 +65,7 @@ function App() {
             <Route
               path="/attendance"
               element={
-                <ProtectedRoute roles={['hr']}>
+                <ProtectedRoute roles={['hr', 'manager', 'ceo']}>
                   <AttendanceDashboard />
                 </ProtectedRoute>
               }
@@ -71,7 +73,7 @@ function App() {
             <Route
               path="/leaves"
               element={
-                <ProtectedRoute roles={['hr']}>
+                <ProtectedRoute roles={['hr', 'manager', 'ceo']}>
                   <LeaveRequests />
                 </ProtectedRoute>
               }
@@ -79,8 +81,24 @@ function App() {
             <Route
               path="/payroll"
               element={
-                <ProtectedRoute roles={['hr']}>
+                <ProtectedRoute roles={['hr', 'manager', 'ceo']}>
                   <PayrollDashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/documents"
+              element={
+                <ProtectedRoute roles={['hr']}>
+                  <DocumentList />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/documents/create"
+              element={
+                <ProtectedRoute roles={['hr']}>
+                  <DocumentCreate />
                 </ProtectedRoute>
               }
             />

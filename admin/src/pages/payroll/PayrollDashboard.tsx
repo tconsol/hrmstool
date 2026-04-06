@@ -4,6 +4,7 @@ import toast from 'react-hot-toast';
 import { Wallet, DollarSign, ChevronLeft, ChevronRight } from 'lucide-react';
 import Modal from '../../components/ui/Modal';
 import Select from '../../components/ui/Select';
+import { useAuth } from '../../context/AuthContext';
 
 const PayrollDashboard = () => {
   const [payrolls, setPayrolls] = useState<any[]>([]);
@@ -14,6 +15,8 @@ const PayrollDashboard = () => {
   const [year, setYear] = useState(now.getFullYear());
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const { user } = useAuth();
+  const isHR = user?.role === 'hr';
 
   // Generate form
   const [showGenerate, setShowGenerate] = useState(false);
@@ -98,7 +101,7 @@ const PayrollDashboard = () => {
           <h1 className="text-2xl font-bold text-white">Payroll</h1>
           <p className="text-dark-400 text-sm mt-1">Manage employee salaries and payslips</p>
         </div>
-        <button onClick={() => setShowGenerate(true)} className="btn-primary flex items-center gap-2">
+        <button onClick={() => setShowGenerate(true)} className="btn-primary flex items-center gap-2" style={{ display: isHR ? undefined : 'none' }}>
           <DollarSign size={18} />
           Generate Payroll
         </button>
@@ -185,7 +188,7 @@ const PayrollDashboard = () => {
                       <span className={getPaymentBadge(p.paymentStatus)}>{p.paymentStatus}</span>
                     </td>
                     <td>
-                      {p.paymentStatus === 'pending' && (
+                      {isHR && p.paymentStatus === 'pending' && (
                         <button
                           onClick={() => handleStatusUpdate(p._id, 'paid')}
                           className="text-xs btn-success py-1 px-2"

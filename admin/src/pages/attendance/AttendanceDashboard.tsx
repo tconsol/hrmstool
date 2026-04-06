@@ -1,15 +1,27 @@
 import { useState, useEffect } from 'react';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
-import { CalendarCheck, Search, Filter } from 'lucide-react';
+import { CalendarCheck, Search, Filter, Clock } from 'lucide-react';
 import Modal from '../../components/ui/Modal';
 import Select from '../../components/ui/Select';
+import { useAuth } from '../../context/AuthContext';
+
+const fmtHours = (h: number) => {
+  if (!h && h !== 0) return '-';
+  const hrs = Math.floor(h);
+  const mins = Math.round((h - hrs) * 60);
+  if (hrs === 0 && mins === 0) return '0h';
+  if (mins === 0) return `${hrs}h`;
+  return `${hrs}h ${mins}m`;
+};
 
 const AttendanceDashboard = () => {
   const [attendance, setAttendance] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
   const [statusFilter, setStatusFilter] = useState('');
+  const { user } = useAuth();
+  const isHR = user?.role === 'hr';
 
   // Manual mark state
   const [showMarkModal, setShowMarkModal] = useState(false);
@@ -87,6 +99,7 @@ const AttendanceDashboard = () => {
             setShowMarkModal(true);
           }}
           className="btn-primary flex items-center gap-2"
+          style={{ display: isHR ? undefined : 'none' }}
         >
           <CalendarCheck size={18} />
           Mark Attendance
@@ -156,7 +169,7 @@ const AttendanceDashboard = () => {
                         ? new Date(record.checkOut).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
                         : '-'}
                     </td>
-                    <td className="hidden lg:table-cell">{record.workHours ? `${record.workHours}h` : '-'}</td>
+                    <td className="hidden lg:table-cell">{record.workHours ? fmtHours(record.workHours) : '-'}</td>
                     <td>
                       <span className={getStatusBadge(record.status)}>{record.status}</span>
                     </td>

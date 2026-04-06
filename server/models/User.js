@@ -30,7 +30,7 @@ const userSchema = new mongoose.Schema({
   },
   role: {
     type: String,
-    enum: ['hr', 'employee'],
+    enum: ['hr', 'manager', 'ceo', 'employee'],
     default: 'employee',
   },
   department: {
@@ -44,6 +44,22 @@ const userSchema = new mongoose.Schema({
   salary: {
     type: Number,
     default: 0,
+  },
+  ctc: {
+    annualCTC: { type: Number, default: 0 },
+    basic: { type: Number, default: 0 },
+    hra: { type: Number, default: 0 },
+    specialAllowance: { type: Number, default: 0 },
+    conveyanceAllowance: { type: Number, default: 0 },
+    medicalAllowance: { type: Number, default: 0 },
+    lta: { type: Number, default: 0 },
+    epfEmployer: { type: Number, default: 0 },
+    gratuity: { type: Number, default: 0 },
+    insurance: { type: Number, default: 0 },
+    variablePay: { type: Number, default: 0 },
+    foodCoupons: { type: Number, default: 0 },
+    transportAllowance: { type: Number, default: 0 },
+    internetReimbursement: { type: Number, default: 0 },
   },
   joiningDate: {
     type: Date,

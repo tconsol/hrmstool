@@ -1,8 +1,34 @@
 import { useState, useEffect } from 'react';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
-import { CalendarCheck, LogIn, LogOut } from 'lucide-react';
+import { CalendarCheck, LogIn, LogOut, Clock } from 'lucide-react';
 import Select from '../../components/ui/Select';
+
+const fmtHours = (h: number) => {
+  if (!h && h !== 0) return '-';
+  const hrs = Math.floor(h);
+  const mins = Math.round((h - hrs) * 60);
+  if (hrs === 0 && mins === 0) return '0h';
+  if (mins === 0) return `${hrs}h`;
+  return `${hrs}h ${mins}m`;
+};
+
+const useElapsed = (checkIn: string | null, checkOut: string | null) => {
+  const [elapsed, setElapsed] = useState('');
+  useEffect(() => {
+    if (!checkIn || checkOut) { setElapsed(''); return; }
+    const update = () => {
+      const diff = Date.now() - new Date(checkIn).getTime();
+      const hrs = Math.floor(diff / 3600000);
+      const mins = Math.floor((diff % 3600000) / 60000);
+      setElapsed(`${hrs}h ${mins}m`);
+    };
+    update();
+    const id = setInterval(update, 30000);
+    return () => clearInterval(id);
+  }, [checkIn, checkOut]);
+  return elapsed;
+};
 
 const MyAttendance = () => {
   const [attendance, setAttendance] = useState<any[]>([]);
@@ -79,6 +105,7 @@ const MyAttendance = () => {
 
   const hasCheckedIn = todayStatus?.checkIn;
   const hasCheckedOut = todayStatus?.checkOut;
+  const liveElapsed = useElapsed(todayStatus?.checkIn, todayStatus?.checkOut);
 
   const summary = {
     present: attendance.filter(a => a.status === 'present').length,
@@ -109,7 +136,12 @@ const MyAttendance = () => {
               <p className="text-xs text-dark-400 mt-1">
                 In: {new Date(todayStatus.checkIn).toLocaleTimeString()}
                 {hasCheckedOut && ` • Out: ${new Date(todayStatus.checkOut).toLocaleTimeString()}`}
-                {todayStatus.workHours > 0 && ` • ${todayStatus.workHours}h worked`}
+                {hasCheckedOut && todayStatus.workHours > 0 && ` • ${fmtHours(todayStatus.workHours)}`}
+                {!hasCheckedOut && liveElapsed && (
+                  <span className="inline-flex items-center gap-1 ml-2 text-brand-400 animate-pulse">
+                    <Clock size={12} /> {liveElapsed} elapsed
+                  </span>
+                )}
               </p>
             )}
           </div>
@@ -209,7 +241,7 @@ const MyAttendance = () => {
                     <td>
                       {record.checkOut ? new Date(record.checkOut).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '-'}
                     </td>
-                    <td className="hidden sm:table-cell">{record.workHours ? `${record.workHours}h` : '-'}</td>
+                    <td className="hidden sm:table-cell">{record.workHours ? fmtHours(record.workHours) : '-'}</td>
                     <td><span className={getStatusBadge(record.status)}>{record.status}</span></td>
                   </tr>
                 ))}

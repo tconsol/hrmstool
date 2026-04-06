@@ -62,9 +62,8 @@ exports.checkOut = async (req, res) => {
     }
 
     attendance.checkOut = new Date();
-    attendance.workHours = parseFloat(
-      ((attendance.checkOut - attendance.checkIn) / (1000 * 60 * 60)).toFixed(2)
-    );
+    const diffMs = attendance.checkOut.getTime() - new Date(attendance.checkIn).getTime();
+    attendance.workHours = Math.max(0, parseFloat((diffMs / (1000 * 60 * 60)).toFixed(2)));
     await attendance.save();
 
     res.json(attendance);
@@ -155,10 +154,17 @@ exports.markAttendance = async (req, res) => {
       date: targetDate,
     });
 
+    const defaultHours = status === 'present' || status === 'late' ? 8 : status === 'half-day' ? 4 : 0;
+    const checkInTime = status !== 'absent' ? new Date(new Date(targetDate).setHours(9, 0, 0, 0)) : null;
+    const checkOutTime = status !== 'absent' ? new Date(new Date(targetDate).setHours(status === 'half-day' ? 13 : 18, 0, 0, 0)) : null;
+
     if (attendance) {
       attendance.status = status;
       attendance.notes = notes;
       attendance.markedBy = 'hr';
+      attendance.checkIn = checkInTime;
+      attendance.checkOut = checkOutTime;
+      attendance.workHours = defaultHours;
     } else {
       attendance = new Attendance({
         user: userId,
@@ -166,7 +172,9 @@ exports.markAttendance = async (req, res) => {
         status,
         notes,
         markedBy: 'hr',
-        checkIn: status !== 'absent' ? new Date(targetDate.setHours(9, 0, 0, 0)) : null,
+        checkIn: checkInTime,
+        checkOut: checkOutTime,
+        workHours: defaultHours,
       });
     }
 

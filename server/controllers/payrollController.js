@@ -13,7 +13,7 @@ exports.generatePayroll = async (req, res) => {
       if (!emp) return res.status(404).json({ error: 'Employee not found' });
       employees = [emp];
     } else {
-      employees = await User.find({ status: 'active', role: 'employee' });
+      employees = await User.find({ status: 'active' });
     }
 
     const results = [];
@@ -151,7 +151,8 @@ exports.downloadPayslip = async (req, res) => {
       return res.status(403).json({ error: 'Access denied' });
     }
 
-    const pdfBuffer = await generatePayslipPDF(payroll);
+    const bw = req.query.bw === 'true';
+    const pdfBuffer = await generatePayslipPDF(payroll, bw);
 
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `attachment; filename=payslip_${payroll.user.employeeId}_${payroll.month}_${payroll.year}.pdf`);
