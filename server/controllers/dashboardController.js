@@ -38,8 +38,13 @@ exports.getHRDashboard = async (req, res) => {
 
     const recentLeaves = await Leave.find({ ...orgFilter, status: 'pending' })
       .populate('user', 'name employeeId department designation')
-      .populate('user.department', 'name')
-      .populate('user.designation', 'name code')
+      .populate({
+        path: 'user',
+        populate: [
+          { path: 'department', select: 'name code' },
+          { path: 'designation', select: 'name code level' }
+        ]
+      })
       .sort({ createdAt: -1 })
       .limit(5);
 

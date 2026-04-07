@@ -90,6 +90,13 @@ exports.getPayrollList = async (req, res) => {
     const total = await Payroll.countDocuments(query);
     const payrolls = await Payroll.find(query)
       .populate('user', 'name email employeeId department designation')
+      .populate({
+        path: 'user',
+        populate: [
+          { path: 'department', select: 'name code' },
+          { path: 'designation', select: 'name code level' }
+        ]
+      })
       .sort({ createdAt: -1 })
       .skip((page - 1) * limit)
       .limit(parseInt(limit));

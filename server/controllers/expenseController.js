@@ -11,7 +11,14 @@ exports.getExpenses = async (req, res) => {
 
     const total = await Expense.countDocuments(query);
     const expenses = await Expense.find(query)
-      .populate('employee', 'name employeeId department')
+      .populate('employee', 'name employeeId department designation')
+      .populate({
+        path: 'employee',
+        populate: [
+          { path: 'department', select: 'name code' },
+          { path: 'designation', select: 'name code level' }
+        ]
+      })
       .populate('approvedBy', 'name')
       .sort({ createdAt: -1 })
       .skip((page - 1) * limit)

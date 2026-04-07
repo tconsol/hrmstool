@@ -10,6 +10,7 @@ import Register from './pages/Register';
 import Dashboard from './pages/dashboard/Dashboard';
 import EmployeeList from './pages/employees/EmployeeList';
 import EmployeeForm from './pages/employees/EmployeeForm';
+import EmployeeDocuments from './pages/employees/EmployeeDocuments';
 import AttendanceDashboard from './pages/attendance/AttendanceDashboard';
 import MyAttendance from './pages/attendance/MyAttendance';
 import LeaveRequests from './pages/leaves/LeaveRequests';
@@ -99,6 +100,14 @@ function App() {
               element={
                 <ProtectedRoute roles={['hr']}>
                   <EmployeeForm />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/employees/:id/documents"
+              element={
+                <ProtectedRoute roles={['hr', 'manager', 'ceo']}>
+                  <EmployeeDocuments />
                 </ProtectedRoute>
               }
             />

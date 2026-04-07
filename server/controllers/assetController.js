@@ -94,7 +94,14 @@ exports.updateAsset = async (req, res) => {
       { _id: req.params.id, organization: req.orgId },
       updates,
       { new: true, runValidators: true }
-    ).populate('assignedTo', 'name employeeId department');
+    ).populate('assignedTo', 'name employeeId department designation')
+      .populate({
+        path: 'assignedTo',
+        populate: [
+          { path: 'department', select: 'name code' },
+          { path: 'designation', select: 'name code level' }
+        ]
+      });
 
     if (!asset) {
       return res.status(404).json({ error: 'Asset not found' });
@@ -118,7 +125,14 @@ exports.assignAsset = async (req, res) => {
         status: assignedTo ? 'assigned' : 'available',
       },
       { new: true }
-    ).populate('assignedTo', 'name employeeId department');
+    ).populate('assignedTo', 'name employeeId department designation')
+      .populate({
+        path: 'assignedTo',
+        populate: [
+          { path: 'department', select: 'name code' },
+          { path: 'designation', select: 'name code level' }
+        ]
+      });
 
     if (!asset) {
       return res.status(404).json({ error: 'Asset not found' });

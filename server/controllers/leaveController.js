@@ -144,6 +144,13 @@ exports.getAllLeaves = async (req, res) => {
     const total = await Leave.countDocuments(query);
     const leaves = await Leave.find(query)
       .populate('user', 'name email employeeId department designation')
+      .populate({
+        path: 'user',
+        populate: [
+          { path: 'department', select: 'name code' },
+          { path: 'designation', select: 'name code level' }
+        ]
+      })
       .populate('approvedBy', 'name')
       .sort({ createdAt: -1 })
       .skip((page - 1) * limit)

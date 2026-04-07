@@ -41,7 +41,21 @@ const documentSchema = new mongoose.Schema({
     trim: true,
   },
   companyLogo: {
-    type: String, // base64 data URL
+    gcsPath: String,
+    fileName: String,
+    uploadedAt: Date,
+  },
+  pdfFile: {
+    gcsPath: String,
+    fileName: String,
+    fileSize: Number,
+    generatedAt: Date,
+  },
+  docxFile: {
+    gcsPath: String,
+    fileName: String,
+    fileSize: Number,
+    generatedAt: Date,
   },
   status: {
     type: String,

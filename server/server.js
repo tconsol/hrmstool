@@ -134,6 +134,17 @@ app.use((req, res) => {
 
 // Global error handler
 app.use((err, req, res, next) => {
+  // Handle multer errors gracefully
+  if (err.code === 'LIMIT_FILE_SIZE') {
+    return res.status(400).json({ error: 'File size exceeds 5MB limit' });
+  }
+  if (err.code === 'LIMIT_FILE_COUNT') {
+    return res.status(400).json({ error: 'Only one file can be uploaded at a time' });
+  }
+  if (err.message && err.message.includes('Only PDF')) {
+    return res.status(400).json({ error: err.message });
+  }
+
   console.error('Server Error:', err.stack);
   res.status(err.status || 500).json({
     error: process.env.NODE_ENV === 'production'

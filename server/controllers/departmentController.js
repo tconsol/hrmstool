@@ -3,7 +3,11 @@ const Department = require('../models/Department');
 exports.getDepartments = async (req, res) => {
   try {
     const departments = await Department.find({ organization: req.orgId })
-      .populate('head', 'name employeeId')
+      .populate('head', 'name employeeId designation')
+      .populate({
+        path: 'head',
+        populate: { path: 'designation', select: 'name code level' }
+      })
       .sort({ name: 1 });
     res.json(departments);
   } catch (error) {
@@ -14,7 +18,11 @@ exports.getDepartments = async (req, res) => {
 exports.getDepartment = async (req, res) => {
   try {
     const department = await Department.findOne({ _id: req.params.id, organization: req.orgId })
-      .populate('head', 'name employeeId designation');
+      .populate('head', 'name employeeId designation')
+      .populate({
+        path: 'head',
+        populate: { path: 'designation', select: 'name code level' }
+      });
     if (!department) {
       return res.status(404).json({ error: 'Department not found' });
     }
