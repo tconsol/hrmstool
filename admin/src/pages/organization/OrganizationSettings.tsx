@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Building, Save, Loader2 } from 'lucide-react';
 import api from '../../services/api';
+import Select from '../../components/ui/Select';
 import toast from 'react-hot-toast';
 
 export default function OrganizationSettings() {
@@ -123,27 +124,37 @@ export default function OrganizationSettings() {
         <div className="space-y-5">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <label className="block text-sm text-slate-300 mb-1">Fiscal Year Start</label>
-              <select value={settings.fiscalYearStart} onChange={e => setSettings({ ...settings, fiscalYearStart: Number(e.target.value) })} className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
-                {months.map((m, idx) => <option key={m} value={idx}>{m}</option>)}
-              </select>
+              <label className="block text-sm text-slate-300 mb-2">Fiscal Year Start</label>
+              <Select
+                value={String(settings.fiscalYearStart)}
+                onChange={(val) => setSettings({ ...settings, fiscalYearStart: Number(val) })}
+                options={months.map((m, idx) => ({ value: String(idx), label: m }))}
+              />
             </div>
             <div>
-              <label className="block text-sm text-slate-300 mb-1">Currency</label>
-              <select value={settings.currency} onChange={e => setSettings({ ...settings, currency: e.target.value })} className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
-                <option value="INR">INR (₹)</option>
-                <option value="USD">USD ($)</option>
-                <option value="EUR">EUR (€)</option>
-                <option value="GBP">GBP (£)</option>
-              </select>
+              <label className="block text-sm text-slate-300 mb-2">Currency</label>
+              <Select
+                value={settings.currency}
+                onChange={(val) => setSettings({ ...settings, currency: val })}
+                options={[
+                  { value: 'INR', label: 'INR (₹)' },
+                  { value: 'USD', label: 'USD ($)' },
+                  { value: 'EUR', label: 'EUR (€)' },
+                  { value: 'GBP', label: 'GBP (£)' },
+                ]}
+              />
             </div>
             <div>
-              <label className="block text-sm text-slate-300 mb-1">Date Format</label>
-              <select value={settings.dateFormat} onChange={e => setSettings({ ...settings, dateFormat: e.target.value })} className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
-                <option value="DD/MM/YYYY">DD/MM/YYYY</option>
-                <option value="MM/DD/YYYY">MM/DD/YYYY</option>
-                <option value="YYYY-MM-DD">YYYY-MM-DD</option>
-              </select>
+              <label className="block text-sm text-slate-300 mb-2">Date Format</label>
+              <Select
+                value={settings.dateFormat}
+                onChange={(val) => setSettings({ ...settings, dateFormat: val })}
+                options={[
+                  { value: 'DD/MM/YYYY', label: 'DD/MM/YYYY' },
+                  { value: 'MM/DD/YYYY', label: 'MM/DD/YYYY' },
+                  { value: 'YYYY-MM-DD', label: 'YYYY-MM-DD' },
+                ]}
+              />
             </div>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
