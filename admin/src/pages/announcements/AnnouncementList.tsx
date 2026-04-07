@@ -3,6 +3,7 @@ import { Megaphone, Plus, Edit2, Trash2, AlertCircle, X } from 'lucide-react';
 import api from '../../services/api';
 import { Announcement, User } from '../../types';
 import Select from '../../components/ui/Select';
+import DatePicker from '../../components/ui/DatePicker';
 import toast from 'react-hot-toast';
 
 const priorityColors: Record<string, string> = {
@@ -143,7 +144,7 @@ export default function AnnouncementList() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-dark-300 mb-1.5">Expires</label>
-                  <input type="date" value={form.expiresAt} onChange={e => setForm({ ...form, expiresAt: e.target.value })} className="input-dark" />
+                  <DatePicker value={form.expiresAt} onChange={(val) => setForm({ ...form, expiresAt: val })} placeholder="No expiry" />
                 </div>
               </div>
               <div>

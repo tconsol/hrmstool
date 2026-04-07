@@ -4,6 +4,8 @@ import toast from 'react-hot-toast';
 import { Plus, CalendarOff } from 'lucide-react';
 import Modal from '../../components/ui/Modal';
 import Select from '../../components/ui/Select';
+import DateRangePicker from '../../components/ui/DateRangePicker';
+import DatePicker from '../../components/ui/DatePicker';
 
 const MyLeaves = () => {
   const [leaves, setLeaves] = useState<any[]>([]);
@@ -167,25 +169,29 @@ const MyLeaves = () => {
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="block text-sm font-medium text-dark-300 mb-1.5">Start Date</label>
-                <input
-                  type="date"
+                <DatePicker
                   value={form.startDate}
-                  onChange={(e) => setForm({ ...form, startDate: e.target.value })}
-                  className="input-dark"
+                  onChange={(val) => setForm({ ...form, startDate: val })}
                   required
                 />
               </div>
               <div>
                 <label className="block text-sm font-medium text-dark-300 mb-1.5">End Date</label>
-                <input
-                  type="date"
+                <DatePicker
                   value={form.endDate}
-                  onChange={(e) => setForm({ ...form, endDate: e.target.value })}
-                  className="input-dark"
+                  onChange={(val) => setForm({ ...form, endDate: val })}
                   required
                 />
               </div>
             </div>
+
+            <DateRangePicker
+              label="Select Leave Dates"
+              startDate={form.startDate}
+              endDate={form.endDate}
+              onStartDateChange={(date) => setForm({ ...form, startDate: date })}
+              onEndDateChange={(date) => setForm({ ...form, endDate: date })}
+            />
 
             <div>
               <label className="block text-sm font-medium text-dark-300 mb-1.5">Reason</label>

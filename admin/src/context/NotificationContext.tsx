@@ -76,9 +76,27 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
       reconnection: true,
       reconnectionDelay: 1000,
       reconnectionDelayMax: 5000,
-      reconnectionAttempts: 5,
+      reconnectionAttempts: Infinity, // Keep trying to reconnect
       secure: true,
       rejectUnauthorized: false,
+      forceNew: false, // Reuse existing connection if available
+    });
+
+    // Connection events
+    newSocket.on('connect', () => {
+      console.log(`✅ WebSocket Connected | Socket ID: ${newSocket.id}`);
+    });
+
+    newSocket.on('disconnect', (reason) => {
+      console.log(`❌ WebSocket Disconnected | Reason: ${reason}`);
+    });
+
+    newSocket.on('connect_error', (error) => {
+      console.error(`⚠️ WebSocket Connection Error:`, error.message);
+    });
+
+    newSocket.on('error', (error) => {
+      console.error(`⚠️ WebSocket Socket Error:`, error);
     });
 
     newSocket.on('notification', (notif: Notification) => {

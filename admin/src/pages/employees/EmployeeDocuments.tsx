@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
 import { ArrowLeft, Upload, Trash2, FileText, Check, AlertCircle, ChevronDown, ChevronUp, Save, User } from 'lucide-react';
+import DatePicker from '../../components/ui/DatePicker';
 
 interface DocMeta { url?: string; fileName?: string; uploadedAt?: string; gcsPath?: string }
 
@@ -462,7 +463,7 @@ export default function EmployeeDocuments() {
             </div>
             <div>
               <label className="block text-sm font-medium text-dark-300 mb-1.5">Date of Birth</label>
-              <input type="date" value={personal.dateOfBirth} onChange={e => setPersonal(p => ({ ...p, dateOfBirth: e.target.value }))} className="input-dark" />
+              <DatePicker value={personal.dateOfBirth} onChange={(val) => setPersonal(p => ({ ...p, dateOfBirth: val }))} />
             </div>
             <div>
               <label className="block text-sm font-medium text-dark-300 mb-1.5">Blood Group</label>

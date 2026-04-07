@@ -3,6 +3,7 @@ import { Monitor, Plus, Edit2, Trash2, UserPlus, X } from 'lucide-react';
 import api from '../../services/api';
 import { Asset, User } from '../../types';
 import Select from '../../components/ui/Select';
+import DatePicker from '../../components/ui/DatePicker';
 import toast from 'react-hot-toast';
 
 const statusColors: Record<string, string> = {
@@ -214,7 +215,7 @@ export default function AssetList() {
               <div className="grid grid-cols-3 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-dark-300 mb-1.5">Purchase Date</label>
-                  <input type="date" value={form.purchaseDate} onChange={e => setForm({ ...form, purchaseDate: e.target.value })} className="input-dark" />
+                  <DatePicker value={form.purchaseDate} onChange={(val) => setForm({ ...form, purchaseDate: val })} />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-dark-300 mb-1.5">Cost</label>
@@ -222,7 +223,7 @@ export default function AssetList() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-dark-300 mb-1.5">Warranty Until</label>
-                  <input type="date" value={form.warrantyExpiry} onChange={e => setForm({ ...form, warrantyExpiry: e.target.value })} className="input-dark" />
+                  <DatePicker value={form.warrantyExpiry} onChange={(val) => setForm({ ...form, warrantyExpiry: val })} />
                 </div>
               </div>
               <div>

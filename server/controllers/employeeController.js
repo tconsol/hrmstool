@@ -399,9 +399,14 @@ exports.uploadProfilePicture = async (req, res) => {
     const signedUrl = await getSignedUrl(gcsPath);
 
     res.json({
-      fileName: req.file.originalname,
-      url: signedUrl,
-      uploadedAt: new Date().toISOString(),
+      profilePicture: {
+        gcsPath,
+        fileName: req.file.originalname,
+        mimeType: req.file.mimetype,
+        fileSize: req.file.size,
+        url: signedUrl,
+        uploadedAt: new Date().toISOString(),
+      },
     });
   } catch (error) {
     console.error('Failed to upload profile picture:', error);

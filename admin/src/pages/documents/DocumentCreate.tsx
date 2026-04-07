@@ -106,8 +106,22 @@ const DocumentCreate = () => {
 
   useEffect(() => {
     fetchEmployees();
+    fetchOrganization();
     if (editId) loadDocument(editId);
   }, [editId]);
+
+  const fetchOrganization = async () => {
+    try {
+      const { data } = await api.get('/organization');
+      if (!editId) {
+        setCompanyName(data.name || '');
+        setCompanyAddress(data.address || '');
+        if (data.logo) setCompanyLogo(data.logo);
+      }
+    } catch (error) {
+      // Org details are optional, don't block
+    }
+  };
 
   // Auto-populate fields from employee data
   useEffect(() => {
@@ -291,6 +305,8 @@ const DocumentCreate = () => {
     return new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' });
   };
   const fmtCurrency = (n: number) => `Rs. ${Number(n || 0).toLocaleString('en-IN')}`;
+  const getDeptName = (dept: any) => typeof dept === 'object' && dept?.name ? dept.name : (typeof dept === 'string' && dept ? dept : '');
+  const getDesignName = (desig: any) => typeof desig === 'object' && desig?.name ? desig.name : (typeof desig === 'string' && desig ? desig : '');
   const fields = TEMPLATE_FIELDS[docType] || [];
   const emp = selectedEmployee || {};
 
@@ -359,7 +375,7 @@ const DocumentCreate = () => {
             />
             {selectedEmployee && (
               <div className="bg-dark-700/30 rounded-lg p-3 text-xs text-dark-300 space-y-0.5">
-                <p>{selectedEmployee.designation || 'N/A'} &bull; {typeof selectedEmployee.department === 'object' && selectedEmployee.department ? (selectedEmployee.department as any).name : (selectedEmployee.department || 'N/A')}</p>
+                <p>{typeof selectedEmployee.designation === 'object' && selectedEmployee.designation ? selectedEmployee.designation.name : (selectedEmployee.designation || 'N/A')} &bull; {typeof selectedEmployee.department === 'object' && selectedEmployee.department ? selectedEmployee.department.name : (selectedEmployee.department || 'N/A')}</p>
                 <p className="text-dark-500">{selectedEmployee.email}</p>
               </div>
             )}
@@ -465,12 +481,12 @@ const DocumentCreate = () => {
               </div>
 
               {/* Template-specific content */}
-              {docType === 'offer_letter' && <OfferLetterPreview data={templateData} emp={emp} companyName={companyName} fmtDate={fmtDate} fmtCurrency={fmtCurrency} />}
-              {docType === 'appointment_letter' && <AppointmentLetterPreview data={templateData} emp={emp} companyName={companyName} fmtDate={fmtDate} />}
-              {docType === 'experience_letter' && <ExperienceLetterPreview data={templateData} emp={emp} companyName={companyName} fmtDate={fmtDate} />}
-              {docType === 'relieving_letter' && <RelievingLetterPreview data={templateData} emp={emp} companyName={companyName} fmtDate={fmtDate} />}
-              {docType === 'increment_letter' && <IncrementLetterPreview data={templateData} emp={emp} companyName={companyName} fmtDate={fmtDate} fmtCurrency={fmtCurrency} />}
-              {docType === 'salary_structure' && <SalaryStructurePreview data={templateData} emp={emp} companyName={companyName} fmtDate={fmtDate} fmtCurrency={fmtCurrency} />}
+              {docType === 'offer_letter' && <OfferLetterPreview data={templateData} emp={emp} companyName={companyName} fmtDate={fmtDate} fmtCurrency={fmtCurrency} getDeptName={getDeptName} getDesignName={getDesignName} />}
+              {docType === 'appointment_letter' && <AppointmentLetterPreview data={templateData} emp={emp} companyName={companyName} fmtDate={fmtDate} getDeptName={getDeptName} getDesignName={getDesignName} />}
+              {docType === 'experience_letter' && <ExperienceLetterPreview data={templateData} emp={emp} companyName={companyName} fmtDate={fmtDate} getDeptName={getDeptName} getDesignName={getDesignName} />}
+              {docType === 'relieving_letter' && <RelievingLetterPreview data={templateData} emp={emp} companyName={companyName} fmtDate={fmtDate} getDeptName={getDeptName} getDesignName={getDesignName} />}
+              {docType === 'increment_letter' && <IncrementLetterPreview data={templateData} emp={emp} companyName={companyName} fmtDate={fmtDate} fmtCurrency={fmtCurrency} getDeptName={getDeptName} getDesignName={getDesignName} />}
+              {docType === 'salary_structure' && <SalaryStructurePreview data={templateData} emp={emp} companyName={companyName} fmtDate={fmtDate} fmtCurrency={fmtCurrency} getDeptName={getDeptName} getDesignName={getDesignName} />}
 
               {/* Footer */}
               <div className="mt-12 pt-4" style={{ borderTop: '1px solid #e5e7eb' }}>
@@ -540,7 +556,7 @@ const PreviewTable = ({ headers, rows }: { headers: string[]; rows: string[][] }
 );
 
 // ── OFFER LETTER ────────────────────────────────────────────────
-const OfferLetterPreview = ({ data, emp, companyName, fmtDate, fmtCurrency }: any) => {
+const OfferLetterPreview = ({ data, emp, companyName, fmtDate, fmtCurrency, getDeptName, getDesignName }: any) => {
   const name = emp.name || data.employeeName || '[Employee Name]';
   const ctc = data.ctcBreakdown || emp.ctc || null;
   const rows: string[][] = [];
@@ -571,8 +587,8 @@ const OfferLetterPreview = ({ data, emp, companyName, fmtDate, fmtCurrency }: an
 
       <p className="text-[10px] mb-3">Dear {name},</p>
       <p className="text-[10px] mb-3">
-        We are pleased to offer you the position of <strong>{data.designation || emp.designation || '[Designation]'}</strong> in
-        the <strong>{data.department || emp.department || '[Department]'}</strong> department at <strong>{companyName || '[Company Name]'}</strong>,
+        We are pleased to offer you the position of <strong>{data.designation || getDesignName(emp.designation) || '[Designation]'}</strong> in
+        the <strong>{data.department || getDeptName(emp.department) || '[Department]'}</strong> department at <strong>{companyName || '[Company Name]'}</strong>,
         effective from <strong>{fmtDate(data.joiningDate || emp.joiningDate)}</strong>.
       </p>
 
@@ -614,7 +630,7 @@ const OfferLetterPreview = ({ data, emp, companyName, fmtDate, fmtCurrency }: an
 };
 
 // ── APPOINTMENT LETTER ──────────────────────────────────────────
-const AppointmentLetterPreview = ({ data, emp, companyName, fmtDate }: any) => {
+const AppointmentLetterPreview = ({ data, emp, companyName, fmtDate, getDeptName, getDesignName }: any) => {
   const name = emp.name || data.employeeName || '[Employee Name]';
   return (
     <div>
@@ -626,15 +642,15 @@ const AppointmentLetterPreview = ({ data, emp, companyName, fmtDate }: any) => {
       <p className="text-[10px] mb-3">Dear {name},</p>
       <p className="text-[10px] mb-3">
         With reference to your application and subsequent interview, we are pleased to appoint you
-        as <strong>{data.designation || emp.designation || '[Designation]'}</strong> in
-        the <strong>{data.department || emp.department || '[Department]'}</strong> department
+        as <strong>{data.designation || getDesignName(emp.designation) || '[Designation]'}</strong> in
+        the <strong>{data.department || getDeptName(emp.department) || '[Department]'}</strong> department
         at <strong>{companyName || '[Company Name]'}</strong>, with effect
         from <strong>{fmtDate(data.joiningDate || emp.joiningDate)}</strong>.
       </p>
       <p className="font-bold text-[10px] mb-2">Terms of Appointment:</p>
       <ol className="text-[10px] list-decimal list-inside space-y-1.5 mb-4">
-        <li>Designation: {data.designation || emp.designation || '[Designation]'}</li>
-        <li>Department: {data.department || emp.department || '[Department]'}</li>
+        <li>Designation: {data.designation || getDesignName(emp.designation) || '[Designation]'}</li>
+        <li>Department: {data.department || getDeptName(emp.department) || '[Department]'}</li>
         <li>Date of Joining: {fmtDate(data.joiningDate || emp.joiningDate)}</li>
         <li>Probation Period: {data.probationPeriod || '6'} months from date of joining</li>
         <li>Notice Period: {data.noticePeriod || '1'} month(s) from either side</li>
@@ -651,7 +667,7 @@ const AppointmentLetterPreview = ({ data, emp, companyName, fmtDate }: any) => {
 };
 
 // ── EXPERIENCE LETTER ───────────────────────────────────────────
-const ExperienceLetterPreview = ({ data, emp, companyName, fmtDate }: any) => {
+const ExperienceLetterPreview = ({ data, emp, companyName, fmtDate, getDeptName, getDesignName }: any) => {
   const name = emp.name || data.employeeName || '[Employee Name]';
   return (
     <div>
@@ -661,8 +677,8 @@ const ExperienceLetterPreview = ({ data, emp, companyName, fmtDate }: any) => {
       <p className="text-[10px] mb-3">
         This is to certify that <strong>{name}</strong> (Employee ID: {emp.employeeId || '[ID]'}) was employed
         with <strong>{companyName || '[Company Name]'}</strong> from <strong>{fmtDate(data.joiningDate || emp.joiningDate)}</strong> to <strong>{fmtDate(data.lastWorkingDate)}</strong> in
-        the capacity of <strong>{data.designation || emp.designation || '[Designation]'}</strong> in
-        the <strong>{data.department || emp.department || '[Department]'}</strong> department.
+        the capacity of <strong>{data.designation || getDesignName(emp.designation) || '[Designation]'}</strong> in
+        the <strong>{data.department || getDeptName(emp.department) || '[Department]'}</strong> department.
       </p>
       <p className="text-[10px] mb-3">
         During the tenure with us, we found {name} to be sincere, dedicated, and hardworking.
@@ -676,7 +692,7 @@ const ExperienceLetterPreview = ({ data, emp, companyName, fmtDate }: any) => {
 };
 
 // ── RELIEVING LETTER ────────────────────────────────────────────
-const RelievingLetterPreview = ({ data, emp, companyName, fmtDate }: any) => {
+const RelievingLetterPreview = ({ data, emp, companyName, fmtDate, getDeptName, getDesignName }: any) => {
   const name = emp.name || data.employeeName || '[Employee Name]';
   return (
     <div>
@@ -692,8 +708,8 @@ const RelievingLetterPreview = ({ data, emp, companyName, fmtDate }: any) => {
         at <strong>{companyName || '[Company Name]'}</strong> effective <strong>{fmtDate(data.lastWorkingDate)}</strong>.
       </p>
       <p className="text-[10px] mb-3">
-        You were working as <strong>{data.designation || emp.designation || '[Designation]'}</strong> in
-        the <strong>{data.department || emp.department || '[Department]'}</strong> department
+        You were working as <strong>{data.designation || getDesignName(emp.designation) || '[Designation]'}</strong> in
+        the <strong>{data.department || getDeptName(emp.department) || '[Department]'}</strong> department
         since <strong>{fmtDate(data.joiningDate || emp.joiningDate)}</strong>.
       </p>
       <p className="text-[10px] mb-3">
@@ -707,7 +723,7 @@ const RelievingLetterPreview = ({ data, emp, companyName, fmtDate }: any) => {
 };
 
 // ── INCREMENT LETTER ────────────────────────────────────────────
-const IncrementLetterPreview = ({ data, emp, companyName, fmtDate, fmtCurrency }: any) => {
+const IncrementLetterPreview = ({ data, emp, companyName, fmtDate, fmtCurrency, getDeptName, getDesignName }: any) => {
   const name = emp.name || data.employeeName || '[Employee Name]';
   const increment = (data.newSalary || 0) - (data.previousSalary || 0);
   const pct = data.previousSalary ? ((increment / data.previousSalary) * 100).toFixed(1) : '0';
@@ -719,7 +735,7 @@ const IncrementLetterPreview = ({ data, emp, companyName, fmtDate, fmtCurrency }
       <p className="font-bold text-[10px]">To,</p>
       <p className="text-[10px]">{name}</p>
       <p className="text-[10px] text-gray-500">Employee ID: {emp.employeeId || '[ID]'}</p>
-      <p className="text-[10px] text-gray-500 mb-4">Department: {data.department || emp.department || '[Department]'}</p>
+      <p className="text-[10px] text-gray-500 mb-4">Department: {data.department || getDeptName(emp.department) || '[Department]'}</p>
       <p className="font-bold text-[10px] mb-3">Subject: Salary Revision</p>
       <p className="text-[10px] mb-3">Dear {name},</p>
       <p className="text-[10px] mb-3">
@@ -744,7 +760,7 @@ const IncrementLetterPreview = ({ data, emp, companyName, fmtDate, fmtCurrency }
 };
 
 // ── SALARY STRUCTURE ────────────────────────────────────────────
-const SalaryStructurePreview = ({ data, emp, companyName, fmtDate, fmtCurrency }: any) => {
+const SalaryStructurePreview = ({ data, emp, companyName, fmtDate, fmtCurrency, getDeptName, getDesignName }: any) => {
   const name = emp.name || data.employeeName || '[Employee Name]';
   const ctc = data.ctcBreakdown || emp.ctc || {};
 
@@ -760,8 +776,8 @@ const SalaryStructurePreview = ({ data, emp, companyName, fmtDate, fmtCurrency }
       <div className="grid grid-cols-2 gap-x-6 gap-y-1 text-[10px] mb-5">
         <p><span className="text-gray-500">Employee Name:</span> <strong>{name}</strong></p>
         <p><span className="text-gray-500">Employee ID:</span> <strong>{emp.employeeId || '[ID]'}</strong></p>
-        <p><span className="text-gray-500">Designation:</span> <strong>{data.designation || emp.designation || '-'}</strong></p>
-        <p><span className="text-gray-500">Department:</span> <strong>{data.department || emp.department || '-'}</strong></p>
+        <p><span className="text-gray-500">Designation:</span> <strong>{data.designation || getDesignName(emp.designation) || '-'}</strong></p>
+        <p><span className="text-gray-500">Department:</span> <strong>{data.department || getDeptName(emp.department) || '-'}</strong></p>
         <p><span className="text-gray-500">Date of Joining:</span> <strong>{fmtDate(data.joiningDate || emp.joiningDate)}</strong></p>
         <p><span className="text-gray-500">Effective From:</span> <strong>{fmtDate(data.effectiveDate)}</strong></p>
       </div>

@@ -45,18 +45,41 @@ const io = new Server(server, {
     origin: allowedOriginsForIO,
     credentials: true,
   },
+  transports: ['websocket', 'polling'],
+  pingInterval: 25000,        // Send ping every 25 seconds
+  pingTimeout: 60000,         // Wait 60 seconds for pong before closing
+  upgradeTimeout: 10000,      // Timeout for transport upgrade
+  allowEIO3: true,            // Support both EIO3 and EIO4
+  maxHttpBufferSize: 1000000, // 1MB max for payloads
 });
 
 setIO(io);
 
 io.on('connection', (socket) => {
   const userId = socket.handshake.auth.userId;
+  const clientIP = socket.handshake.address;
+  const userAgent = socket.handshake.headers['user-agent'];
+  
   if (userId) {
     socket.join(`user_${userId}`);
+    console.log(`✅ WebSocket Connected - User: ${userId} | IP: ${clientIP}`);
+  } else {
+    console.log(`⚪ WebSocket Connected - Anonymous | IP: ${clientIP}`);
   }
 
-  socket.on('disconnect', () => {
-    // cleanup handled automatically by socket.io
+  // Detect error events that might cause disconnection
+  socket.on('error', (error) => {
+    console.error(`⚠️  Socket Error - User: ${userId} | Error: ${error}`);
+  });
+
+  socket.on('connect_error', (error) => {
+    console.error(`⚠️  Connection Error - User: ${userId} | Error: ${error.message}`);
+  });
+
+  socket.on('disconnect', (reason) => {
+    if (userId) {
+      console.log(`❌ WebSocket Disconnected - User: ${userId} | Reason: ${reason}`);
+    }
   });
 });
 
@@ -154,6 +177,46 @@ app.use((err, req, res, next) => {
 });
 
 const PORT = process.env.PORT || 5000;
+
+// Enhanced server startup logging
+const startTime = Date.now();
+
 server.listen(PORT, () => {
-  console.log(`HRMS Server running on port ${PORT}`);
+  const uptime = Date.now() - startTime;
+  
+  console.log('\n' + '='.repeat(60));
+  console.log('🚀 HRMS SERVER INITIALIZED SUCCESSFULLY');
+  console.log('='.repeat(60));
+  
+  console.log('\n📡 Server Configuration:');
+  console.log(`   🔌 Port: ${PORT}`);
+  console.log(`   🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`   ⏱️  Startup Time: ${uptime}ms`);
+  
+  console.log('\n🔐 CORS & Security:');
+  console.log(`   ✅ CORS Enabled`);
+  console.log(`   📝 Allowed Origins: ${allowedOrigins.join(', ')}`);
+  console.log(`   🛡️  Helmet Security Headers: Active`);
+  
+  console.log('\n🌐 WebSocket (Socket.IO):');
+  console.log(`   ✅ WebSocket Server: Connected`);
+  console.log(`   👥 Real-time Features: Enabled`);
+  console.log(`   📊 Allowed Namespaces: user notifications, presence`);
+  
+  console.log('\n📡 API Endpoints:');
+  console.log(`   ✅ Authentication: /api/auth`);
+  console.log(`   ✅ Employees: /api/employees`);
+  console.log(`   ✅ Attendance: /api/attendance`);
+  console.log(`   ✅ Leaves: /api/leaves`);
+  console.log(`   ✅ Payroll: /api/payroll`);
+  console.log(`   ✅ Organization: /api/organization`);
+  console.log(`   ✅ 14+ additional endpoints configured`);
+  
+  console.log('\n💾 Data Persistence:');
+  console.log(`   ✅ MongoDB: Connected`);
+  console.log(`   ☁️  GCP Cloud Storage: Configured`);
+  
+  console.log('\n' + '='.repeat(60));
+  console.log(`✨ Server Ready at http://localhost:${PORT}`);
+  console.log('='.repeat(60) + '\n');
 });

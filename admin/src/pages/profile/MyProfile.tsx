@@ -1,12 +1,14 @@
-import { useState, useEffect, FormEvent } from 'react';
+import { useState, useEffect, useRef, FormEvent } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
-import { UserCircle, Save, Lock } from 'lucide-react';
+import { UserCircle, Save, Lock, Camera } from 'lucide-react';
 
 const MyProfile = () => {
   const { user, updateUser } = useAuth();
   const [loading, setLoading] = useState(false);
+  const [uploadingPic, setUploadingPic] = useState(false);
+  const picInputRef = useRef<HTMLInputElement>(null);
   const [form, setForm] = useState({
     phone: '',
     address: '',
@@ -33,15 +35,43 @@ const MyProfile = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      const { data } = await api.get('/auth/me');
-      // For employees, we can only update phone and address through their own profile
-      // This is a self-service update
-      updateUser({ ...data, phone: form.phone, address: form.address });
-      toast.success('Profile updated');
-    } catch (error) {
-      toast.error('Failed to update profile');
+      const { data } = await api.put('/auth/profile', {
+        phone: form.phone,
+        address: form.address,
+      });
+      updateUser(data);
+      toast.success('Profile updated successfully');
+    } catch (error: any) {
+      toast.error(error.response?.data?.error || 'Failed to update profile');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleProfilePicUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error('Image must be under 2MB');
+      return;
+    }
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
+      toast.error('Only JPEG, PNG, or WebP images are allowed');
+      return;
+    }
+    setUploadingPic(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      const { data } = await api.post('/employees/profile/picture', formData);
+      updateUser({ ...user!, profilePicture: data.profilePicture });
+      toast.success('Profile picture updated');
+    } catch (error: any) {
+      toast.error(error.response?.data?.error || 'Failed to upload profile picture');
+    } finally {
+      setUploadingPic(false);
+      if (picInputRef.current) picInputRef.current.value = '';
     }
   };
 
@@ -80,8 +110,26 @@ const MyProfile = () => {
       {/* Profile Info Card */}
       <div className="glass-card p-6">
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mb-6 pb-6 border-b border-dark-700/50">
-          <div className="w-16 h-16 bg-brand-600/20 rounded-full flex items-center justify-center">
-            <UserCircle size={40} className="text-brand-400" />
+          <div className="relative group">
+            <div className="w-16 h-16 rounded-full overflow-hidden bg-brand-600/20 flex items-center justify-center">
+              {user.profilePicture?.url ? (
+                <img src={user.profilePicture.url} alt={user.name} className="w-full h-full object-cover" />
+              ) : (
+                <UserCircle size={40} className="text-brand-400" />
+              )}
+            </div>
+            <button
+              onClick={() => picInputRef.current?.click()}
+              disabled={uploadingPic}
+              className="absolute inset-0 w-16 h-16 rounded-full bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+            >
+              {uploadingPic ? (
+                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              ) : (
+                <Camera size={18} className="text-white" />
+              )}
+            </button>
+            <input ref={picInputRef} type="file" accept="image/jpeg,image/png,image/webp" onChange={handleProfilePicUpload} className="hidden" />
           </div>
           <div>
             <h2 className="text-xl font-semibold text-white">{user.name}</h2>
@@ -119,6 +167,63 @@ const MyProfile = () => {
                 {user.status}
               </span>
             </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Update Profile Picture */}
+      <div className="glass-card p-6">
+        <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+          <Camera size={20} className="text-brand-400" />
+          Update Profile Picture
+        </h3>
+        <div className="flex flex-col sm:flex-row items-center gap-6">
+          <div className="flex-shrink-0">
+            <div className="relative group">
+              <div className="w-24 h-24 rounded-full overflow-hidden bg-brand-600/20 flex items-center justify-center border-2 border-brand-600/30">
+                {user.profilePicture?.url ? (
+                  <img src={user.profilePicture.url} alt={user.name} className="w-full h-full object-cover" />
+                ) : (
+                  <UserCircle size={60} className="text-brand-400" />
+                )}
+              </div>
+              <button
+                onClick={() => picInputRef.current?.click()}
+                disabled={uploadingPic}
+                className="absolute bottom-0 right-0 p-2 bg-brand-600 hover:bg-brand-700 disabled:opacity-50 text-white rounded-full transition-colors shadow-lg"
+                title="Change profile picture"
+              >
+                {uploadingPic ? (
+                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                ) : (
+                  <Camera size={16} />
+                )}
+              </button>
+              <input ref={picInputRef} type="file" accept="image/jpeg,image/png,image/webp" onChange={handleProfilePicUpload} className="hidden" />
+            </div>
+          </div>
+          <div className="flex-1">
+            <h4 className="font-medium text-white mb-2">Change Your Profile Picture</h4>
+            <p className="text-sm text-dark-300 mb-4">
+              Upload a new profile picture. Supported formats: JPEG, PNG, WebP. Maximum size: 2MB.
+            </p>
+            <button
+              onClick={() => picInputRef.current?.click()}
+              disabled={uploadingPic}
+              className="btn-primary flex items-center gap-2"
+            >
+              {uploadingPic ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  Uploading...
+                </>
+              ) : (
+                <>
+                  <Camera size={16} />
+                  Choose Image
+                </>
+              )}
+            </button>
           </div>
         </div>
       </div>

@@ -2,8 +2,9 @@ import { useState, useEffect, FormEvent } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
-import { ArrowLeft, Save, ChevronDown, ChevronUp, Calculator } from 'lucide-react';
+import { ArrowLeft, Save, ChevronDown, ChevronUp, Calculator, FileText } from 'lucide-react';
 import Select from '../../components/ui/Select';
+import DatePicker from '../../components/ui/DatePicker';
 
 const defaultCTC = {
   annualCTC: 0, basic: 0, hra: 0, specialAllowance: 0,
@@ -133,16 +134,18 @@ const EmployeeForm = () => {
         const { password, ...updateData } = payload;
         await api.put(`/employees/${id}`, updateData);
         toast.success('Employee updated successfully');
+        navigate('/employees');
       } else {
         if (!payload.password) {
           toast.error('Password is required');
           setLoading(false);
           return;
         }
-        await api.post('/employees', payload);
-        toast.success('Employee added successfully');
+        const { data } = await api.post('/employees', payload);
+        toast.success('Employee added! Redirecting to upload documents...');
+        // Navigate to documents page for the newly created employee
+        navigate(`/employees/${data._id}/documents`);
       }
-      navigate('/employees');
     } catch (error: any) {
       toast.error(error.response?.data?.error || 'Operation failed');
     } finally {
@@ -172,10 +175,24 @@ const EmployeeForm = () => {
             {isEdit ? 'Edit Employee' : 'Add Employee'}
           </h1>
           <p className="text-dark-400 text-sm mt-1">
-            {isEdit ? 'Update employee information' : 'Add a new team member'}
+            {isEdit ? 'Update employee information' : 'Add a new team member (you can upload documents after creating)'}
           </p>
         </div>
       </div>
+
+      {!isEdit && (
+        <div className="glass-card p-4 border-l-4 border-brand-500 bg-brand-600/5">
+          <div className="flex gap-3 items-start">
+            <FileText size={20} className="text-brand-400 flex-shrink-0 mt-0.5" />
+            <div>
+              <h3 className="font-semibold text-white mb-1">Document Upload</h3>
+              <p className="text-sm text-dark-300">
+                After creating the employee, you'll be taken to the document upload page where you can add onboarding documents (Aadhaar, PAN, educational certificates, etc.)
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       <form onSubmit={handleSubmit} className="glass-card p-6 space-y-5">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -268,12 +285,9 @@ const EmployeeForm = () => {
 
           <div>
             <label className="block text-sm font-medium text-dark-300 mb-1.5">Joining Date</label>
-            <input
-              name="joiningDate"
-              type="date"
+            <DatePicker
               value={form.joiningDate}
-              onChange={handleChange}
-              className="input-dark"
+              onChange={(val) => setForm({ ...form, joiningDate: val })}
             />
           </div>
         </div>
@@ -440,14 +454,26 @@ const EmployeeForm = () => {
           />
         </div>
 
-        <div className="flex justify-end gap-3 pt-4 border-t border-dark-700/50">
-          <button
-            type="button"
-            onClick={() => navigate('/employees')}
-            className="btn-secondary"
-          >
-            Cancel
-          </button>
+        <div className="flex justify-between items-center gap-3 pt-4 border-t border-dark-700/50">
+          <div>
+            {isEdit && (
+              <button
+                type="button"
+                onClick={() => navigate(`/employees/${id}/documents`)}
+                className="btn-secondary flex items-center gap-2 text-sm"
+              >
+                <FileText size={16} /> Upload Documents
+              </button>
+            )}
+          </div>
+          <div className="flex gap-3">
+            <button
+              type="button"
+              onClick={() => navigate('/employees')}
+              className="btn-secondary"
+            >
+              Cancel
+            </button>
           <button type="submit" disabled={loading} className="btn-primary flex items-center gap-2">
             {loading ? (
               <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
@@ -456,6 +482,7 @@ const EmployeeForm = () => {
             )}
             {isEdit ? 'Update' : 'Add'} Employee
           </button>
+          </div>
         </div>
       </form>
     </div>

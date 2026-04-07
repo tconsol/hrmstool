@@ -4,6 +4,7 @@ import api from '../../services/api';
 import { Training } from '../../types';
 import toast from 'react-hot-toast';
 import Select from '../../components/ui/Select';
+import DatePicker from '../../components/ui/DatePicker';
 
 const statusColors: Record<string, string> = {
   upcoming: 'bg-blue-500/20 text-blue-400',
@@ -182,11 +183,11 @@ export default function TrainingList() {
               <div className="grid grid-cols-3 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-dark-300 mb-1.5">Start Date *</label>
-                  <input type="date" value={form.startDate} onChange={e => setForm({ ...form, startDate: e.target.value })} className="input-dark" required />
+                  <DatePicker value={form.startDate} onChange={(val) => setForm({ ...form, startDate: val })} required />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-dark-300 mb-1.5">End Date *</label>
-                  <input type="date" value={form.endDate} onChange={e => setForm({ ...form, endDate: e.target.value })} className="input-dark" required />
+                  <DatePicker value={form.endDate} onChange={(val) => setForm({ ...form, endDate: val })} required />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-dark-300 mb-1.5">Max Seats</label>

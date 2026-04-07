@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { Building, Save, Loader2 } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { Building, Save, Loader2, Upload, X } from 'lucide-react';
 import api from '../../services/api';
 import Select from '../../components/ui/Select';
 import toast from 'react-hot-toast';
@@ -7,7 +7,8 @@ import toast from 'react-hot-toast';
 export default function OrganizationSettings() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [org, setOrg] = useState({ name: '', email: '', phone: '', address: '', website: '', industry: '' });
+  const [org, setOrg] = useState({ name: '', email: '', phone: '', address: '', website: '', industry: '', logo: '' });
+  const logoInputRef = useRef<HTMLInputElement>(null);
   const [settings, setSettings] = useState({
     fiscalYearStart: 4,
     workingDays: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
@@ -33,6 +34,7 @@ export default function OrganizationSettings() {
         setOrg({
           name: orgRes.data.name || '', email: orgRes.data.email || '', phone: orgRes.data.phone || '',
           address: orgRes.data.address || '', website: orgRes.data.website || '', industry: orgRes.data.industry || '',
+          logo: orgRes.data.logo || '',
         });
         if (settingsRes.data?.settings) {
           setSettings(prev => ({ ...prev, ...settingsRes.data.settings }));
@@ -58,6 +60,34 @@ export default function OrganizationSettings() {
       toast.success('Settings updated');
     } catch (err: any) { toast.error(err.response?.data?.error || 'Failed'); }
     finally { setSaving(false); }
+  };
+
+  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Logo must be under 5MB');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      const dataUrl = reader.result as string;
+      // Compress if needed
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const scale = Math.min(400 / img.width, 400 / img.height, 1);
+        canvas.width = Math.round(img.width * scale);
+        canvas.height = Math.round(img.height * scale);
+        const ctx = canvas.getContext('2d')!;
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        const compressed = canvas.toDataURL('image/png', 0.9);
+        setOrg(prev => ({ ...prev, logo: compressed }));
+      };
+      img.onerror = () => setOrg(prev => ({ ...prev, logo: dataUrl }));
+      img.src = dataUrl;
+    };
+    reader.readAsDataURL(file);
   };
 
   const toggleDay = (day: string) => {
@@ -109,6 +139,38 @@ export default function OrganizationSettings() {
           <div>
             <label className="block text-sm text-slate-300 mb-1">Address</label>
             <input value={org.address} onChange={e => setOrg({ ...org, address: e.target.value })} className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500" />
+          </div>
+        </div>
+        {/* Logo Upload */}
+        <div className="mt-4">
+          <label className="block text-sm text-slate-300 mb-2">Organization Logo</label>
+          <div className="flex items-center gap-4">
+            {org.logo ? (
+              <div className="relative group">
+                <img src={org.logo} alt="Logo" className="h-16 w-auto rounded-lg bg-white p-1.5 border border-slate-600" />
+                <button
+                  onClick={() => setOrg(prev => ({ ...prev, logo: '' }))}
+                  className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center text-white text-xs opacity-0 group-hover:opacity-100 transition-opacity"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </div>
+            ) : (
+              <div className="h-16 w-16 rounded-lg bg-slate-700 border border-slate-600 flex items-center justify-center">
+                <Building className="w-6 h-6 text-slate-500" />
+              </div>
+            )}
+            <div>
+              <button
+                onClick={() => logoInputRef.current?.click()}
+                className="flex items-center gap-2 px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-sm text-slate-300 hover:bg-slate-600 transition-colors"
+              >
+                <Upload className="w-4 h-4" />
+                {org.logo ? 'Change Logo' : 'Upload Logo'}
+              </button>
+              <p className="text-xs text-slate-500 mt-1">PNG, JPG up to 5MB</p>
+              <input ref={logoInputRef} type="file" accept="image/*" onChange={handleLogoUpload} className="hidden" />
+            </div>
           </div>
         </div>
         <div className="flex justify-end mt-4">

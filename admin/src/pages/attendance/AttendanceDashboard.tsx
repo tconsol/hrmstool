@@ -5,6 +5,7 @@ import { CalendarCheck, Search, Filter, Clock } from 'lucide-react';
 import Modal from '../../components/ui/Modal';
 import Select from '../../components/ui/Select';
 import { useAuth } from '../../context/AuthContext';
+import DatePicker from '../../components/ui/DatePicker';
 
 const fmtHours = (h: number) => {
   if (!h && h !== 0) return '-';
@@ -109,11 +110,10 @@ const AttendanceDashboard = () => {
       {/* Filters */}
       <div className="glass-card p-4">
         <div className="flex flex-col sm:flex-row gap-3">
-          <input
-            type="date"
+          <DatePicker
             value={date}
-            onChange={(e) => setDate(e.target.value)}
-            className="input-dark w-full sm:w-48"
+            onChange={setDate}
+            className="w-full sm:w-48"
           />
           <Select
             value={statusFilter}
@@ -209,11 +209,9 @@ const AttendanceDashboard = () => {
 
             <div>
               <label className="block text-sm font-medium text-dark-300 mb-1.5">Date</label>
-              <input
-                type="date"
+              <DatePicker
                 value={markForm.date}
-                onChange={(e) => setMarkForm({ ...markForm, date: e.target.value })}
-                className="input-dark"
+                onChange={(val) => setMarkForm({ ...markForm, date: val })}
               />
             </div>
 
