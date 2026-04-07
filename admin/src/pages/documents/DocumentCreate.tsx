@@ -357,7 +357,7 @@ const DocumentCreate = () => {
             />
             {selectedEmployee && (
               <div className="bg-dark-700/30 rounded-lg p-3 text-xs text-dark-300 space-y-0.5">
-                <p>{selectedEmployee.designation || 'N/A'} &bull; {selectedEmployee.department || 'N/A'}</p>
+                <p>{selectedEmployee.designation || 'N/A'} &bull; {typeof selectedEmployee.department === 'object' && selectedEmployee.department ? (selectedEmployee.department as any).name : (selectedEmployee.department || 'N/A')}</p>
                 <p className="text-dark-500">{selectedEmployee.email}</p>
               </div>
             )}

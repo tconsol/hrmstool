@@ -4,7 +4,7 @@ const CalendarEvent = require('../models/CalendarEvent');
 exports.getEvents = async (req, res) => {
   try {
     const { month, year } = req.query;
-    const query = {};
+    const query = { organization: req.orgId };
 
     if (month && year) {
       const start = new Date(year, month - 1, 1);
@@ -26,7 +26,7 @@ exports.getEvents = async (req, res) => {
   }
 };
 
-// GET /api/calendar/year?year=2026 — all events for a full year
+// GET /api/calendar/year?year=2026
 exports.getYearEvents = async (req, res) => {
   try {
     const year = parseInt(req.query.year) || new Date().getFullYear();
@@ -34,6 +34,7 @@ exports.getYearEvents = async (req, res) => {
     const end = new Date(year, 11, 31, 23, 59, 59);
 
     const events = await CalendarEvent.find({
+      organization: req.orgId,
       $or: [
         { startDate: { $gte: start, $lte: end } },
         { endDate: { $gte: start, $lte: end } },
@@ -49,7 +50,7 @@ exports.getYearEvents = async (req, res) => {
   }
 };
 
-// POST /api/calendar — HR only
+// POST /api/calendar
 exports.createEvent = async (req, res) => {
   try {
     const { title, description, type, startDate, endDate, color } = req.body;
@@ -70,6 +71,7 @@ exports.createEvent = async (req, res) => {
       endDate: new Date(endDate),
       color: color || getDefaultColor(type),
       createdBy: req.user._id,
+      organization: req.orgId,
     });
 
     const populated = await event.populate('createdBy', 'name');
@@ -79,11 +81,11 @@ exports.createEvent = async (req, res) => {
   }
 };
 
-// PUT /api/calendar/:id — HR only
+// PUT /api/calendar/:id
 exports.updateEvent = async (req, res) => {
   try {
-    const event = await CalendarEvent.findByIdAndUpdate(
-      req.params.id,
+    const event = await CalendarEvent.findOneAndUpdate(
+      { _id: req.params.id, organization: req.orgId },
       { ...req.body },
       { new: true, runValidators: true }
     ).populate('createdBy', 'name');
@@ -95,10 +97,10 @@ exports.updateEvent = async (req, res) => {
   }
 };
 
-// DELETE /api/calendar/:id — HR only
+// DELETE /api/calendar/:id
 exports.deleteEvent = async (req, res) => {
   try {
-    const event = await CalendarEvent.findByIdAndDelete(req.params.id);
+    const event = await CalendarEvent.findOneAndDelete({ _id: req.params.id, organization: req.orgId });
     if (!event) return res.status(404).json({ error: 'Event not found' });
     res.json({ message: 'Event deleted' });
   } catch (error) {

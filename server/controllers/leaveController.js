@@ -6,9 +6,9 @@ const { getIO } = require('../utils/socket');
 /**
  * Create a notification and emit it via Socket.IO to the recipient's room.
  */
-const createAndEmitNotification = async ({ recipient, sender, type, title, message, data = {} }) => {
+const createAndEmitNotification = async ({ recipient, sender, type, title, message, data = {}, orgId }) => {
   try {
-    const notification = await Notification.create({ recipient, sender, type, title, message, data });
+    const notification = await Notification.create({ recipient, sender, type, title, message, data, organization: orgId });
     const populated = await notification.populate('sender', 'name employeeId');
     
     console.log('✓ Notification created:', notification._id);
@@ -62,6 +62,7 @@ exports.applyLeave = async (req, res) => {
 
     const leave = new Leave({
       user: req.user._id,
+      organization: req.orgId,
       leaveType,
       startDate: start,
       endDate: end,
@@ -73,7 +74,7 @@ exports.applyLeave = async (req, res) => {
 
     // Notify all HR users that an employee applied for leave
     try {
-      const hrUsers = await User.find({ role: { $in: ['hr', 'manager', 'ceo'] }, status: 'active' }).select('_id');
+      const hrUsers = await User.find({ organization: req.orgId, role: { $in: ['hr', 'manager', 'ceo'] }, status: 'active' }).select('_id');
       const applicant = await User.findById(req.user._id).select('name employeeId department');
       
       console.log(`📋 Leave applied by ${applicant.name}, notifying ${hrUsers.length} HR users`);
@@ -87,6 +88,7 @@ exports.applyLeave = async (req, res) => {
             title: 'New Leave Application',
             message: `${applicant.name} applied for ${leaveType} leave from ${start.toDateString()} to ${end.toDateString()} (${totalDays} day${totalDays > 1 ? 's' : ''}).`,
             data: { leaveId: leave._id, employeeId: applicant.employeeId, department: applicant.department },
+            orgId: req.orgId,
           })
         )
       );
@@ -107,7 +109,7 @@ exports.applyLeave = async (req, res) => {
 exports.getMyLeaves = async (req, res) => {
   try {
     const { status, year } = req.query;
-    const query = { user: req.user._id };
+    const query = { user: req.user._id, organization: req.orgId };
 
     if (status) query.status = status;
     if (year) {
@@ -132,7 +134,7 @@ exports.getMyLeaves = async (req, res) => {
 exports.getAllLeaves = async (req, res) => {
   try {
     const { status, department, page = 1, limit = 20 } = req.query;
-    const query = {};
+    const query = { organization: req.orgId };
 
     if (status) query.status = status;
 
@@ -168,7 +170,7 @@ exports.updateLeaveStatus = async (req, res) => {
       return res.status(400).json({ error: 'Status must be approved or rejected' });
     }
 
-    const leave = await Leave.findById(req.params.id);
+    const leave = await Leave.findOne({ _id: req.params.id, organization: req.orgId });
     if (!leave) {
       return res.status(404).json({ error: 'Leave request not found' });
     }
@@ -199,6 +201,7 @@ exports.updateLeaveStatus = async (req, res) => {
         title: `Leave Request ${status === 'approved' ? 'Approved' : 'Rejected'}`,
         message: `Your ${leave.leaveType} leave request (${new Date(leave.startDate).toDateString()} – ${new Date(leave.endDate).toDateString()}) has been ${status} by ${approver.name}.${remarks ? ` Remark: ${remarks}` : ''}`,
         data: { leaveId: leave._id, status },
+        orgId: req.orgId,
       });
       console.log(`✓ Notification sent to employee ${leave.user} for leave ${status}`);
     } catch (notifErr) {

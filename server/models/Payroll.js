@@ -1,6 +1,11 @@
 const mongoose = require('mongoose');
 
 const payrollSchema = new mongoose.Schema({
+  organization: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Organization',
+    required: true,
+  },
   user: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
@@ -64,6 +69,6 @@ const payrollSchema = new mongoose.Schema({
 });
 
 // One payroll per user per month
-payrollSchema.index({ user: 1, month: 1, year: 1 }, { unique: true });
+payrollSchema.index({ organization: 1, user: 1, month: 1, year: 1 }, { unique: true });
 
 module.exports = mongoose.model('Payroll', payrollSchema);

@@ -23,7 +23,9 @@ api.interceptors.response.use(
     if (error.response?.status === 401) {
       localStorage.removeItem('hrms_token');
       localStorage.removeItem('hrms_user');
-      window.location.href = '/login';
+      // Redirect superadmin to their login page
+      const isSuperAdminRoute = window.location.pathname.startsWith('/superadmin');
+      window.location.href = isSuperAdminRoute ? '/superadmin/login' : '/login';
     }
     return Promise.reject(error);
   }

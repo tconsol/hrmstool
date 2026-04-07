@@ -1,0 +1,85 @@
+const Announcement = require('../models/Announcement');
+
+exports.getAnnouncements = async (req, res) => {
+  try {
+    const { page = 1, limit = 20, active } = req.query;
+    const query = { organization: req.orgId };
+
+    if (active === 'true') {
+      query.isActive = true;
+      query.$or = [{ expiresAt: null }, { expiresAt: { $gte: new Date() } }];
+    }
+
+    const total = await Announcement.countDocuments(query);
+    const announcements = await Announcement.find(query)
+      .populate('createdBy', 'name')
+      .sort({ createdAt: -1 })
+      .skip((page - 1) * limit)
+      .limit(parseInt(limit));
+
+    res.json({
+      announcements,
+      total,
+      page: parseInt(page),
+      pages: Math.ceil(total / limit),
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch announcements' });
+  }
+};
+
+exports.createAnnouncement = async (req, res) => {
+  try {
+    const { title, content, priority, targetRoles, expiresAt } = req.body;
+
+    if (!title || !content) {
+      return res.status(400).json({ error: 'Title and content are required' });
+    }
+
+    const announcement = new Announcement({
+      title,
+      content,
+      priority: priority || 'medium',
+      targetRoles: targetRoles || [],
+      expiresAt: expiresAt ? new Date(expiresAt) : null,
+      createdBy: req.user._id,
+      organization: req.orgId,
+    });
+
+    await announcement.save();
+    const populated = await announcement.populate('createdBy', 'name');
+    res.status(201).json(populated);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to create announcement' });
+  }
+};
+
+exports.updateAnnouncement = async (req, res) => {
+  try {
+    const announcement = await Announcement.findOneAndUpdate(
+      { _id: req.params.id, organization: req.orgId },
+      req.body,
+      { new: true, runValidators: true }
+    ).populate('createdBy', 'name');
+
+    if (!announcement) {
+      return res.status(404).json({ error: 'Announcement not found' });
+    }
+
+    res.json(announcement);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to update announcement' });
+  }
+};
+
+exports.deleteAnnouncement = async (req, res) => {
+  try {
+    const announcement = await Announcement.findOneAndDelete({ _id: req.params.id, organization: req.orgId });
+    if (!announcement) {
+      return res.status(404).json({ error: 'Announcement not found' });
+    }
+    res.json({ message: 'Announcement deleted' });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to delete announcement' });
+  }
+};

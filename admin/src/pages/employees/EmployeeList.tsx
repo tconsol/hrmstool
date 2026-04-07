@@ -154,7 +154,7 @@ const EmployeeList = () => {
                         <p className="text-xs text-dark-400">{emp.employeeId} • {emp.email}</p>
                       </div>
                     </td>
-                    <td className="hidden md:table-cell">{emp.department || 'N/A'}</td>
+                    <td className="hidden md:table-cell">{typeof emp.department === 'object' && emp.department ? (emp.department as any).name : (emp.department || 'N/A')}</td>
                     <td className="hidden lg:table-cell">{emp.designation || 'N/A'}</td>
                     <td className="hidden sm:table-cell">₹{emp.salary?.toLocaleString()}</td>
                     <td>

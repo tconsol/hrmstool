@@ -2,11 +2,14 @@ const User = require('../models/User');
 const Attendance = require('../models/Attendance');
 const Leave = require('../models/Leave');
 const Payroll = require('../models/Payroll');
+const Announcement = require('../models/Announcement');
+const Department = require('../models/Department');
 
 exports.getHRDashboard = async (req, res) => {
   try {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
+    const orgFilter = { organization: req.orgId };
 
     const [
       totalEmployees,
@@ -16,31 +19,42 @@ exports.getHRDashboard = async (req, res) => {
       currentMonth,
       departments,
     ] = await Promise.all([
-      User.countDocuments(),
-      User.countDocuments({ status: 'active' }),
-      Attendance.countDocuments({ date: today, status: { $in: ['present', 'late'] } }),
-      Leave.countDocuments({ status: 'pending' }),
+      User.countDocuments(orgFilter),
+      User.countDocuments({ ...orgFilter, status: 'active' }),
+      Attendance.countDocuments({ ...orgFilter, date: today, status: { $in: ['present', 'late'] } }),
+      Leave.countDocuments({ ...orgFilter, status: 'pending' }),
       Payroll.aggregate([
-        { $match: { month: today.getMonth() + 1, year: today.getFullYear() } },
+        { $match: { organization: req.user.organization, month: today.getMonth() + 1, year: today.getFullYear() } },
         { $group: { _id: null, total: { $sum: '$netSalary' }, count: { $sum: 1 } } },
       ]),
       User.aggregate([
-        { $match: { status: 'active' } },
+        { $match: { organization: req.user.organization, status: 'active' } },
         { $group: { _id: '$department', count: { $sum: 1 } } },
         { $sort: { count: -1 } },
+        { $lookup: { from: 'departments', localField: '_id', foreignField: '_id', as: 'dept' } },
+        { $project: { _id: 1, count: 1, name: { $ifNull: [{ $arrayElemAt: ['$dept.name', 0] }, 'Unassigned'] } } },
       ]),
     ]);
 
-    // Recent leaves
-    const recentLeaves = await Leave.find({ status: 'pending' })
+    const recentLeaves = await Leave.find({ ...orgFilter, status: 'pending' })
       .populate('user', 'name employeeId department')
       .sort({ createdAt: -1 })
       .limit(5);
 
-    // Recent employees
-    const recentEmployees = await User.find()
+    const recentEmployees = await User.find(orgFilter)
       .select('name employeeId department joiningDate status')
+      .populate('department', 'name')
       .sort({ createdAt: -1 })
+      .limit(5);
+
+    // Get active announcements
+    const announcements = await Announcement.find({
+      organization: req.orgId,
+      isActive: true,
+      $or: [{ expiresAt: null }, { expiresAt: { $gte: new Date() } }],
+    })
+      .populate('createdBy', 'name')
+      .sort({ priority: -1, createdAt: -1 })
       .limit(5);
 
     res.json({
@@ -55,6 +69,7 @@ exports.getHRDashboard = async (req, res) => {
       departments,
       recentLeaves,
       recentEmployees,
+      announcements,
     });
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch dashboard data' });
@@ -65,8 +80,8 @@ exports.getEmployeeDashboard = async (req, res) => {
   try {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-
     const userId = req.user._id;
+    const orgFilter = { organization: req.orgId };
 
     const [
       todayAttendance,
@@ -75,19 +90,34 @@ exports.getEmployeeDashboard = async (req, res) => {
       recentLeaves,
       latestPayroll,
     ] = await Promise.all([
-      Attendance.findOne({ user: userId, date: today }),
+      Attendance.findOne({ ...orgFilter, user: userId, date: today }),
       User.findById(userId).select('leaveBalance'),
       Attendance.countDocuments({
+        ...orgFilter,
         user: userId,
         date: { $gte: new Date(today.getFullYear(), today.getMonth(), 1) },
         status: { $in: ['present', 'late'] },
       }),
-      Leave.find({ user: userId })
+      Leave.find({ ...orgFilter, user: userId })
         .sort({ createdAt: -1 })
         .limit(3),
-      Payroll.findOne({ user: userId })
+      Payroll.findOne({ ...orgFilter, user: userId })
         .sort({ year: -1, month: -1 }),
     ]);
+
+    // Get active announcements for this user's role
+    const announcements = await Announcement.find({
+      organization: req.orgId,
+      isActive: true,
+      $or: [
+        { targetRoles: { $size: 0 } },
+        { targetRoles: req.user.role },
+      ],
+      $or: [{ expiresAt: null }, { expiresAt: { $gte: new Date() } }],
+    })
+      .populate('createdBy', 'name')
+      .sort({ priority: -1, createdAt: -1 })
+      .limit(5);
 
     res.json({
       todayAttendance,
@@ -95,6 +125,7 @@ exports.getEmployeeDashboard = async (req, res) => {
       monthAttendance,
       recentLeaves,
       latestPayroll,
+      announcements,
     });
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch dashboard data' });

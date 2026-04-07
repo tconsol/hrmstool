@@ -2,9 +2,13 @@ const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 
 const userSchema = new mongoose.Schema({
+  organization: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Organization',
+    required: true,
+  },
   employeeId: {
     type: String,
-    unique: true,
     required: true,
   },
   name: {
@@ -15,7 +19,6 @@ const userSchema = new mongoose.Schema({
   email: {
     type: String,
     required: true,
-    unique: true,
     lowercase: true,
     trim: true,
   },
@@ -105,5 +108,8 @@ userSchema.methods.toJSON = function () {
   delete user.password;
   return user;
 };
+
+userSchema.index({ organization: 1, email: 1 }, { unique: true });
+userSchema.index({ organization: 1, employeeId: 1 }, { unique: true });
 
 module.exports = mongoose.model('User', userSchema);

@@ -96,7 +96,7 @@ const MyProfile = () => {
           </div>
           <div>
             <label className="text-xs font-medium text-dark-500 uppercase">Department</label>
-            <p className="text-sm text-white mt-1">{user.department || 'N/A'}</p>
+            <p className="text-sm text-white mt-1">{typeof user.department === 'object' && user.department ? (user.department as any).name : (user.department || 'N/A')}</p>
           </div>
           <div>
             <label className="text-xs font-medium text-dark-500 uppercase">Designation</label>

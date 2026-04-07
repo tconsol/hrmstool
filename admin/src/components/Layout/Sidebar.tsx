@@ -1,7 +1,7 @@
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useNotifications } from '../../context/NotificationContext';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import {
   LayoutDashboard,
   Users,
@@ -18,6 +18,15 @@ import {
   FileText,
   Briefcase,
   User,
+  Building2,
+  CalendarHeart,
+  Megaphone,
+  Receipt,
+  Clock,
+  Monitor,
+  GraduationCap,
+  Settings,
+  Search,
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -52,6 +61,7 @@ const Sidebar = ({ isOpen, onClose, isCollapsed = false, onToggleCollapse }: Sid
   const isManagement = ['hr', 'manager', 'ceo'].includes(user?.role ?? '');
   const isHROnly = user?.role === 'hr';
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({ 'My Space': true });
+  const [search, setSearch] = useState('');
 
   const toggleGroup = (label: string) => {
     setOpenGroups(prev => ({ ...prev, [label]: !prev[label] }));
@@ -82,6 +92,13 @@ const Sidebar = ({ isOpen, onClose, isCollapsed = false, onToggleCollapse }: Sid
         { to: '/leaves', label: 'Leave Requests', icon: CalendarOff },
         { to: '/payroll', label: 'Payroll', icon: Wallet },
         { to: '/documents', label: 'Documents', icon: FileText },
+        { to: '/departments', label: 'Departments', icon: Building2 },
+        { to: '/holidays', label: 'Holidays', icon: CalendarHeart },
+        { to: '/announcements', label: 'Announcements', icon: Megaphone },
+        { to: '/expenses', label: 'Expenses', icon: Receipt },
+        { to: '/shifts', label: 'Shifts', icon: Clock },
+        { to: '/assets', label: 'Assets', icon: Monitor },
+        { to: '/training', label: 'Training', icon: GraduationCap },
       ],
     },
     {
@@ -91,11 +108,14 @@ const Sidebar = ({ isOpen, onClose, isCollapsed = false, onToggleCollapse }: Sid
         { to: '/my-attendance', label: 'My Attendance', icon: CalendarCheck },
         { to: '/my-leaves', label: 'My Leaves', icon: CalendarOff },
         { to: '/my-salary', label: 'My Salary', icon: Wallet },
+        { to: '/my-expenses', label: 'My Expenses', icon: Receipt },
+        { to: '/my-assets', label: 'My Assets', icon: Monitor },
         { to: '/profile', label: 'My Profile', icon: UserCircle },
       ],
     },
     { to: '/calendar', label: 'Calendar', icon: CalendarDays },
     { to: '/notifications', label: 'Notifications', icon: Bell, badge: unreadCount },
+    { to: '/organization', label: 'Organization', icon: Settings },
   ];
 
   const managerItems: SidebarItem[] = [
@@ -108,6 +128,11 @@ const Sidebar = ({ isOpen, onClose, isCollapsed = false, onToggleCollapse }: Sid
         { to: '/attendance', label: 'Attendance', icon: CalendarCheck },
         { to: '/leaves', label: 'Leave Requests', icon: CalendarOff },
         { to: '/payroll', label: 'Payroll', icon: Wallet },
+        { to: '/departments', label: 'Departments', icon: Building2 },
+        { to: '/holidays', label: 'Holidays', icon: CalendarHeart },
+        { to: '/announcements', label: 'Announcements', icon: Megaphone },
+        { to: '/expenses', label: 'Expenses', icon: Receipt },
+        { to: '/training', label: 'Training', icon: GraduationCap },
       ],
     },
     {
@@ -117,6 +142,8 @@ const Sidebar = ({ isOpen, onClose, isCollapsed = false, onToggleCollapse }: Sid
         { to: '/my-attendance', label: 'My Attendance', icon: CalendarCheck },
         { to: '/my-leaves', label: 'My Leaves', icon: CalendarOff },
         { to: '/my-salary', label: 'My Salary', icon: Wallet },
+        { to: '/my-expenses', label: 'My Expenses', icon: Receipt },
+        { to: '/my-assets', label: 'My Assets', icon: Monitor },
         { to: '/profile', label: 'My Profile', icon: UserCircle },
       ],
     },
@@ -133,9 +160,12 @@ const Sidebar = ({ isOpen, onClose, isCollapsed = false, onToggleCollapse }: Sid
         { to: '/my-attendance', label: 'My Attendance', icon: CalendarCheck },
         { to: '/my-leaves', label: 'My Leaves', icon: CalendarOff },
         { to: '/my-salary', label: 'My Salary', icon: Wallet },
+        { to: '/my-expenses', label: 'My Expenses', icon: Receipt },
+        { to: '/my-assets', label: 'My Assets', icon: Monitor },
         { to: '/profile', label: 'My Profile', icon: UserCircle },
       ],
     },
+    { to: '/training', label: 'Training', icon: GraduationCap },
     { to: '/calendar', label: 'Calendar', icon: CalendarDays },
     { to: '/notifications', label: 'Notifications', icon: Bell, badge: unreadCount },
   ];
@@ -143,6 +173,22 @@ const Sidebar = ({ isOpen, onClose, isCollapsed = false, onToggleCollapse }: Sid
   let items: SidebarItem[] = employeeItems;
   if (user?.role === 'hr') items = hrItems;
   else if (isManagement) items = managerItems;
+
+  // Filter items by search query
+  const filteredItems = useMemo(() => {
+    if (!search.trim()) return items;
+    const q = search.toLowerCase();
+    const result: SidebarItem[] = [];
+    for (const item of items) {
+      if (isGroup(item)) {
+        const matched = item.links.filter(l => l.label.toLowerCase().includes(q));
+        if (matched.length > 0) result.push({ ...item, links: matched });
+      } else {
+        if ((item as LinkItem).label.toLowerCase().includes(q)) result.push(item);
+      }
+    }
+    return result;
+  }, [items, search]);
 
   const renderLink = (link: LinkItem, indent = false) => (
     <NavLink
@@ -207,9 +253,25 @@ const Sidebar = ({ isOpen, onClose, isCollapsed = false, onToggleCollapse }: Sid
           </div>
         </div>
 
+        {/* Search */}
+        {!isCollapsed && (
+          <div className="px-3 pt-3 pb-1 flex-shrink-0">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-dark-500" size={14} />
+              <input
+                type="text"
+                placeholder="Search menu..."
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                className="w-full pl-8 pr-3 py-2 text-xs bg-dark-700/50 border border-dark-600/50 rounded-lg text-gray-300 placeholder-dark-500 focus:outline-none focus:border-brand-500/50"
+              />
+            </div>
+          </div>
+        )}
+
         {/* Navigation — scrollable */}
         <nav className={`flex-1 overflow-y-auto overflow-x-hidden ${isCollapsed ? 'px-2 py-4' : 'px-3 py-4'} space-y-1`}>
-          {items.map((item, idx) => {
+          {filteredItems.map((item, idx) => {
             if (isGroup(item)) {
               const expanded = openGroups[item.label] ?? false;
               if (isCollapsed) {
@@ -232,7 +294,7 @@ const Sidebar = ({ isOpen, onClose, isCollapsed = false, onToggleCollapse }: Sid
                       className={`text-dark-500 transition-transform duration-200 ${expanded ? 'rotate-180' : ''}`}
                     />
                   </button>
-                  <div className={`overflow-hidden transition-all duration-200 ${expanded ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'}`}>
+                  <div className={`overflow-hidden transition-all duration-200 ${expanded ? 'max-h-[600px] opacity-100' : 'max-h-0 opacity-0'}`}>
                     {item.links.map(link => renderLink(link, true))}
                   </div>
                 </div>

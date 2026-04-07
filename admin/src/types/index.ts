@@ -1,13 +1,49 @@
+export interface Organization {
+  _id: string;
+  name: string;
+  slug: string;
+  email: string;
+  phone: string;
+  address: string;
+  logo: string;
+  website: string;
+  industry: string;
+  employeeCount: string;
+  subscription: {
+    plan: string;
+    startDate: string;
+    endDate: string;
+    maxEmployees: number;
+  };
+  settings: {
+    fiscalYearStart: number;
+    workingDays: string[];
+    shiftStartTime: string;
+    shiftEndTime: string;
+    lateThresholdMinutes: number;
+    currency: string;
+    dateFormat: string;
+    leavePolicy: {
+      casual: number;
+      sick: number;
+      paid: number;
+    };
+  };
+  isActive: boolean;
+  createdAt: string;
+}
+
 export interface User {
   _id: string;
   employeeId: string;
   name: string;
   email: string;
   phone: string;
-  role: 'hr' | 'manager' | 'ceo' | 'employee';
+  role: 'hr' | 'manager' | 'ceo' | 'employee' | 'superadmin';
   department: string;
   designation: string;
   salary: number;
+  organization: Organization | string;
   ctc: {
     annualCTC: number;
     basic: number;
@@ -110,4 +146,95 @@ export interface PaginatedResponse<T> {
   page: number;
   pages: number;
   [key: string]: T[] | number;
+}
+
+export interface Department {
+  _id: string;
+  name: string;
+  code: string;
+  description: string;
+  head: User | string | null;
+  isActive: boolean;
+  createdAt: string;
+}
+
+export interface Holiday {
+  _id: string;
+  name: string;
+  date: string;
+  type: 'national' | 'company' | 'optional';
+  description: string;
+  createdAt: string;
+}
+
+export interface Announcement {
+  _id: string;
+  title: string;
+  content: string;
+  priority: 'low' | 'medium' | 'high' | 'urgent';
+  targetRoles: string[];
+  isActive: boolean;
+  expiresAt: string | null;
+  createdBy: User | string;
+  createdAt: string;
+}
+
+export interface Expense {
+  _id: string;
+  employee: User | string;
+  category: 'travel' | 'food' | 'equipment' | 'office_supplies' | 'training' | 'internet' | 'phone' | 'other';
+  amount: number;
+  description: string;
+  receipt: string;
+  date: string;
+  status: 'pending' | 'approved' | 'rejected' | 'reimbursed';
+  approvedBy: User | string | null;
+  remarks: string;
+  createdAt: string;
+}
+
+export interface Shift {
+  _id: string;
+  name: string;
+  startTime: string;
+  endTime: string;
+  graceMinutes: number;
+  isDefault: boolean;
+  createdAt: string;
+}
+
+export interface Asset {
+  _id: string;
+  name: string;
+  type: 'laptop' | 'phone' | 'monitor' | 'keyboard' | 'mouse' | 'headset' | 'chair' | 'desk' | 'id_card' | 'other';
+  brand: string;
+  model: string;
+  serialNumber: string;
+  purchaseDate: string;
+  purchaseCost: number;
+  warrantyExpiry: string;
+  assignedTo: User | string | null;
+  assignedDate: string | null;
+  status: 'available' | 'assigned' | 'maintenance' | 'retired';
+  notes: string;
+  createdAt: string;
+}
+
+export interface Training {
+  _id: string;
+  title: string;
+  description: string;
+  type: 'online' | 'classroom' | 'workshop' | 'certification' | 'onboarding';
+  trainer: string;
+  startDate: string;
+  endDate: string;
+  maxParticipants: number;
+  participants: Array<{
+    user: User | string;
+    status: 'enrolled' | 'completed' | 'dropped';
+    enrolledAt: string;
+  }>;
+  status: 'upcoming' | 'ongoing' | 'completed' | 'cancelled';
+  createdBy: User | string;
+  createdAt: string;
 }

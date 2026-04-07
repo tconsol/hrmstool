@@ -13,6 +13,7 @@ exports.checkIn = async (req, res) => {
     const today = getToday();
     const existingRecord = await Attendance.findOne({
       user: req.user._id,
+      organization: req.orgId,
       date: today,
     });
 
@@ -28,6 +29,7 @@ exports.checkIn = async (req, res) => {
 
     const attendance = existingRecord || new Attendance({
       user: req.user._id,
+      organization: req.orgId,
       date: today,
     });
 
@@ -50,6 +52,7 @@ exports.checkOut = async (req, res) => {
     const today = getToday();
     const attendance = await Attendance.findOne({
       user: req.user._id,
+      organization: req.orgId,
       date: today,
     });
 
@@ -75,7 +78,7 @@ exports.checkOut = async (req, res) => {
 exports.getMyAttendance = async (req, res) => {
   try {
     const { month, year } = req.query;
-    const query = { user: req.user._id };
+    const query = { user: req.user._id, organization: req.orgId };
 
     if (month && year) {
       const startDate = new Date(year, month - 1, 1);
@@ -95,6 +98,7 @@ exports.getTodayStatus = async (req, res) => {
     const today = getToday();
     const attendance = await Attendance.findOne({
       user: req.user._id,
+      organization: req.orgId,
       date: today,
     });
     res.json(attendance || { status: 'not-marked' });
@@ -106,7 +110,7 @@ exports.getTodayStatus = async (req, res) => {
 exports.getAllAttendance = async (req, res) => {
   try {
     const { date, department, status, page = 1, limit = 20 } = req.query;
-    const query = {};
+    const query = { organization: req.orgId };
 
     if (date) {
       const targetDate = new Date(date);
@@ -151,6 +155,7 @@ exports.markAttendance = async (req, res) => {
 
     let attendance = await Attendance.findOne({
       user: userId,
+      organization: req.orgId,
       date: targetDate,
     });
 
@@ -168,6 +173,7 @@ exports.markAttendance = async (req, res) => {
     } else {
       attendance = new Attendance({
         user: userId,
+        organization: req.orgId,
         date: targetDate,
         status,
         notes,
@@ -197,6 +203,7 @@ exports.getAttendanceSummary = async (req, res) => {
     const summary = await Attendance.aggregate([
       {
         $match: {
+          organization: req.user.organization,
           date: { $gte: startDate, $lte: endDate },
         },
       },

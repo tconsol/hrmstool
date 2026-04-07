@@ -9,18 +9,18 @@ exports.generatePayroll = async (req, res) => {
 
     let employees;
     if (employeeId) {
-      const emp = await User.findById(employeeId);
+      const emp = await User.findOne({ _id: employeeId, organization: req.orgId });
       if (!emp) return res.status(404).json({ error: 'Employee not found' });
       employees = [emp];
     } else {
-      employees = await User.find({ status: 'active' });
+      employees = await User.find({ organization: req.orgId, status: 'active' });
     }
 
     const results = [];
 
     for (const emp of employees) {
       // Check if payroll already exists
-      const existing = await Payroll.findOne({ user: emp._id, month, year });
+      const existing = await Payroll.findOne({ user: emp._id, organization: req.orgId, month, year });
       if (existing) {
         results.push({ employee: emp.name, status: 'already exists' });
         continue;
@@ -45,6 +45,7 @@ exports.generatePayroll = async (req, res) => {
 
       const payroll = new Payroll({
         user: emp._id,
+        organization: req.orgId,
         month,
         year,
         baseSalary: emp.salary,
@@ -76,7 +77,7 @@ exports.generatePayroll = async (req, res) => {
 exports.getPayrollList = async (req, res) => {
   try {
     const { month, year, status, page = 1, limit = 20 } = req.query;
-    const query = {};
+    const query = { organization: req.orgId };
 
     if (month) query.month = parseInt(month);
     if (year) query.year = parseInt(year);
@@ -103,7 +104,7 @@ exports.getPayrollList = async (req, res) => {
 exports.getMyPayroll = async (req, res) => {
   try {
     const { year } = req.query;
-    const query = { user: req.user._id };
+    const query = { user: req.user._id, organization: req.orgId };
 
     if (year) query.year = parseInt(year);
 
@@ -118,8 +119,8 @@ exports.updatePaymentStatus = async (req, res) => {
   try {
     const { status } = req.body;
 
-    const payroll = await Payroll.findByIdAndUpdate(
-      req.params.id,
+    const payroll = await Payroll.findOneAndUpdate(
+      { _id: req.params.id, organization: req.orgId },
       {
         paymentStatus: status,
         paymentDate: status === 'paid' ? new Date() : null,
@@ -139,7 +140,7 @@ exports.updatePaymentStatus = async (req, res) => {
 
 exports.downloadPayslip = async (req, res) => {
   try {
-    const payroll = await Payroll.findById(req.params.id)
+    const payroll = await Payroll.findOne({ _id: req.params.id, organization: req.orgId })
       .populate('user', 'name email employeeId department designation joiningDate');
 
     if (!payroll) {
@@ -165,7 +166,7 @@ exports.downloadPayslip = async (req, res) => {
 exports.getPayrollSummary = async (req, res) => {
   try {
     const { month, year } = req.query;
-    const query = {};
+    const query = { organization: req.orgId };
     if (month) query.month = parseInt(month);
     if (year) query.year = parseInt(year);
 

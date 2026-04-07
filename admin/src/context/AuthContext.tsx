@@ -6,6 +6,8 @@ interface AuthContextType {
   user: User | null;
   token: string | null;
   login: (email: string, password: string) => Promise<void>;
+  superAdminLogin: (email: string, password: string) => Promise<void>;
+  register: (data: { orgName: string; name: string; email: string; password: string; phone?: string; industry?: string }) => Promise<void>;
   logout: () => void;
   loading: boolean;
   updateUser: (user: User) => void;
@@ -39,6 +41,26 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setUser(authUser);
   };
 
+  const superAdminLogin = async (email: string, password: string) => {
+    const response = await api.post('/superadmin/login', { email, password });
+    const { token: authToken, user: authUser } = response.data;
+
+    localStorage.setItem('hrms_token', authToken);
+    localStorage.setItem('hrms_user', JSON.stringify(authUser));
+    setToken(authToken);
+    setUser(authUser);
+  };
+
+  const register = async (data: { orgName: string; name: string; email: string; password: string; phone?: string; industry?: string }) => {
+    const response = await api.post('/auth/register', data);
+    const { token: authToken, user: authUser } = response.data;
+
+    localStorage.setItem('hrms_token', authToken);
+    localStorage.setItem('hrms_user', JSON.stringify(authUser));
+    setToken(authToken);
+    setUser(authUser);
+  };
+
   const logout = () => {
     localStorage.removeItem('hrms_token');
     localStorage.removeItem('hrms_user');
@@ -52,7 +74,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, login, logout, loading, updateUser }}>
+    <AuthContext.Provider value={{ user, token, login, superAdminLogin, register, logout, loading, updateUser }}>
       {children}
     </AuthContext.Provider>
   );

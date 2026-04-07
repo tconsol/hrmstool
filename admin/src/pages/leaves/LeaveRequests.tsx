@@ -120,7 +120,7 @@ const LeaveRequests = () => {
                     <td>
                       <div>
                         <p className="font-medium text-white">{leave.user?.name || 'N/A'}</p>
-                        <p className="text-xs text-dark-400">{leave.user?.department}</p>
+                        <p className="text-xs text-dark-400">{typeof leave.user?.department === 'object' && leave.user?.department ? (leave.user.department as any).name : (leave.user?.department || 'N/A')}</p>
                       </div>
                     </td>
                     <td className="capitalize">{leave.leaveType}</td>

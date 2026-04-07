@@ -4,7 +4,9 @@ import { AuthProvider } from './context/AuthContext';
 import { NotificationProvider } from './context/NotificationContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import Layout from './components/Layout/Layout';
+import SuperAdminLayout from './components/Layout/SuperAdminLayout';
 import Login from './pages/Login';
+import Register from './pages/Register';
 import Dashboard from './pages/dashboard/Dashboard';
 import EmployeeList from './pages/employees/EmployeeList';
 import EmployeeForm from './pages/employees/EmployeeForm';
@@ -19,14 +21,51 @@ import NotificationsPage from './pages/notifications/NotificationsPage';
 import CompanyCalendar from './pages/calendar/CompanyCalendar';
 import DocumentList from './pages/documents/DocumentList';
 import DocumentCreate from './pages/documents/DocumentCreate';
+import DepartmentList from './pages/departments/DepartmentList';
+import HolidayList from './pages/holidays/HolidayList';
+import AnnouncementList from './pages/announcements/AnnouncementList';
+import MyExpenses from './pages/expenses/MyExpenses';
+import ExpenseManagement from './pages/expenses/ExpenseManagement';
+import ShiftList from './pages/shifts/ShiftList';
+import AssetList from './pages/assets/AssetList';
+import MyAssets from './pages/assets/MyAssets';
+import TrainingList from './pages/training/TrainingList';
+import OrganizationSettings from './pages/organization/OrganizationSettings';
+
+// Super Admin Pages
+import SuperAdminLogin from './pages/superadmin/SuperAdminLogin';
+import SuperAdminDashboard from './pages/superadmin/SuperAdminDashboard';
+import OrganizationManagement from './pages/superadmin/OrganizationManagement';
+import SubscriptionManagement from './pages/superadmin/SubscriptionManagement';
+import RevenueDashboard from './pages/superadmin/RevenueDashboard';
+import AuditLog from './pages/superadmin/AuditLog';
+import SystemSettings from './pages/superadmin/SystemSettings';
 
 function App() {
   return (
     <AuthProvider>
       <NotificationProvider>
-        <BrowserRouter>
+        <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
           <Routes>
             <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="/superadmin/login" element={<SuperAdminLogin />} />
+
+          {/* Super Admin Routes */}
+          <Route
+            element={
+              <ProtectedRoute roles={['superadmin']}>
+                <SuperAdminLayout />
+              </ProtectedRoute>
+            }
+          >
+            <Route path="/superadmin/dashboard" element={<SuperAdminDashboard />} />
+            <Route path="/superadmin/organizations" element={<OrganizationManagement />} />
+            <Route path="/superadmin/subscriptions" element={<SubscriptionManagement />} />
+            <Route path="/superadmin/revenue" element={<RevenueDashboard />} />
+            <Route path="/superadmin/audit-log" element={<AuditLog />} />
+            <Route path="/superadmin/settings" element={<SystemSettings />} />
+          </Route>
 
           <Route
             element={
@@ -103,10 +142,71 @@ function App() {
               }
             />
 
+            {/* New Feature Routes (hr, ceo) */}
+            <Route
+              path="/departments"
+              element={
+                <ProtectedRoute roles={['hr', 'manager', 'ceo']}>
+                  <DepartmentList />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/holidays"
+              element={
+                <ProtectedRoute roles={['hr', 'manager', 'ceo']}>
+                  <HolidayList />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/announcements"
+              element={
+                <ProtectedRoute roles={['hr', 'manager', 'ceo']}>
+                  <AnnouncementList />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/expenses"
+              element={
+                <ProtectedRoute roles={['hr', 'manager', 'ceo']}>
+                  <ExpenseManagement />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/shifts"
+              element={
+                <ProtectedRoute roles={['hr']}>
+                  <ShiftList />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/assets"
+              element={
+                <ProtectedRoute roles={['hr']}>
+                  <AssetList />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/organization"
+              element={
+                <ProtectedRoute roles={['hr', 'ceo']}>
+                  <OrganizationSettings />
+                </ProtectedRoute>
+              }
+            />
+
             {/* Employee Routes */}
             <Route path="/my-attendance" element={<MyAttendance />} />
             <Route path="/my-leaves" element={<MyLeaves />} />
             <Route path="/my-salary" element={<MySalary />} />
+            <Route path="/my-expenses" element={<MyExpenses />} />
+            <Route path="/my-assets" element={<MyAssets />} />
+            <Route path="/training" element={<TrainingList />} />
             <Route path="/profile" element={<MyProfile />} />
 
             {/* Notifications — all roles */}

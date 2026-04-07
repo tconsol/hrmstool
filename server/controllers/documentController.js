@@ -25,7 +25,7 @@ exports.createDocument = async (req, res) => {
       return res.status(400).json({ error: 'Invalid document type' });
     }
 
-    const emp = await User.findById(employee);
+    const emp = await User.findOne({ _id: employee, organization: req.orgId });
     if (!emp) {
       return res.status(404).json({ error: 'Employee not found' });
     }
@@ -40,6 +40,7 @@ exports.createDocument = async (req, res) => {
 
     const document = new Document({
       employee,
+      organization: req.orgId,
       type,
       title,
       data: data || {},
@@ -66,7 +67,7 @@ exports.createDocument = async (req, res) => {
 exports.getDocuments = async (req, res) => {
   try {
     const { type, employee, status, page = 1, limit = 20 } = req.query;
-    const query = {};
+    const query = { organization: req.orgId };
 
     if (type) query.type = type;
     if (employee) query.employee = employee;
@@ -94,7 +95,7 @@ exports.getDocuments = async (req, res) => {
 
 exports.getDocument = async (req, res) => {
   try {
-    const document = await Document.findById(req.params.id)
+    const document = await Document.findOne({ _id: req.params.id, organization: req.orgId })
       .populate('employee', 'name email employeeId department designation joiningDate address salary ctc')
       .populate('generatedBy', 'name');
 
@@ -112,7 +113,7 @@ exports.updateDocument = async (req, res) => {
   try {
     const { data, companyName, companyAddress, companyLogo, status } = req.body;
 
-    const document = await Document.findById(req.params.id);
+    const document = await Document.findOne({ _id: req.params.id, organization: req.orgId });
     if (!document) {
       return res.status(404).json({ error: 'Document not found' });
     }
@@ -139,7 +140,7 @@ exports.updateDocument = async (req, res) => {
 
 exports.deleteDocument = async (req, res) => {
   try {
-    const document = await Document.findByIdAndDelete(req.params.id);
+    const document = await Document.findOneAndDelete({ _id: req.params.id, organization: req.orgId });
     if (!document) {
       return res.status(404).json({ error: 'Document not found' });
     }
@@ -151,7 +152,7 @@ exports.deleteDocument = async (req, res) => {
 
 exports.downloadDocument = async (req, res) => {
   try {
-    const document = await Document.findById(req.params.id)
+    const document = await Document.findOne({ _id: req.params.id, organization: req.orgId })
       .populate('employee', 'name email employeeId department designation joiningDate address salary ctc');
 
     if (!document) {
@@ -178,7 +179,7 @@ exports.downloadDocument = async (req, res) => {
 
 exports.downloadDocx = async (req, res) => {
   try {
-    const document = await Document.findById(req.params.id)
+    const document = await Document.findOne({ _id: req.params.id, organization: req.orgId })
       .populate('employee', 'name email employeeId department designation joiningDate address salary ctc');
 
     if (!document) {

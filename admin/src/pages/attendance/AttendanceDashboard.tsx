@@ -158,7 +158,7 @@ const AttendanceDashboard = () => {
                         <p className="text-xs text-dark-400">{record.user?.employeeId}</p>
                       </div>
                     </td>
-                    <td className="hidden md:table-cell">{record.user?.department || 'N/A'}</td>
+                    <td className="hidden md:table-cell">{typeof record.user?.department === 'object' && record.user?.department ? (record.user.department as any).name : (record.user?.department || 'N/A')}</td>
                     <td>
                       {record.checkIn
                         ? new Date(record.checkIn).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })

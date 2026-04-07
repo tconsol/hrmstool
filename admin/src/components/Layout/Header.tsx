@@ -217,10 +217,14 @@ const Header = ({ onMenuToggle }: HeaderProps) => {
               {user?.name?.[0]?.toUpperCase() ?? 'U'}
             </div>
             <div className="hidden sm:block text-left">
-              <p className="text-xs font-semibold text-white leading-tight truncate max-w-[100px]">
+              <p className="text-xs font-semibold text-white leading-tight truncate max-w-[120px]">
                 {user?.name}
               </p>
-              <p className="text-[10px] text-dark-400 capitalize">{user?.role}</p>
+              <p className="text-[10px] text-dark-400 capitalize">
+                {typeof user?.organization === 'object' && user?.organization
+                  ? (user.organization as any).name
+                  : user?.role}
+              </p>
             </div>
             <ChevronDown
               size={14}

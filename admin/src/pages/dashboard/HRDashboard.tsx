@@ -14,7 +14,7 @@ import type { DashboardStats, Leave, User } from '../../types';
 
 const HRDashboard = () => {
   const [stats, setStats] = useState<DashboardStats | null>(null);
-  const [departments, setDepartments] = useState<{ _id: string; count: number }[]>([]);
+  const [departments, setDepartments] = useState<{ _id: string; count: number; name: string }[]>([]);
   const [recentLeaves, setRecentLeaves] = useState<Leave[]>([]);
   const [recentEmployees, setRecentEmployees] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
@@ -113,7 +113,7 @@ const HRDashboard = () => {
               <div key={dept._id} className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="w-2 h-2 rounded-full bg-brand-500" />
-                  <span className="text-sm text-dark-300">{dept._id || 'Unassigned'}</span>
+                  <span className="text-sm text-dark-300">{dept.name || 'Unassigned'}</span>
                 </div>
                 <div className="flex items-center gap-3">
                   <div className="w-32 bg-dark-700 rounded-full h-2">
@@ -186,7 +186,7 @@ const HRDashboard = () => {
                 <tr key={emp._id}>
                   <td className="font-mono text-xs">{emp.employeeId}</td>
                   <td className="font-medium text-white">{emp.name}</td>
-                  <td>{emp.department || 'N/A'}</td>
+                  <td>{typeof emp.department === 'object' && emp.department ? (emp.department as any).name : (emp.department || 'N/A')}</td>
                   <td>{new Date(emp.joiningDate).toLocaleDateString()}</td>
                   <td>
                     <span className={emp.status === 'active' ? 'badge-success' : 'badge-danger'}>

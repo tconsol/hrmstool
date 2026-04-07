@@ -1,5 +1,6 @@
 const router = require('express').Router();
 const { auth, authorize } = require('../middleware/auth');
+const orgScope = require('../middleware/orgScope');
 const {
   createDocument,
   getDocuments,
@@ -11,6 +12,7 @@ const {
 } = require('../controllers/documentController');
 
 router.use(auth);
+router.use(orgScope);
 router.use(authorize('hr'));
 
 router.post('/', createDocument);

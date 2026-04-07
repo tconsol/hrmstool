@@ -1,5 +1,6 @@
 const router = require('express').Router();
 const { auth, authorize } = require('../middleware/auth');
+const orgScope = require('../middleware/orgScope');
 const validate = require('../middleware/validate');
 const {
   getEmployees,
@@ -13,6 +14,7 @@ const {
 } = require('../controllers/employeeController');
 
 router.use(auth);
+router.use(orgScope);
 
 router.get('/', authorize('hr', 'manager', 'ceo'), getEmployees);
 router.get('/departments', authorize('hr', 'manager', 'ceo'), getDepartments);

@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { auth, authorize } = require('../middleware/auth');
+const orgScope = require('../middleware/orgScope');
 const {
   getEvents,
   getYearEvents,
@@ -10,12 +11,12 @@ const {
 } = require('../controllers/calendarController');
 
 // All authenticated users can read
-router.get('/', auth, getEvents);
-router.get('/year', auth, getYearEvents);
+router.get('/', auth, orgScope, getEvents);
+router.get('/year', auth, orgScope, getYearEvents);
 
 // Only HR can create / edit / delete
-router.post('/', auth, authorize('hr'), createEvent);
-router.put('/:id', auth, authorize('hr'), updateEvent);
-router.delete('/:id', auth, authorize('hr'), deleteEvent);
+router.post('/', auth, orgScope, authorize('hr'), createEvent);
+router.put('/:id', auth, orgScope, authorize('hr'), updateEvent);
+router.delete('/:id', auth, orgScope, authorize('hr'), deleteEvent);
 
 module.exports = router;

@@ -1,5 +1,6 @@
 const router = require('express').Router();
 const { auth, authorize } = require('../middleware/auth');
+const orgScope = require('../middleware/orgScope');
 const {
   checkIn,
   checkOut,
@@ -11,6 +12,7 @@ const {
 } = require('../controllers/attendanceController');
 
 router.use(auth);
+router.use(orgScope);
 
 // Employee routes
 router.post('/check-in', checkIn);

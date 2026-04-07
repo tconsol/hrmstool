@@ -1,5 +1,6 @@
 const router = require('express').Router();
 const { auth } = require('../middleware/auth');
+const orgScope = require('../middleware/orgScope');
 const {
   getMyNotifications,
   markAsRead,
@@ -9,6 +10,7 @@ const {
 } = require('../controllers/notificationController');
 
 router.use(auth);
+router.use(orgScope);
 
 router.get('/', getMyNotifications);
 router.get('/unread-count', getUnreadCount);

@@ -1,6 +1,11 @@
 const mongoose = require('mongoose');
 
 const attendanceSchema = new mongoose.Schema({
+  organization: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Organization',
+    required: true,
+  },
   user: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
@@ -41,6 +46,6 @@ const attendanceSchema = new mongoose.Schema({
 });
 
 // Compound index: one record per user per day
-attendanceSchema.index({ user: 1, date: 1 }, { unique: true });
+attendanceSchema.index({ organization: 1, user: 1, date: 1 }, { unique: true });
 
 module.exports = mongoose.model('Attendance', attendanceSchema);

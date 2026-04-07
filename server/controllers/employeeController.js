@@ -26,7 +26,7 @@ exports.updateEmployeeValidation = [
 exports.getEmployees = async (req, res) => {
   try {
     const { search, department, status, role, page = 1, limit = 10 } = req.query;
-    const query = {};
+    const query = { organization: req.orgId };
 
     if (search) {
       query.$or = [
@@ -59,7 +59,7 @@ exports.getEmployees = async (req, res) => {
 
 exports.getEmployee = async (req, res) => {
   try {
-    const employee = await User.findById(req.params.id).select('-password');
+    const employee = await User.findOne({ _id: req.params.id, organization: req.orgId }).select('-password');
     if (!employee) {
       return res.status(404).json({ error: 'Employee not found' });
     }
@@ -73,16 +73,17 @@ exports.addEmployee = async (req, res) => {
   try {
     const { email } = req.body;
 
-    const existing = await User.findOne({ email });
+    const existing = await User.findOne({ email, organization: req.orgId });
     if (existing) {
       return res.status(400).json({ error: 'Email already registered' });
     }
 
-    const employeeId = await generateEmployeeId();
+    const employeeId = await generateEmployeeId(req.orgId);
 
     const employee = new User({
       ...req.body,
       employeeId,
+      organization: req.orgId,
     });
 
     await employee.save();
@@ -97,8 +98,8 @@ exports.updateEmployee = async (req, res) => {
     const updates = { ...req.body };
     delete updates.password; // Don't allow password update through this route
 
-    const employee = await User.findByIdAndUpdate(
-      req.params.id,
+    const employee = await User.findOneAndUpdate(
+      { _id: req.params.id, organization: req.orgId },
       updates,
       { new: true, runValidators: true }
     ).select('-password');
@@ -115,7 +116,7 @@ exports.updateEmployee = async (req, res) => {
 
 exports.toggleStatus = async (req, res) => {
   try {
-    const employee = await User.findById(req.params.id);
+    const employee = await User.findOne({ _id: req.params.id, organization: req.orgId });
     if (!employee) {
       return res.status(404).json({ error: 'Employee not found' });
     }
@@ -131,7 +132,7 @@ exports.toggleStatus = async (req, res) => {
 
 exports.getDepartments = async (req, res) => {
   try {
-    const departments = await User.distinct('department', { department: { $ne: '' } });
+    const departments = await User.distinct('department', { organization: req.orgId, department: { $ne: '' } });
     res.json(departments.filter(Boolean));
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch departments' });

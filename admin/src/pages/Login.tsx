@@ -1,5 +1,5 @@
 import { useState, FormEvent } from 'react';
-import { useNavigate, Navigate } from 'react-router-dom';
+import { useNavigate, Navigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Eye, EyeOff, Lock, Mail } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -13,6 +13,9 @@ const Login = () => {
   const navigate = useNavigate();
 
   if (user) {
+    if (user.role === 'superadmin') {
+      return <Navigate to="/superadmin/dashboard" replace />;
+    }
     return <Navigate to="/dashboard" replace />;
   }
 
@@ -107,27 +110,18 @@ const Login = () => {
             )}
           </button>
 
-          <div className="pt-4 border-t border-dark-700/50">
-            <p className="text-xs text-dark-500 text-center">
-              Demo Credentials
-            </p>
-            <div className="mt-2 grid grid-cols-2 gap-2">
-              <button
-                type="button"
-                onClick={() => { setEmail('admin@hrms.com'); setPassword('admin123'); }}
-                className="text-xs py-2 px-3 bg-dark-700/50 hover:bg-dark-700 rounded-lg text-dark-300 hover:text-white transition-all"
-              >
-                HR Admin
-              </button>
-              <button
-                type="button"
-                onClick={() => { setEmail('rahul@hrms.com'); setPassword('employee123'); }}
-                className="text-xs py-2 px-3 bg-dark-700/50 hover:bg-dark-700 rounded-lg text-dark-300 hover:text-white transition-all"
-              >
-                Employee
-              </button>
-            </div>
-          </div>
+          <p className="text-center text-sm text-dark-400">
+            Don't have an organization?{' '}
+            <Link to="/register" className="text-brand-400 hover:text-brand-300 font-medium transition-colors">
+              Register here
+            </Link>
+          </p>
+
+          <p className="text-center text-xs text-dark-500">
+            <Link to="/superadmin/login" className="text-dark-400 hover:text-red-400 transition-colors">
+              Super Admin Portal →
+            </Link>
+          </p>
         </form>
       </div>
     </div>

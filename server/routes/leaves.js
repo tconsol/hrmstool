@@ -1,5 +1,6 @@
 const router = require('express').Router();
 const { auth, authorize } = require('../middleware/auth');
+const orgScope = require('../middleware/orgScope');
 const {
   applyLeave,
   getMyLeaves,
@@ -9,6 +10,7 @@ const {
 } = require('../controllers/leaveController');
 
 router.use(auth);
+router.use(orgScope);
 
 // Employee routes
 router.post('/apply', applyLeave);

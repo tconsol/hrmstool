@@ -18,6 +18,15 @@ const notificationRoutes = require('./routes/notifications');
 const calendarRoutes = require('./routes/calendar');
 const debugRoutes = require('./routes/debug');
 const documentRoutes = require('./routes/documents');
+const organizationRoutes = require('./routes/organization');
+const departmentRoutes = require('./routes/departments');
+const holidayRoutes = require('./routes/holidays');
+const announcementRoutes = require('./routes/announcements');
+const expenseRoutes = require('./routes/expenses');
+const shiftRoutes = require('./routes/shifts');
+const assetRoutes = require('./routes/assets');
+const trainingRoutes = require('./routes/training');
+const superAdminRoutes = require('./routes/superAdmin');
 
 const app = express();
 const server = http.createServer(app);
@@ -76,6 +85,15 @@ app.use('/api/notifications', notificationRoutes);
 app.use('/api/calendar', calendarRoutes);
 app.use('/api/debug', debugRoutes);
 app.use('/api/documents', documentRoutes);
+app.use('/api/organization', organizationRoutes);
+app.use('/api/departments', departmentRoutes);
+app.use('/api/holidays', holidayRoutes);
+app.use('/api/announcements', announcementRoutes);
+app.use('/api/expenses', expenseRoutes);
+app.use('/api/shifts', shiftRoutes);
+app.use('/api/assets', assetRoutes);
+app.use('/api/training', trainingRoutes);
+app.use('/api/superadmin', superAdminRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {

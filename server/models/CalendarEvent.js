@@ -1,6 +1,11 @@
 const mongoose = require('mongoose');
 
 const calendarEventSchema = new mongoose.Schema({
+  organization: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Organization',
+    required: true,
+  },
   title: {
     type: String,
     required: true,
@@ -36,5 +41,7 @@ const calendarEventSchema = new mongoose.Schema({
 }, {
   timestamps: true,
 });
+
+calendarEventSchema.index({ organization: 1, startDate: 1 });
 
 module.exports = mongoose.model('CalendarEvent', calendarEventSchema);
