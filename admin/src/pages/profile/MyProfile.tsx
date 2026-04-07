@@ -85,7 +85,7 @@ const MyProfile = () => {
           </div>
           <div>
             <h2 className="text-xl font-semibold text-white">{user.name}</h2>
-            <p className="text-sm text-dark-400">{user.employeeId} • {user.designation || user.role}</p>
+            <p className="text-sm text-dark-400">{user.employeeId} • {typeof user.designation === 'object' && user.designation ? (user.designation as any).name : (user.designation || user.role)}</p>
           </div>
         </div>
 
@@ -100,7 +100,7 @@ const MyProfile = () => {
           </div>
           <div>
             <label className="text-xs font-medium text-dark-500 uppercase">Designation</label>
-            <p className="text-sm text-white mt-1">{user.designation || 'N/A'}</p>
+            <p className="text-sm text-white mt-1">{typeof user.designation === 'object' && user.designation ? (user.designation as any).name : (user.designation || 'N/A')}</p>
           </div>
           <div>
             <label className="text-xs font-medium text-dark-500 uppercase">Joining Date</label>

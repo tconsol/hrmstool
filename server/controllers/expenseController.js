@@ -114,7 +114,16 @@ exports.deleteExpense = async (req, res) => {
       return res.status(404).json({ error: 'Expense not found' });
     }
 
-    if (expense.status !== 'pending') {
+    // Check authorization: either manager/hr/ceo role or owner of the expense
+    const isManagement = ['hr', 'manager', 'ceo'].includes(req.user.role);
+    const isOwner = expense.user.toString() === req.user._id.toString();
+    
+    if (!isManagement && !isOwner) {
+      return res.status(403).json({ error: 'Unauthorized to delete this expense' });
+    }
+
+    // Non-management users can only delete pending expenses
+    if (!isManagement && expense.status !== 'pending') {
       return res.status(400).json({ error: 'Can only delete pending expenses' });
     }
 
@@ -128,7 +137,7 @@ exports.deleteExpense = async (req, res) => {
 exports.getExpenseSummary = async (req, res) => {
   try {
     const summary = await Expense.aggregate([
-      { $match: { organization: req.user.organization } },
+      { $match: { organization: req.orgId } },
       {
         $group: {
           _id: '$status',
@@ -139,7 +148,7 @@ exports.getExpenseSummary = async (req, res) => {
     ]);
 
     const byCategory = await Expense.aggregate([
-      { $match: { organization: req.user.organization, status: { $in: ['approved', 'reimbursed'] } } },
+      { $match: { organization: req.orgId, status: { $in: ['approved', 'reimbursed'] } } },
       {
         $group: {
           _id: '$category',

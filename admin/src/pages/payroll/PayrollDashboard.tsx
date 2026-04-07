@@ -177,7 +177,10 @@ const PayrollDashboard = () => {
                     <td>
                       <div>
                         <p className="font-medium text-white">{p.user?.name || 'N/A'}</p>
-                        <p className="text-xs text-dark-400">{p.user?.employeeId}</p>
+                        <p className="text-xs text-dark-400">
+                          {p.user?.employeeId}
+                          {typeof p.user?.department === 'object' && p.user?.department ? ` • ${(p.user.department as any).name}` : (p.user?.department ? ` • ${p.user.department}` : '')}
+                        </p>
                       </div>
                     </td>
                     <td>₹{p.baseSalary?.toLocaleString()}</td>

@@ -53,9 +53,30 @@ export default function TrainingList() {
 
   const handleEdit = (t: Training) => {
     setEditId(t._id);
+    let startDateStr = '';
+    let endDateStr = '';
+    
+    if (t.startDate) {
+      if (t.startDate.includes('T')) {
+        startDateStr = t.startDate.split('T')[0];
+      } else {
+        const date = new Date(t.startDate);
+        startDateStr = date.toISOString().slice(0, 10);
+      }
+    }
+    
+    if (t.endDate) {
+      if (t.endDate.includes('T')) {
+        endDateStr = t.endDate.split('T')[0];
+      } else {
+        const date = new Date(t.endDate);
+        endDateStr = date.toISOString().slice(0, 10);
+      }
+    }
+    
     setForm({
       title: t.title, description: t.description || '', type: t.type, trainer: t.trainer || '',
-      startDate: t.startDate.split('T')[0], endDate: t.endDate.split('T')[0],
+      startDate: startDateStr, endDate: endDateStr,
       maxParticipants: t.maxParticipants ? String(t.maxParticipants) : '',
     });
     setShowModal(true);

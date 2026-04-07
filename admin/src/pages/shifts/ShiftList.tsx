@@ -118,7 +118,10 @@ export default function ShiftList() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-dark-300 mb-1.5">Grace Minutes</label>
-                <input type="number" min={0} value={form.graceMinutes} onChange={e => setForm({ ...form, graceMinutes: e.target.value })} className="input-dark" />
+                <input type="number" min={0} value={form.graceMinutes} onChange={e => {
+                  const v = e.target.value === '' ? 0 : Number(e.target.value);
+                  setForm({ ...form, graceMinutes: v });
+                }} className="input-dark" />
               </div>
               <label className="flex items-center gap-2 text-sm text-dark-300">
                 <input type="checkbox" checked={form.isDefault} onChange={e => setForm({ ...form, isDefault: e.target.checked })} className="rounded border-dark-600 bg-dark-700 text-brand-500 focus:ring-brand-500" />

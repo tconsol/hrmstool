@@ -9,11 +9,15 @@ exports.generatePayroll = async (req, res) => {
 
     let employees;
     if (employeeId) {
-      const emp = await User.findOne({ _id: employeeId, organization: req.orgId });
+      const emp = await User.findOne({ _id: employeeId, organization: req.orgId })
+        .populate('department', 'name')
+        .populate('designation', 'name code');
       if (!emp) return res.status(404).json({ error: 'Employee not found' });
       employees = [emp];
     } else {
-      employees = await User.find({ organization: req.orgId, status: 'active' });
+      employees = await User.find({ organization: req.orgId, status: 'active' })
+        .populate('department', 'name')
+        .populate('designation', 'name code');
     }
 
     const results = [];

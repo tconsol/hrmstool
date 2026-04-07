@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import api from '../../services/api';
+import toast from 'react-hot-toast';
 import { Settings, CreditCard, Shield, Server } from 'lucide-react';
 
 interface PlanInfo {
@@ -26,17 +27,23 @@ interface SystemData {
 const SystemSettings = () => {
   const [data, setData] = useState<SystemData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     fetchSettings();
   }, []);
 
   const fetchSettings = async () => {
+    setLoading(true);
+    setError(null);
     try {
       const { data: settings } = await api.get('/superadmin/settings');
       setData(settings);
-    } catch (error) {
-      console.error('Failed to fetch settings:', error);
+    } catch (err: any) {
+      const errorMessage = err.response?.data?.error || 'Failed to fetch settings';
+      setError(errorMessage);
+      toast.error(errorMessage);
+      console.error('Failed to fetch settings:', err);
     } finally {
       setLoading(false);
     }
@@ -46,6 +53,20 @@ const SystemSettings = () => {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="w-8 h-8 border-2 border-red-500 border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="space-y-6">
+        <h1 className="text-2xl font-bold text-white">System Settings</h1>
+        <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-6 text-center">
+          <p className="text-red-400 font-medium mb-3">{error}</p>
+          <button onClick={fetchSettings} className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors">
+            Retry
+          </button>
+        </div>
       </div>
     );
   }

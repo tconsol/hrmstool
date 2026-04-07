@@ -22,6 +22,7 @@ export default function HolidayList() {
   useEffect(() => { fetchHolidays(); }, [year]);
 
   const fetchHolidays = async () => {
+    setLoading(true);
     try {
       const { data } = await api.get(`/holidays?year=${year}`);
       setHolidays(data);

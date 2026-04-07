@@ -146,6 +146,28 @@ export default function AnnouncementList() {
                   <input type="date" value={form.expiresAt} onChange={e => setForm({ ...form, expiresAt: e.target.value })} className="input-dark" />
                 </div>
               </div>
+              <div>
+                <label className="block text-sm font-medium text-dark-300 mb-2">Target Roles (leave empty for all)</label>
+                <div className="space-y-2">
+                  {['admin', 'hr', 'manager', 'employee'].map(role => (
+                    <label key={role} className="flex items-center gap-2 text-sm text-dark-300 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={form.targetRoles.includes(role)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setForm({ ...form, targetRoles: [...form.targetRoles, role] });
+                          } else {
+                            setForm({ ...form, targetRoles: form.targetRoles.filter(r => r !== role) });
+                          }
+                        }}
+                        className="rounded border-dark-600 bg-dark-700 text-brand-500 focus:ring-brand-500"
+                      />
+                      <span className="capitalize">{role}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
               <div className="flex justify-end gap-3 pt-2">
                 <button type="button" onClick={() => setShowModal(false)} className="btn-secondary">Cancel</button>
                 <button type="submit" className="btn-primary">{editId ? 'Update' : 'Publish'}</button>

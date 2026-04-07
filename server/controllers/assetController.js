@@ -11,7 +11,14 @@ exports.getAssets = async (req, res) => {
 
     const total = await Asset.countDocuments(query);
     const assets = await Asset.find(query)
-      .populate('assignedTo', 'name employeeId department')
+      .populate('assignedTo', 'name employeeId department designation')
+      .populate({
+        path: 'assignedTo',
+        populate: [
+          { path: 'department', select: 'name code' },
+          { path: 'designation', select: 'name code level' }
+        ]
+      })
       .sort({ createdAt: -1 })
       .skip((page - 1) * limit)
       .limit(parseInt(limit));
@@ -30,6 +37,14 @@ exports.getAssets = async (req, res) => {
 exports.getMyAssets = async (req, res) => {
   try {
     const assets = await Asset.find({ organization: req.orgId, assignedTo: req.user._id })
+      .populate('assignedTo', 'name employeeId department designation')
+      .populate({
+        path: 'assignedTo',
+        populate: [
+          { path: 'department', select: 'name code' },
+          { path: 'designation', select: 'name code level' }
+        ]
+      })
       .sort({ assignedDate: -1 });
     res.json(assets);
   } catch (error) {
@@ -67,9 +82,17 @@ exports.createAsset = async (req, res) => {
 
 exports.updateAsset = async (req, res) => {
   try {
+    const allowedFields = ['name', 'type', 'brand', 'model', 'serialNumber', 'status', 'assignedDate', 'notes'];
+    const updates = {};
+    allowedFields.forEach(field => {
+      if (field in req.body) {
+        updates[field] = req.body[field];
+      }
+    });
+
     const asset = await Asset.findOneAndUpdate(
       { _id: req.params.id, organization: req.orgId },
-      req.body,
+      updates,
       { new: true, runValidators: true }
     ).populate('assignedTo', 'name employeeId department');
 

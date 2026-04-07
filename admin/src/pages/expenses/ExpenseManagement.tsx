@@ -16,6 +16,7 @@ export default function ExpenseManagement() {
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [summary, setSummary] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [actionLoading, setActionLoading] = useState(false);
   const [statusFilter, setStatusFilter] = useState('');
   const [remarkModal, setRemarkModal] = useState<{ id: string; action: string } | null>(null);
   const [remarks, setRemarks] = useState('');
@@ -39,6 +40,7 @@ export default function ExpenseManagement() {
   };
 
   const handleAction = async (id: string, status: string) => {
+    setActionLoading(true);
     try {
       await api.patch(`/expenses/${id}/status`, { status, remarks });
       toast.success(`Expense ${status}`);
@@ -46,6 +48,7 @@ export default function ExpenseManagement() {
       setRemarks('');
       fetchAll();
     } catch (err: any) { toast.error(err.response?.data?.error || 'Failed'); }
+    finally { setActionLoading(false); }
   };
 
   if (loading) return <div className="flex items-center justify-center h-64"><div className="w-8 h-8 border-2 border-brand-500 border-t-transparent rounded-full animate-spin" /></div>;
@@ -114,7 +117,7 @@ export default function ExpenseManagement() {
                 <tr key={e._id}>
                   <td className="px-5 py-3 text-gray-300">{emp ? emp.name : '-'}</td>
                   <td className="px-5 py-3 text-dark-300 text-sm">{new Date(e.date).toLocaleDateString()}</td>
-                  <td className="px-5 py-3 text-dark-300 capitalize text-sm">{e.category.replace('_', ' ')}</td>
+                  <td className="px-5 py-3 text-dark-300 capitalize text-sm">{e.category.replace(/_/g, ' ')}</td>
                   <td className="px-5 py-3 text-gray-300 font-medium">₹{e.amount.toLocaleString()}</td>
                   <td className="px-5 py-3 text-dark-400 text-sm max-w-xs truncate">{e.description}</td>
                   <td className="px-5 py-3">
@@ -153,8 +156,8 @@ export default function ExpenseManagement() {
                 <textarea value={remarks} onChange={e => setRemarks(e.target.value)} rows={2} className="input-dark" placeholder="Optional remarks..." />
               </div>
               <div className="flex justify-end gap-3">
-                <button onClick={() => setRemarkModal(null)} className="btn-secondary">Cancel</button>
-                <button onClick={() => handleAction(remarkModal.id, remarkModal.action)} className={`px-4 py-2.5 text-white rounded-lg font-medium transition-colors ${remarkModal.action === 'approved' ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700'}`}>{remarkModal.action === 'approved' ? 'Approve' : 'Reject'}</button>
+                <button onClick={() => setRemarkModal(null)} className="btn-secondary" disabled={actionLoading}>Cancel</button>
+                <button onClick={() => handleAction(remarkModal.id, remarkModal.action)} disabled={actionLoading} className={`px-4 py-2.5 text-white rounded-lg font-medium transition-colors ${remarkModal.action === 'approved' ? 'bg-green-600 hover:bg-green-700 disabled:opacity-50' : 'bg-red-600 hover:bg-red-700 disabled:opacity-50'}`}>{actionLoading ? 'Processing...' : (remarkModal.action === 'approved' ? 'Approve' : 'Reject')}</button>
               </div>
             </div>
           </div>

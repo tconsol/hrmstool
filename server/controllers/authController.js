@@ -29,18 +29,25 @@ exports.registerValidation = [
 ];
 
 exports.register = async (req, res) => {
+  const session = await require('mongoose').startSession();
+  session.startTransaction();
+
   try {
     const { orgName, name, email, password, phone, industry, employeeCount } = req.body;
 
     // Check if organization name already exists
     const existingOrg = await Organization.findOne({ name: { $regex: new RegExp(`^${orgName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') } });
     if (existingOrg) {
+      await session.abortTransaction();
+      session.endSession();
       return res.status(400).json({ error: 'An organization with this name already exists. Please choose a different name.' });
     }
 
     // Check if email already exists
     const existingUser = await User.findOne({ email });
     if (existingUser) {
+      await session.abortTransaction();
+      session.endSession();
       return res.status(400).json({ error: 'Email already registered' });
     }
 
@@ -62,7 +69,7 @@ exports.register = async (req, res) => {
       industry,
       employeeCount: employeeCount || '1-10',
     });
-    await org.save();
+    await org.save({ session });
 
     // Create admin user (HR role)
     const employeeId = 'EMP0001';
@@ -75,11 +82,14 @@ exports.register = async (req, res) => {
       role: 'hr',
       organization: org._id,
     });
-    await user.save();
+    await user.save({ session });
 
     // Update org with creator
     org.createdBy = user._id;
-    await org.save();
+    await org.save({ session });
+
+    await session.commitTransaction();
+    session.endSession();
 
     const token = generateToken(user._id);
     res.status(201).json({
@@ -88,6 +98,8 @@ exports.register = async (req, res) => {
       organization: org,
     });
   } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
     console.error('Registration error:', error);
     res.status(500).json({ error: 'Server error during registration' });
   }
@@ -127,7 +139,10 @@ exports.login = async (req, res) => {
 
 exports.getMe = async (req, res) => {
   try {
-    const user = await User.findById(req.user._id).populate('organization', 'name slug logo settings');
+    const user = await User.findById(req.user._id)
+      .populate('organization', 'name slug logo settings')
+      .populate('department', 'name code')
+      .populate('designation', 'name code level');
     res.json(user);
   } catch (error) {
     res.status(500).json({ error: 'Server error' });

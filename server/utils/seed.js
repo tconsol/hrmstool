@@ -5,6 +5,7 @@ require('dotenv').config();
 const Organization = require('../models/Organization');
 const User = require('../models/User');
 const Department = require('../models/Department');
+const Designation = require('../models/Designation');
 const Holiday = require('../models/Holiday');
 const Announcement = require('../models/Announcement');
 const Shift = require('../models/Shift');
@@ -25,6 +26,7 @@ const seedData = async () => {
     await Organization.deleteMany({});
     await User.deleteMany({});
     await Department.deleteMany({});
+    await Designation.deleteMany({});
     await Holiday.deleteMany({});
     await Announcement.deleteMany({});
     await Shift.deleteMany({});
@@ -100,11 +102,31 @@ const seedData = async () => {
     await new Shift({ name: 'Morning Shift', startTime: '09:00', endTime: '18:00', graceMinutes: 15, isDefault: true, organization: org1._id }).save();
     await new Shift({ name: 'Evening Shift', startTime: '14:00', endTime: '23:00', graceMinutes: 10, organization: org1._id }).save();
 
-    // NOTE: department stored as NAME string (not ObjectId)
+    // Create designations for org1
+    const org1DesignationData = [
+      { name: 'HR Manager',         code: 'HRMGR',  level: 'manager',   description: 'Manages HR operations' },
+      { name: 'HR Executive',       code: 'HREXEC', level: 'entry',     description: 'HR support and coordination' },
+      { name: 'Senior Developer',   code: 'SDEV',   level: 'senior',    description: 'Senior software developer' },
+      { name: 'Backend Developer',  code: 'BDEV',   level: 'junior',    description: 'Backend development' },
+      { name: 'Frontend Developer', code: 'FDEV',   level: 'junior',    description: 'Frontend development' },
+      { name: 'UI/UX Designer',     code: 'DESIGNER', level: 'senior',  description: 'UI and UX design' },
+      { name: 'Graphic Designer',   code: 'GDESIGNER', level: 'entry',  description: 'Graphic design' },
+      { name: 'Marketing Manager',  code: 'MKTMGR', level: 'manager',   description: 'Marketing management' },
+      { name: 'Finance Analyst',    code: 'FANALYST', level: 'junior',  description: 'Financial analysis' },
+      { name: 'Sales Executive',    code: 'SALEXEC', level: 'entry',    description: 'Sales and business development' },
+    ];
+    const org1Designations = [];
+    for (const d of org1DesignationData) {
+      const des = new Designation({ ...d, organization: org1._id, isActive: true });
+      await des.save();
+      org1Designations.push(des);
+    }
+
+    // HR staff
     const org1HR = [];
     const org1HRData = [
-      { employeeId: 'EMP0001', name: 'Rajesh Kumar', email: 'admin@hrms.com', password: 'admin123', phone: '9876543210', designation: 'HR Manager',  department: 'Human Resources', salary: 85000, role: 'hr' },
-      { employeeId: 'EMP0002', name: 'Neha Singh',   email: 'hr@hrms.com',   password: 'hr123456', phone: '9876543220', designation: 'HR Executive', department: 'Human Resources', salary: 60000, role: 'hr' },
+      { employeeId: 'EMP0001', name: 'Rajesh Kumar', email: 'admin@hrms.com', password: 'admin123', phone: '9876543210', designation: org1Designations[0]._id, department: org1Depts[5]._id, salary: 85000, role: 'hr' },
+      { employeeId: 'EMP0002', name: 'Neha Singh',   email: 'hr@hrms.com',   password: 'hr123456', phone: '9876543220', designation: org1Designations[1]._id, department: org1Depts[5]._id, salary: 60000, role: 'hr' },
     ];
     for (const d of org1HRData) {
       const u = new User({ ...d, organization: org1._id, joiningDate: new Date('2022-01-15'), address: 'Mumbai, India', status: 'active' });
@@ -116,14 +138,14 @@ const seedData = async () => {
 
     const org1Emps = [];
     const org1EmpData = [
-      { employeeId: 'EMP0003', name: 'Rahul Sharma', email: 'rahul@hrms.com', password: 'employee123', phone: '9876543211', department: 'Engineering',    designation: 'Senior Developer',   salary: 80000, joiningDate: new Date('2021-06-01') },
-      { employeeId: 'EMP0004', name: 'Priya Patel',  email: 'priya@hrms.com', password: 'employee123', phone: '9876543212', department: 'Design',          designation: 'UI/UX Designer',     salary: 65000, joiningDate: new Date('2022-08-15') },
-      { employeeId: 'EMP0005', name: 'Amit Kumar',   email: 'amit@hrms.com',  password: 'employee123', phone: '9876543213', department: 'Engineering',    designation: 'Backend Developer',  salary: 75000, joiningDate: new Date('2022-01-10') },
-      { employeeId: 'EMP0006', name: 'Sneha Reddy',  email: 'sneha@hrms.com', password: 'employee123', phone: '9876543214', department: 'Marketing',       designation: 'Marketing Manager',  salary: 70000, joiningDate: new Date('2021-03-01') },
-      { employeeId: 'EMP0007', name: 'Vikram Singh', email: 'vikram@hrms.com',password: 'employee123', phone: '9876543215', department: 'Engineering',    designation: 'Frontend Developer', salary: 72000, joiningDate: new Date('2023-02-15') },
-      { employeeId: 'EMP0008', name: 'Anjali Gupta', email: 'anjali@hrms.com',password: 'employee123', phone: '9876543216', department: 'Finance',         designation: 'Finance Analyst',    salary: 60000, joiningDate: new Date('2023-07-10') },
-      { employeeId: 'EMP0009', name: 'Rohan Desai',  email: 'rohan@hrms.com', password: 'employee123', phone: '9876543217', department: 'Sales',           designation: 'Sales Executive',    salary: 55000, joiningDate: new Date('2023-09-01') },
-      { employeeId: 'EMP0010', name: 'Divya Singh',  email: 'divya@hrms.com', password: 'employee123', phone: '9876543218', department: 'Design',          designation: 'Graphic Designer',   salary: 50000, joiningDate: new Date('2024-01-15') },
+      { employeeId: 'EMP0003', name: 'Rahul Sharma', email: 'rahul@hrms.com', password: 'employee123', phone: '9876543211', department: org1Depts[0]._id, designation: org1Designations[2]._id, salary: 80000, joiningDate: new Date('2021-06-01') },
+      { employeeId: 'EMP0004', name: 'Priya Patel',  email: 'priya@hrms.com', password: 'employee123', phone: '9876543212', department: org1Depts[1]._id, designation: org1Designations[5]._id, salary: 65000, joiningDate: new Date('2022-08-15') },
+      { employeeId: 'EMP0005', name: 'Amit Kumar',   email: 'amit@hrms.com',  password: 'employee123', phone: '9876543213', department: org1Depts[0]._id, designation: org1Designations[3]._id, salary: 75000, joiningDate: new Date('2022-01-10') },
+      { employeeId: 'EMP0006', name: 'Sneha Reddy',  email: 'sneha@hrms.com', password: 'employee123', phone: '9876543214', department: org1Depts[2]._id, designation: org1Designations[7]._id, salary: 70000, joiningDate: new Date('2021-03-01') },
+      { employeeId: 'EMP0007', name: 'Vikram Singh', email: 'vikram@hrms.com',password: 'employee123', phone: '9876543215', department: org1Depts[0]._id, designation: org1Designations[4]._id, salary: 72000, joiningDate: new Date('2023-02-15') },
+      { employeeId: 'EMP0008', name: 'Anjali Gupta', email: 'anjali@hrms.com',password: 'employee123', phone: '9876543216', department: org1Depts[3]._id, designation: org1Designations[8]._id, salary: 60000, joiningDate: new Date('2023-07-10') },
+      { employeeId: 'EMP0009', name: 'Rohan Desai',  email: 'rohan@hrms.com', password: 'employee123', phone: '9876543217', department: org1Depts[4]._id, designation: org1Designations[9]._id, salary: 55000, joiningDate: new Date('2023-09-01') },
+      { employeeId: 'EMP0010', name: 'Divya Singh',  email: 'divya@hrms.com', password: 'employee123', phone: '9876543218', department: org1Depts[1]._id, designation: org1Designations[6]._id, salary: 50000, joiningDate: new Date('2024-01-15') },
     ];
     for (const d of org1EmpData) {
       const u = new User({ ...d, role: 'employee', organization: org1._id, address: 'India', status: 'active' });
@@ -230,6 +252,7 @@ const seedData = async () => {
     });
     await org2.save();
 
+    const org2Depts = [];
     for (const d of [
       { name: 'Cardiology', code: 'CARD', description: 'Heart & Cardiovascular' },
       { name: 'Neurology', code: 'NEUR', description: 'Brain & Nervous System' },
@@ -237,26 +260,44 @@ const seedData = async () => {
       { name: 'Administration', code: 'ADM', description: 'Hospital Administration' },
       { name: 'Pharmacy', code: 'PHAR', description: 'Pharmacy & Medicines' },
       { name: 'Human Resources', code: 'HR', description: 'HR & Administration' },
-    ]) { await new Department({ ...d, organization: org2._id, isActive: true }).save(); }
+    ]) { const dept = new Department({ ...d, organization: org2._id, isActive: true }); await dept.save(); org2Depts.push(dept); }
 
     await new Shift({ name: 'Day Shift', startTime: '08:00', endTime: '20:00', graceMinutes: 10, isDefault: true, organization: org2._id }).save();
     await new Shift({ name: 'Night Shift', startTime: '20:00', endTime: '08:00', graceMinutes: 10, organization: org2._id }).save();
 
+    const org2DesignationData = [
+      { name: 'HR Director',        code: 'HRDIR', level: 'manager',   description: 'HR Department Head' },
+      { name: 'HR Manager',         code: 'HRMGR', level: 'senior',    description: 'HR Administration' },
+      { name: 'Senior Cardiologist', code: 'CARD', level: 'senior',    description: 'Cardiology Specialist' },
+      { name: 'Neurologist',        code: 'NEUR', level: 'senior',    description: 'Neurology Specialist' },
+      { name: 'Admin Officer',      code: 'ADMIN', level: 'entry',     description: 'Administrative Support' },
+      { name: 'Pharmacist',         code: 'PHAR', level: 'junior',     description: 'Pharmacy Staff' },
+      { name: 'Ortho Surgeon',      code: 'ORTH', level: 'senior',    description: 'Orthopedic Specialist' },
+    ];
+    const org2Designations = [];
+    for (const d of org2DesignationData) {
+      const des = new Designation({ ...d, organization: org2._id, isActive: true });
+      await des.save();
+      org2Designations.push(des);
+    }
+
     const org2HR = [];
-    for (const d of [
-      { employeeId: 'EMP0001', name: 'Dr. Anita Sharma', email: 'admin@medicare.com', password: 'admin123', phone: '9876500001', designation: 'HR Director', department: 'Human Resources', salary: 95000, role: 'hr' },
-      { employeeId: 'EMP0002', name: 'Kiran Mehta',      email: 'hr@medicare.com',    password: 'hr123456', phone: '9876500002', designation: 'HR Manager',  department: 'Human Resources', salary: 70000, role: 'hr' },
-    ]) { const u = new User({ ...d, organization: org2._id, joiningDate: new Date('2020-05-01'), address: 'Bengaluru, India', status: 'active' }); await u.save(); org2HR.push(u); }
+    const org2HRData = [
+      { employeeId: 'EMP0001', name: 'Dr. Anita Sharma', email: 'admin@medicare.com', password: 'admin123', phone: '9876500001', designation: org2Designations[0]._id, department: org2Depts[5]._id, salary: 95000, role: 'hr' },
+      { employeeId: 'EMP0002', name: 'Kiran Mehta',      email: 'hr@medicare.com',    password: 'hr123456', phone: '9876500002', designation: org2Designations[1]._id, department: org2Depts[5]._id, salary: 70000, role: 'hr' },
+    ];
+    for (const d of org2HRData) { const u = new User({ ...d, organization: org2._id, joiningDate: new Date('2020-05-01'), address: 'Bengaluru, India', status: 'active' }); await u.save(); org2HR.push(u); }
     org2.createdBy = org2HR[0]._id; await org2.save();
 
     const org2Emps = [];
-    for (const d of [
-      { employeeId: 'EMP0003', name: 'Dr. Suresh Rao',   email: 'suresh@medicare.com', password: 'employee123', phone: '9876500003', department: 'Cardiology',     designation: 'Senior Cardiologist', salary: 150000, joiningDate: new Date('2018-03-10') },
-      { employeeId: 'EMP0004', name: 'Dr. Meena Iyer',   email: 'meena@medicare.com',  password: 'employee123', phone: '9876500004', department: 'Neurology',      designation: 'Neurologist',         salary: 140000, joiningDate: new Date('2019-07-20') },
-      { employeeId: 'EMP0005', name: 'Ravi Prakash',     email: 'ravi@medicare.com',   password: 'employee123', phone: '9876500005', department: 'Administration', designation: 'Admin Officer',       salary: 50000,  joiningDate: new Date('2021-02-15') },
-      { employeeId: 'EMP0006', name: 'Sunita Nair',      email: 'sunita@medicare.com', password: 'employee123', phone: '9876500006', department: 'Pharmacy',       designation: 'Pharmacist',          salary: 55000,  joiningDate: new Date('2022-08-01') },
-      { employeeId: 'EMP0007', name: 'Dr. Arjun Pillai', email: 'arjun@medicare.com',  password: 'employee123', phone: '9876500007', department: 'Orthopaedics',   designation: 'Ortho Surgeon',       salary: 145000, joiningDate: new Date('2020-11-15') },
-    ]) { const u = new User({ ...d, role: 'employee', organization: org2._id, address: 'Bengaluru, India', status: 'active' }); await u.save(); org2Emps.push(u); }
+    const org2EmpData = [
+      { employeeId: 'EMP0003', name: 'Dr. Suresh Rao',   email: 'suresh@medicare.com', password: 'employee123', phone: '9876500003', department: org2Depts[0]._id, designation: org2Designations[2]._id, salary: 150000, joiningDate: new Date('2018-03-10') },
+      { employeeId: 'EMP0004', name: 'Dr. Meena Iyer',   email: 'meena@medicare.com',  password: 'employee123', phone: '9876500004', department: org2Depts[1]._id, designation: org2Designations[3]._id, salary: 140000, joiningDate: new Date('2019-07-20') },
+      { employeeId: 'EMP0005', name: 'Ravi Prakash',     email: 'ravi@medicare.com',   password: 'employee123', phone: '9876500005', department: org2Depts[3]._id, designation: org2Designations[4]._id, salary: 50000,  joiningDate: new Date('2021-02-15') },
+      { employeeId: 'EMP0006', name: 'Sunita Nair',      email: 'sunita@medicare.com', password: 'employee123', phone: '9876500006', department: org2Depts[4]._id, designation: org2Designations[5]._id, salary: 55000,  joiningDate: new Date('2022-08-01') },
+      { employeeId: 'EMP0007', name: 'Dr. Arjun Pillai', email: 'arjun@medicare.com',  password: 'employee123', phone: '9876500007', department: org2Depts[2]._id, designation: org2Designations[6]._id, salary: 145000, joiningDate: new Date('2020-11-15') },
+    ];
+    for (const d of org2EmpData) { const u = new User({ ...d, role: 'employee', organization: org2._id, address: 'Bengaluru, India', status: 'active' }); await u.save(); org2Emps.push(u); }
 
     await new Holiday({ name: 'Republic Day', date: new Date(currentYear, 0, 26), type: 'national', organization: org2._id }).save();
     await new Holiday({ name: 'Independence Day', date: new Date(currentYear, 7, 15), type: 'national', organization: org2._id }).save();
@@ -301,28 +342,44 @@ const seedData = async () => {
     });
     await org3.save();
 
+    const org3Depts = [];
     for (const d of [
       { name: 'Science', code: 'SCI', description: 'Physics, Chemistry, Biology' },
       { name: 'Mathematics', code: 'MATH', description: 'Mathematics & Statistics' },
       { name: 'English', code: 'ENG', description: 'English Language & Literature' },
       { name: 'Administration', code: 'ADM', description: 'School Administration' },
       { name: 'Human Resources', code: 'HR', description: 'HR & Staffing' },
-    ]) { await new Department({ ...d, organization: org3._id, isActive: true }).save(); }
+    ]) { const dept = new Department({ ...d, organization: org3._id, isActive: true }); await dept.save(); org3Depts.push(dept); }
 
     await new Shift({ name: 'School Hours', startTime: '08:30', endTime: '17:00', graceMinutes: 10, isDefault: true, organization: org3._id }).save();
 
+    const org3DesignationData = [
+      { name: 'Principal',         code: 'PRIN', level: 'manager',   description: 'School Principal' },
+      { name: 'Science Teacher',   code: 'SCITR', level: 'senior',   description: 'Science Department' },
+      { name: 'Maths Teacher',     code: 'MATHTR', level: 'senior',  description: 'Mathematics Department' },
+      { name: 'English Teacher',   code: 'ENGTR', level: 'senior',   description: 'English Department' },
+      { name: 'Admin Clerk',       code: 'ADCL', level: 'entry',     description: 'Administrative Staff' },
+    ];
+    const org3Designations = [];
+    for (const d of org3DesignationData) {
+      const des = new Designation({ ...d, organization: org3._id, isActive: true });
+      await des.save();
+      org3Designations.push(des);
+    }
+
     const org3HR = [];
-    const prof = new User({ employeeId: 'EMP0001', name: 'Prof. Lakshmi Devi', email: 'admin@eduprime.com', password: 'admin123', phone: '9876600001', designation: 'Principal', department: 'Administration', salary: 80000, role: 'hr', organization: org3._id, joiningDate: new Date('2015-06-01'), address: 'Hyderabad, India', status: 'active' });
+    const prof = new User({ employeeId: 'EMP0001', name: 'Prof. Lakshmi Devi', email: 'admin@eduprime.com', password: 'admin123', phone: '9876600001', designation: org3Designations[0]._id, department: org3Depts[3]._id, salary: 80000, role: 'hr', organization: org3._id, joiningDate: new Date('2015-06-01'), address: 'Hyderabad, India', status: 'active' });
     await prof.save(); org3HR.push(prof);
     org3.createdBy = prof._id; await org3.save();
 
     const org3Emps = [];
-    for (const d of [
-      { employeeId: 'EMP0002', name: 'Mr. Sudhir Babu',  email: 'sudhir@eduprime.com', password: 'employee123', phone: '9876600002', department: 'Science',       designation: 'Science Teacher', salary: 45000, joiningDate: new Date('2018-07-01') },
-      { employeeId: 'EMP0003', name: 'Mrs. Padma Reddy', email: 'padma@eduprime.com',  password: 'employee123', phone: '9876600003', department: 'Mathematics',    designation: 'Maths Teacher',   salary: 42000, joiningDate: new Date('2019-07-15') },
-      { employeeId: 'EMP0004', name: 'Mr. Aryan Kapoor', email: 'aryan@eduprime.com',  password: 'employee123', phone: '9876600004', department: 'English',        designation: 'English Teacher', salary: 40000, joiningDate: new Date('2020-06-01') },
-      { employeeId: 'EMP0005', name: 'Ms. Rekha Mishra', email: 'rekha@eduprime.com',  password: 'employee123', phone: '9876600005', department: 'Administration', designation: 'Admin Clerk',     salary: 32000, joiningDate: new Date('2022-01-10') },
-    ]) { const u = new User({ ...d, role: 'employee', organization: org3._id, address: 'Hyderabad, India', status: 'active' }); await u.save(); org3Emps.push(u); }
+    const org3EmpData = [
+      { employeeId: 'EMP0002', name: 'Mr. Sudhir Babu',  email: 'sudhir@eduprime.com', password: 'employee123', phone: '9876600002', department: org3Depts[0]._id, designation: org3Designations[1]._id, salary: 45000, joiningDate: new Date('2018-07-01') },
+      { employeeId: 'EMP0003', name: 'Mrs. Padma Reddy', email: 'padma@eduprime.com',  password: 'employee123', phone: '9876600003', department: org3Depts[1]._id, designation: org3Designations[2]._id, salary: 42000, joiningDate: new Date('2019-07-15') },
+      { employeeId: 'EMP0004', name: 'Mr. Aryan Kapoor', email: 'aryan@eduprime.com',  password: 'employee123', phone: '9876600004', department: org3Depts[2]._id, designation: org3Designations[3]._id, salary: 40000, joiningDate: new Date('2020-06-01') },
+      { employeeId: 'EMP0005', name: 'Ms. Rekha Mishra', email: 'rekha@eduprime.com',  password: 'employee123', phone: '9876600005', department: org3Depts[3]._id, designation: org3Designations[4]._id, salary: 32000, joiningDate: new Date('2022-01-10') },
+    ];
+    for (const d of org3EmpData) { const u = new User({ ...d, role: 'employee', organization: org3._id, address: 'Hyderabad, India', status: 'active' }); await u.save(); org3Emps.push(u); }
 
     await new Holiday({ name: 'Republic Day',     date: new Date(currentYear, 0, 26), type: 'national', organization: org3._id }).save();
     await new Holiday({ name: 'Teachers Day',     date: new Date(currentYear, 8,  5), type: 'company', description: 'National Teachers Day', organization: org3._id }).save();
@@ -356,30 +413,47 @@ const seedData = async () => {
     });
     await org4.save();
 
+    const org4Depts = [];
     for (const d of [
       { name: 'Store Operations', code: 'OPS', description: 'Store Floor & Operations' },
       { name: 'Warehouse', code: 'WH', description: 'Inventory & Warehouse' },
       { name: 'Customer Service', code: 'CS', description: 'Customer Support' },
       { name: 'Finance', code: 'FIN', description: 'Billing & Finance' },
       { name: 'Human Resources', code: 'HR', description: 'HR & Administration' },
-    ]) { await new Department({ ...d, organization: org4._id, isActive: true }).save(); }
+    ]) { const dept = new Department({ ...d, organization: org4._id, isActive: true }); await dept.save(); org4Depts.push(dept); }
 
     await new Shift({ name: 'Morning Shift', startTime: '09:00', endTime: '17:00', graceMinutes: 15, isDefault: true, organization: org4._id }).save();
     await new Shift({ name: 'Evening Shift', startTime: '13:00', endTime: '21:00', graceMinutes: 15, organization: org4._id }).save();
 
+    const org4DesignationData = [
+      { name: 'HR Manager',            code: 'HRMGR', level: 'manager',   description: 'HR Administration' },
+      { name: 'Store Supervisor',      code: 'SPSV', level: 'senior',    description: 'Store Floor Supervisor' },
+      { name: 'Customer Exec',         code: 'CUST', level: 'entry',     description: 'Customer Service' },
+      { name: 'Warehouse Incharge',    code: 'WHIN', level: 'senior',    description: 'Warehouse Management' },
+      { name: 'Accounts Executive',    code: 'ACCT', level: 'junior',    description: 'Finance & Accounts' },
+      { name: 'Sales Associate',       code: 'SALE', level: 'entry',     description: 'Sales Floor Staff' },
+    ];
+    const org4Designations = [];
+    for (const d of org4DesignationData) {
+      const des = new Designation({ ...d, organization: org4._id, isActive: true });
+      await des.save();
+      org4Designations.push(des);
+    }
+
     const org4HR = [];
-    const pm4 = new User({ employeeId: 'EMP0001', name: 'Pooja Agarwal', email: 'admin@retailmax.com', password: 'admin123', phone: '9876700001', designation: 'HR Manager', department: 'Human Resources', salary: 75000, role: 'hr', organization: org4._id, joiningDate: new Date('2019-04-01'), address: 'Delhi, India', status: 'active' });
+    const pm4 = new User({ employeeId: 'EMP0001', name: 'Pooja Agarwal', email: 'admin@retailmax.com', password: 'admin123', phone: '9876700001', designation: org4Designations[0]._id, department: org4Depts[4]._id, salary: 75000, role: 'hr', organization: org4._id, joiningDate: new Date('2019-04-01'), address: 'Delhi, India', status: 'active' });
     await pm4.save(); org4HR.push(pm4);
     org4.createdBy = pm4._id; await org4.save();
 
     const org4Emps = [];
-    for (const d of [
-      { employeeId: 'EMP0002', name: 'Raju Tiwari',  email: 'raju@retailmax.com',   password: 'employee123', phone: '9876700002', department: 'Store Operations', designation: 'Store Supervisor',    salary: 40000, joiningDate: new Date('2020-05-15') },
-      { employeeId: 'EMP0003', name: 'Sonal Verma',  email: 'sonal@retailmax.com',  password: 'employee123', phone: '9876700003', department: 'Customer Service', designation: 'Customer Exec',       salary: 35000, joiningDate: new Date('2021-08-01') },
-      { employeeId: 'EMP0004', name: 'Deepak Jain',  email: 'deepak@retailmax.com', password: 'employee123', phone: '9876700004', department: 'Warehouse',        designation: 'Warehouse Incharge',  salary: 38000, joiningDate: new Date('2021-03-20') },
-      { employeeId: 'EMP0005', name: 'Kavita Yadav', email: 'kavita@retailmax.com', password: 'employee123', phone: '9876700005', department: 'Finance',          designation: 'Accounts Executive', salary: 45000, joiningDate: new Date('2022-06-01') },
-      { employeeId: 'EMP0006', name: 'Mohit Sharma', email: 'mohit@retailmax.com',  password: 'employee123', phone: '9876700006', department: 'Store Operations', designation: 'Sales Associate',     salary: 30000, joiningDate: new Date('2023-01-15') },
-    ]) { const u = new User({ ...d, role: 'employee', organization: org4._id, address: 'Delhi, India', status: 'active' }); await u.save(); org4Emps.push(u); }
+    const org4EmpData = [
+      { employeeId: 'EMP0002', name: 'Raju Tiwari',  email: 'raju@retailmax.com',   password: 'employee123', phone: '9876700002', department: org4Depts[0]._id, designation: org4Designations[1]._id, salary: 40000, joiningDate: new Date('2020-05-15') },
+      { employeeId: 'EMP0003', name: 'Sonal Verma',  email: 'sonal@retailmax.com',  password: 'employee123', phone: '9876700003', department: org4Depts[2]._id, designation: org4Designations[2]._id, salary: 35000, joiningDate: new Date('2021-08-01') },
+      { employeeId: 'EMP0004', name: 'Deepak Jain',  email: 'deepak@retailmax.com', password: 'employee123', phone: '9876700004', department: org4Depts[1]._id, designation: org4Designations[3]._id, salary: 38000, joiningDate: new Date('2021-03-20') },
+      { employeeId: 'EMP0005', name: 'Kavita Yadav', email: 'kavita@retailmax.com', password: 'employee123', phone: '9876700005', department: org4Depts[3]._id, designation: org4Designations[4]._id, salary: 45000, joiningDate: new Date('2022-06-01') },
+      { employeeId: 'EMP0006', name: 'Mohit Sharma', email: 'mohit@retailmax.com',  password: 'employee123', phone: '9876700006', department: org4Depts[0]._id, designation: org4Designations[5]._id, salary: 30000, joiningDate: new Date('2023-01-15') },
+    ];
+    for (const d of org4EmpData) { const u = new User({ ...d, role: 'employee', organization: org4._id, address: 'Delhi, India', status: 'active' }); await u.save(); org4Emps.push(u); }
 
     await new Holiday({ name: 'Republic Day',     date: new Date(currentYear, 0, 26), type: 'national', organization: org4._id }).save();
     await new Holiday({ name: 'Independence Day', date: new Date(currentYear, 7, 15), type: 'national', organization: org4._id }).save();

@@ -144,7 +144,18 @@ export default function AssetList() {
                   </td>
                   <td className="capitalize text-sm">{a.type.replace('_', ' ')}</td>
                   <td className="text-sm font-mono">{a.serialNumber || '-'}</td>
-                  <td className="text-sm">{assignee ? assignee.name : '-'}</td>
+                  <td className="text-sm">
+                    {assignee ? (
+                      <div>
+                        <div className="text-white">{assignee.name}</div>
+                        <div className="text-xs text-dark-400">
+                          {typeof assignee.department === 'object' && assignee.department ? (assignee.department as any).name : (assignee.department || 'N/A')}
+                        </div>
+                      </div>
+                    ) : (
+                      '-'
+                    )}
+                  </td>
                   <td>
                     <span className={`px-2 py-0.5 rounded text-xs font-medium capitalize ${statusColors[a.status]}`}>{a.status}</span>
                   </td>

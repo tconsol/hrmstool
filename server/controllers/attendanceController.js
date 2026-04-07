@@ -121,7 +121,11 @@ exports.getAllAttendance = async (req, res) => {
     if (status) query.status = status;
 
     let attendanceQuery = Attendance.find(query)
-      .populate('user', 'name email employeeId department designation')
+      .populate('user', 'name email employeeId department designation status salary')
+      .populate({ path: 'user', populate: [
+        { path: 'department', select: 'name code' },
+        { path: 'designation', select: 'name code level' }
+      ]})
       .sort({ date: -1 });
 
     const total = await Attendance.countDocuments(query);

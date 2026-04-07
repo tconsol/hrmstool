@@ -8,8 +8,8 @@ export default function OrganizationSettings() {
   const [saving, setSaving] = useState(false);
   const [org, setOrg] = useState({ name: '', email: '', phone: '', address: '', website: '', industry: '' });
   const [settings, setSettings] = useState({
-    fiscalYearStart: 'April',
-    workingDays: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'],
+    fiscalYearStart: 4,
+    workingDays: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
     shiftStartTime: '09:00',
     shiftEndTime: '18:00',
     lateThresholdMinutes: 15,
@@ -17,6 +17,8 @@ export default function OrganizationSettings() {
     dateFormat: 'DD/MM/YYYY',
   });
 
+  const dayMap = { 'Mon': 'Monday', 'Tue': 'Tuesday', 'Wed': 'Wednesday', 'Thu': 'Thursday', 'Fri': 'Friday', 'Sat': 'Saturday', 'Sun': 'Sunday' };
+  const dayMapReverse = { 'Monday': 'Mon', 'Tuesday': 'Tue', 'Wednesday': 'Wed', 'Thursday': 'Thu', 'Friday': 'Fri', 'Saturday': 'Sat', 'Sunday': 'Sun' };
   const allDays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
   const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
@@ -51,18 +53,19 @@ export default function OrganizationSettings() {
   const handleSaveSettings = async () => {
     setSaving(true);
     try {
-      await api.put('/organization/settings', settings);
+      await api.put('/organization/settings', { settings });
       toast.success('Settings updated');
     } catch (err: any) { toast.error(err.response?.data?.error || 'Failed'); }
     finally { setSaving(false); }
   };
 
   const toggleDay = (day: string) => {
+    const abbrevDay = dayMapReverse[day as keyof typeof dayMapReverse];
     setSettings(prev => ({
       ...prev,
-      workingDays: prev.workingDays.includes(day)
-        ? prev.workingDays.filter(d => d !== day)
-        : [...prev.workingDays, day],
+      workingDays: prev.workingDays.includes(abbrevDay)
+        ? prev.workingDays.filter(d => d !== abbrevDay)
+        : [...prev.workingDays, abbrevDay],
     }));
   };
 
@@ -121,8 +124,8 @@ export default function OrganizationSettings() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <label className="block text-sm text-slate-300 mb-1">Fiscal Year Start</label>
-              <select value={settings.fiscalYearStart} onChange={e => setSettings({ ...settings, fiscalYearStart: e.target.value })} className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
-                {months.map(m => <option key={m} value={m}>{m}</option>)}
+              <select value={settings.fiscalYearStart} onChange={e => setSettings({ ...settings, fiscalYearStart: Number(e.target.value) })} className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                {months.map((m, idx) => <option key={m} value={idx}>{m}</option>)}
               </select>
             </div>
             <div>
@@ -160,11 +163,15 @@ export default function OrganizationSettings() {
           <div>
             <label className="block text-sm text-slate-300 mb-2">Working Days</label>
             <div className="flex flex-wrap gap-2">
-              {allDays.map(day => (
-                <button key={day} type="button" onClick={() => toggleDay(day)} className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${settings.workingDays.includes(day) ? 'bg-blue-600 text-white' : 'bg-slate-700 text-slate-400 hover:text-white'}`}>
-                  {day.slice(0, 3)}
-                </button>
-              ))}
+              {allDays.map(day => {
+                const abbrev = dayMapReverse[day as keyof typeof dayMapReverse];
+                const isSelected = settings.workingDays.includes(abbrev);
+                return (
+                  <button key={day} type="button" onClick={() => toggleDay(day)} className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${isSelected ? 'bg-blue-600 text-white' : 'bg-slate-700 text-slate-400 hover:text-white'}`}>
+                    {day.slice(0, 3)}
+                  </button>
+                );
+              })}
             </div>
           </div>
         </div>

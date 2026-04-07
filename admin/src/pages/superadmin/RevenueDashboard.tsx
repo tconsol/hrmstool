@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import api from '../../services/api';
+import toast from 'react-hot-toast';
 import {
   TrendingUp,
   DollarSign,
@@ -42,8 +43,9 @@ const RevenueDashboard = () => {
       setSummary(data.summary);
       setRevenueByPlan(data.revenueByPlan);
       setOrganizations(data.organizations);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to fetch revenue:', error);
+      toast.error('Failed to fetch revenue data');
     } finally {
       setLoading(false);
     }

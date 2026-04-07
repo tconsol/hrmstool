@@ -9,7 +9,14 @@ exports.getTrainings = async (req, res) => {
 
     const total = await Training.countDocuments(query);
     const trainings = await Training.find(query)
-      .populate('participants.user', 'name employeeId department')
+      .populate('participants.user', 'name employeeId department designation')
+      .populate({
+        path: 'participants.user',
+        populate: [
+          { path: 'department', select: 'name code' },
+          { path: 'designation', select: 'name code level' }
+        ]
+      })
       .populate('createdBy', 'name')
       .sort({ startDate: -1 })
       .skip((page - 1) * limit)
@@ -29,7 +36,14 @@ exports.getTrainings = async (req, res) => {
 exports.getTraining = async (req, res) => {
   try {
     const training = await Training.findOne({ _id: req.params.id, organization: req.orgId })
-      .populate('participants.user', 'name employeeId department')
+      .populate('participants.user', 'name employeeId department designation')
+      .populate({
+        path: 'participants.user',
+        populate: [
+          { path: 'department', select: 'name code' },
+          { path: 'designation', select: 'name code level' }
+        ]
+      })
       .populate('createdBy', 'name');
 
     if (!training) {
@@ -72,12 +86,27 @@ exports.createTraining = async (req, res) => {
 
 exports.updateTraining = async (req, res) => {
   try {
+    const allowedFields = ['title', 'description', 'type', 'trainer', 'startDate', 'endDate', 'location', 'maxParticipants', 'status'];
+    const updates = {};
+    allowedFields.forEach(field => {
+      if (field in req.body) {
+        updates[field] = req.body[field];
+      }
+    });
+
     const training = await Training.findOneAndUpdate(
       { _id: req.params.id, organization: req.orgId },
-      req.body,
+      updates,
       { new: true, runValidators: true }
     )
-      .populate('participants.user', 'name employeeId department')
+      .populate('participants.user', 'name employeeId department designation')
+      .populate({
+        path: 'participants.user',
+        populate: [
+          { path: 'department', select: 'name code' },
+          { path: 'designation', select: 'name code level' }
+        ]
+      })
       .populate('createdBy', 'name');
 
     if (!training) {
@@ -92,35 +121,50 @@ exports.updateTraining = async (req, res) => {
 
 exports.enrollInTraining = async (req, res) => {
   try {
-    const training = await Training.findOne({ _id: req.params.id, organization: req.orgId });
+    // Use atomic findOneAndUpdate to prevent race conditions
+    const training = await Training.findOneAndUpdate(
+      {
+        _id: req.params.id,
+        organization: req.orgId,
+        status: { $nin: ['cancelled', 'completed'] },
+        'participants.user': { $ne: req.user._id },
+        $or: [
+          { maxParticipants: { $lte: 0 } },
+          { $expr: { $lt: [{ $size: '$participants' }, '$maxParticipants'] } }
+        ]
+      },
+      { $push: { participants: { user: req.user._id } } },
+      { new: true, runValidators: true }
+    )
+      .populate('participants.user', 'name employeeId department designation')
+      .populate({
+        path: 'participants.user',
+        populate: [
+          { path: 'department', select: 'name code' },
+          { path: 'designation', select: 'name code level' }
+        ]
+      })
+      .populate('createdBy', 'name');
+
     if (!training) {
-      return res.status(404).json({ error: 'Training not found' });
+      // Determine which validation failed
+      const originalTraining = await Training.findOne({ _id: req.params.id, organization: req.orgId });
+      if (!originalTraining) {
+        return res.status(404).json({ error: 'Training not found' });
+      }
+      if (originalTraining.status === 'cancelled' || originalTraining.status === 'completed') {
+        return res.status(400).json({ error: 'Training is not available for enrollment' });
+      }
+      if (originalTraining.participants.some(p => p.user.toString() === req.user._id.toString())) {
+        return res.status(400).json({ error: 'Already enrolled in this training' });
+      }
+      if (originalTraining.maxParticipants > 0 && originalTraining.participants.length >= originalTraining.maxParticipants) {
+        return res.status(400).json({ error: 'Training is full' });
+      }
+      return res.status(400).json({ error: 'Cannot enroll in this training' });
     }
 
-    if (training.status === 'cancelled' || training.status === 'completed') {
-      return res.status(400).json({ error: 'Training is not available for enrollment' });
-    }
-
-    const alreadyEnrolled = training.participants.some(
-      p => p.user.toString() === req.user._id.toString()
-    );
-    if (alreadyEnrolled) {
-      return res.status(400).json({ error: 'Already enrolled in this training' });
-    }
-
-    if (training.maxParticipants > 0 && training.participants.length >= training.maxParticipants) {
-      return res.status(400).json({ error: 'Training is full' });
-    }
-
-    training.participants.push({ user: req.user._id });
-    await training.save();
-
-    const populated = await training.populate([
-      { path: 'participants.user', select: 'name employeeId department' },
-      { path: 'createdBy', select: 'name' },
-    ]);
-
-    res.json(populated);
+    res.json(training);
   } catch (error) {
     res.status(500).json({ error: 'Failed to enroll in training' });
   }

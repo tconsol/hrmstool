@@ -46,9 +46,17 @@ exports.createHoliday = async (req, res) => {
 
 exports.updateHoliday = async (req, res) => {
   try {
+    const allowedFields = ['name', 'date', 'type', 'description'];
+    const updates = {};
+    allowedFields.forEach(field => {
+      if (field in req.body) {
+        updates[field] = req.body[field];
+      }
+    });
+
     const holiday = await Holiday.findOneAndUpdate(
       { _id: req.params.id, organization: req.orgId },
-      req.body,
+      updates,
       { new: true, runValidators: true }
     );
 

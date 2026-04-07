@@ -40,8 +40,8 @@ export interface User {
   email: string;
   phone: string;
   role: 'hr' | 'manager' | 'ceo' | 'employee' | 'superadmin';
-  department: string;
-  designation: string;
+  department: string | { _id: string; name: string; code?: string };
+  designation: string | { _id: string; name: string; code?: string; level?: string };
   salary: number;
   organization: Organization | string;
   ctc: {
@@ -237,4 +237,16 @@ export interface Training {
   status: 'upcoming' | 'ongoing' | 'completed' | 'cancelled';
   createdBy: User | string;
   createdAt: string;
+}
+
+export interface Designation {
+  _id: string;
+  name: string;
+  code: string;
+  description: string;
+  level: 'entry' | 'junior' | 'senior' | 'lead' | 'manager' | 'executive';
+  organization: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
 }

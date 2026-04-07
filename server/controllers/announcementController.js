@@ -56,9 +56,17 @@ exports.createAnnouncement = async (req, res) => {
 
 exports.updateAnnouncement = async (req, res) => {
   try {
+    const allowedFields = ['title', 'content', 'priority', 'pinned', 'expiresAt', 'targetRoles', 'isActive'];
+    const updates = {};
+    allowedFields.forEach(field => {
+      if (field in req.body) {
+        updates[field] = req.body[field];
+      }
+    });
+
     const announcement = await Announcement.findOneAndUpdate(
       { _id: req.params.id, organization: req.orgId },
-      req.body,
+      updates,
       { new: true, runValidators: true }
     ).populate('createdBy', 'name');
 

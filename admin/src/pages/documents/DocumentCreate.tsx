@@ -113,10 +113,12 @@ const DocumentCreate = () => {
   useEffect(() => {
     if (!selectedEmployee) return;
     const emp = selectedEmployee;
+    const deptName = typeof emp.department === 'object' && emp.department ? emp.department.name : (emp.department || '');
+    const designName = typeof emp.designation === 'object' && emp.designation ? emp.designation.name : (emp.designation || '');
     setTemplateData(prev => ({
       ...prev,
-      designation: prev.designation || emp.designation || '',
-      department: prev.department || emp.department || '',
+      designation: prev.designation || designName || '',
+      department: prev.department || deptName || '',
       joiningDate: prev.joiningDate || emp.joiningDate?.split('T')[0] || '',
       annualCTC: prev.annualCTC || emp.ctc?.annualCTC || (emp.salary ? emp.salary * 12 : ''),
       previousSalary: prev.previousSalary || emp.ctc?.annualCTC || (emp.salary ? emp.salary * 12 : ''),

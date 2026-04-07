@@ -55,9 +55,17 @@ exports.createDepartment = async (req, res) => {
 
 exports.updateDepartment = async (req, res) => {
   try {
+    const allowedFields = ['name', 'description', 'head'];
+    const updates = {};
+    allowedFields.forEach(field => {
+      if (field in req.body) {
+        updates[field] = req.body[field];
+      }
+    });
+
     const department = await Department.findOneAndUpdate(
       { _id: req.params.id, organization: req.orgId },
-      req.body,
+      updates,
       { new: true, runValidators: true }
     ).populate('head', 'name employeeId');
 

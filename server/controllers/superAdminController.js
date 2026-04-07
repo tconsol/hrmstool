@@ -248,7 +248,9 @@ exports.getOrganizationDetails = async (req, res) => {
       User.find({ organization: org._id })
         .sort({ createdAt: -1 })
         .limit(5)
-        .select('name email role status createdAt'),
+        .select('name email role status department designation createdAt')
+        .populate('department', 'name')
+        .populate('designation', 'name code'),
     ]);
 
     const roleDistribution = await User.aggregate([
@@ -300,7 +302,7 @@ exports.updateSubscription = async (req, res) => {
     }
 
     if (plan) org.subscription.plan = plan;
-    if (maxEmployees) org.subscription.maxEmployees = maxEmployees;
+    if (typeof maxEmployees !== 'undefined') org.subscription.maxEmployees = maxEmployees;
     if (endDate) org.subscription.endDate = new Date(endDate);
 
     await org.save();
@@ -447,7 +449,10 @@ exports.getAuditLog = async (req, res) => {
     const recentUsers = await User.find()
       .sort({ createdAt: -1 })
       .limit(50)
-      .select('name email role organization status createdAt')
+      .select('name email role organization status department designation createdAt')
+      .populate('organization', 'name')
+      .populate('department', 'name')
+      .populate('designation', 'name code')
       .populate('organization', 'name');
 
     res.json({

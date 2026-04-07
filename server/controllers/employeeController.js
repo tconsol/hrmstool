@@ -42,6 +42,8 @@ exports.getEmployees = async (req, res) => {
     const total = await User.countDocuments(query);
     const employees = await User.find(query)
       .select('-password')
+      .populate('department', 'name')
+      .populate('designation', 'name code level')
       .sort({ createdAt: -1 })
       .skip((page - 1) * limit)
       .limit(parseInt(limit));
@@ -59,7 +61,10 @@ exports.getEmployees = async (req, res) => {
 
 exports.getEmployee = async (req, res) => {
   try {
-    const employee = await User.findOne({ _id: req.params.id, organization: req.orgId }).select('-password');
+    const employee = await User.findOne({ _id: req.params.id, organization: req.orgId })
+      .select('-password')
+      .populate('department', 'name code')
+      .populate('designation', 'name code level description');
     if (!employee) {
       return res.status(404).json({ error: 'Employee not found' });
     }
@@ -102,7 +107,9 @@ exports.updateEmployee = async (req, res) => {
       { _id: req.params.id, organization: req.orgId },
       updates,
       { new: true, runValidators: true }
-    ).select('-password');
+    ).select('-password')
+      .populate('department', 'name code')
+      .populate('designation', 'name code level');
 
     if (!employee) {
       return res.status(404).json({ error: 'Employee not found' });

@@ -43,13 +43,21 @@ exports.createShift = async (req, res) => {
 
 exports.updateShift = async (req, res) => {
   try {
-    if (req.body.isDefault) {
+    const allowedFields = ['name', 'startTime', 'endTime', 'graceMinutes', 'isDefault'];
+    const updates = {};
+    allowedFields.forEach(field => {
+      if (field in req.body) {
+        updates[field] = req.body[field];
+      }
+    });
+
+    if (updates.isDefault) {
       await Shift.updateMany({ organization: req.orgId }, { isDefault: false });
     }
 
     const shift = await Shift.findOneAndUpdate(
       { _id: req.params.id, organization: req.orgId },
-      req.body,
+      updates,
       { new: true, runValidators: true }
     );
 

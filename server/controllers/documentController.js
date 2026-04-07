@@ -25,7 +25,9 @@ exports.createDocument = async (req, res) => {
       return res.status(400).json({ error: 'Invalid document type' });
     }
 
-    const emp = await User.findOne({ _id: employee, organization: req.orgId });
+    const emp = await User.findOne({ _id: employee, organization: req.orgId })
+      .populate('department', 'name')
+      .populate('designation', 'name code');
     if (!emp) {
       return res.status(404).json({ error: 'Employee not found' });
     }

@@ -22,6 +22,7 @@ import CompanyCalendar from './pages/calendar/CompanyCalendar';
 import DocumentList from './pages/documents/DocumentList';
 import DocumentCreate from './pages/documents/DocumentCreate';
 import DepartmentList from './pages/departments/DepartmentList';
+import DesignationList from './pages/designations/DesignationList';
 import HolidayList from './pages/holidays/HolidayList';
 import AnnouncementList from './pages/announcements/AnnouncementList';
 import MyExpenses from './pages/expenses/MyExpenses';
@@ -148,6 +149,14 @@ function App() {
               element={
                 <ProtectedRoute roles={['hr', 'manager', 'ceo']}>
                   <DepartmentList />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/designations"
+              element={
+                <ProtectedRoute roles={['hr', 'manager', 'ceo']}>
+                  <DesignationList />
                 </ProtectedRoute>
               }
             />

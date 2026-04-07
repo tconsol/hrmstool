@@ -151,7 +151,7 @@ const HRDashboard = () => {
                 <div>
                   <p className="text-sm font-medium text-white">{leave.user?.name}</p>
                   <p className="text-xs text-dark-400">
-                    {leave.leaveType} • {leave.totalDays} day{leave.totalDays > 1 ? 's' : ''}
+                    {typeof leave.user?.department === 'object' && leave.user?.department ? (leave.user.department as any).name : (leave.user?.department || 'Dept')} • {leave.leaveType} • {leave.totalDays} day{leave.totalDays > 1 ? 's' : ''}
                   </p>
                 </div>
                 <span className="badge-warning">{leave.status}</span>

@@ -27,6 +27,7 @@ import {
   GraduationCap,
   Settings,
   Search,
+  Layers,
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -93,6 +94,7 @@ const Sidebar = ({ isOpen, onClose, isCollapsed = false, onToggleCollapse }: Sid
         { to: '/payroll', label: 'Payroll', icon: Wallet },
         { to: '/documents', label: 'Documents', icon: FileText },
         { to: '/departments', label: 'Departments', icon: Building2 },
+        { to: '/designations', label: 'Designations', icon: Layers },
         { to: '/holidays', label: 'Holidays', icon: CalendarHeart },
         { to: '/announcements', label: 'Announcements', icon: Megaphone },
         { to: '/expenses', label: 'Expenses', icon: Receipt },
@@ -129,6 +131,7 @@ const Sidebar = ({ isOpen, onClose, isCollapsed = false, onToggleCollapse }: Sid
         { to: '/leaves', label: 'Leave Requests', icon: CalendarOff },
         { to: '/payroll', label: 'Payroll', icon: Wallet },
         { to: '/departments', label: 'Departments', icon: Building2 },
+        { to: '/designations', label: 'Designations', icon: Layers },
         { to: '/holidays', label: 'Holidays', icon: CalendarHeart },
         { to: '/announcements', label: 'Announcements', icon: Megaphone },
         { to: '/expenses', label: 'Expenses', icon: Receipt },

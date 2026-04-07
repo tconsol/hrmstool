@@ -37,12 +37,14 @@ const userSchema = new mongoose.Schema({
     default: 'employee',
   },
   department: {
-    type: String,
-    trim: true,
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Department',
+    default: null,
   },
   designation: {
-    type: String,
-    trim: true,
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Designation',
+    default: null,
   },
   salary: {
     type: Number,

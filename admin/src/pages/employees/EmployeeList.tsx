@@ -155,7 +155,7 @@ const EmployeeList = () => {
                       </div>
                     </td>
                     <td className="hidden md:table-cell">{typeof emp.department === 'object' && emp.department ? (emp.department as any).name : (emp.department || 'N/A')}</td>
-                    <td className="hidden lg:table-cell">{emp.designation || 'N/A'}</td>
+                    <td className="hidden lg:table-cell">{typeof emp.designation === 'object' && emp.designation ? (emp.designation as any).name : (emp.designation || 'N/A')}</td>
                     <td className="hidden sm:table-cell">₹{emp.salary?.toLocaleString()}</td>
                     <td>
                       <span className={emp.status === 'active' ? 'badge-success' : 'badge-danger'}>

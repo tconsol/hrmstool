@@ -24,11 +24,11 @@ exports.getHRDashboard = async (req, res) => {
       Attendance.countDocuments({ ...orgFilter, date: today, status: { $in: ['present', 'late'] } }),
       Leave.countDocuments({ ...orgFilter, status: 'pending' }),
       Payroll.aggregate([
-        { $match: { organization: req.user.organization, month: today.getMonth() + 1, year: today.getFullYear() } },
+        { $match: { organization: req.orgId, month: today.getMonth() + 1, year: today.getFullYear() } },
         { $group: { _id: null, total: { $sum: '$netSalary' }, count: { $sum: 1 } } },
       ]),
       User.aggregate([
-        { $match: { organization: req.user.organization, status: 'active' } },
+        { $match: { organization: req.orgId, status: 'active' } },
         { $group: { _id: '$department', count: { $sum: 1 } } },
         { $sort: { count: -1 } },
         { $lookup: { from: 'departments', localField: '_id', foreignField: '_id', as: 'dept' } },
@@ -37,13 +37,16 @@ exports.getHRDashboard = async (req, res) => {
     ]);
 
     const recentLeaves = await Leave.find({ ...orgFilter, status: 'pending' })
-      .populate('user', 'name employeeId department')
+      .populate('user', 'name employeeId department designation')
+      .populate('user.department', 'name')
+      .populate('user.designation', 'name code')
       .sort({ createdAt: -1 })
       .limit(5);
 
     const recentEmployees = await User.find(orgFilter)
-      .select('name employeeId department joiningDate status')
-      .populate('department', 'name')
+      .select('name employeeId department designation joiningDate status')
+      .populate('department', 'name code')
+      .populate('designation', 'name code level')
       .sort({ createdAt: -1 })
       .limit(5);
 
@@ -109,11 +112,10 @@ exports.getEmployeeDashboard = async (req, res) => {
     const announcements = await Announcement.find({
       organization: req.orgId,
       isActive: true,
-      $or: [
-        { targetRoles: { $size: 0 } },
-        { targetRoles: req.user.role },
+      $and: [
+        { $or: [{ targetRoles: { $size: 0 } }, { targetRoles: req.user.role }] },
+        { $or: [{ expiresAt: null }, { expiresAt: { $gte: new Date() } }] },
       ],
-      $or: [{ expiresAt: null }, { expiresAt: { $gte: new Date() } }],
     })
       .populate('createdBy', 'name')
       .sort({ priority: -1, createdAt: -1 })

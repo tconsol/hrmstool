@@ -30,6 +30,9 @@ const EmployeeForm = () => {
   const [ctcMode, setCtcMode] = useState(false);
   const [showOptional, setShowOptional] = useState(false);
   const [ctc, setCtc] = useState(defaultCTC);
+  const [departments, setDepartments] = useState<any[]>([]);
+  const [designations, setDesignations] = useState<any[]>([]);
+  const [loadingOptions, setLoadingOptions] = useState(true);
 
   const [form, setForm] = useState({
     name: '',
@@ -45,10 +48,28 @@ const EmployeeForm = () => {
   });
 
   useEffect(() => {
+    fetchDepartmentsAndDesignations();
     if (isEdit) {
       fetchEmployee();
+    } else {
+      setFetching(false);
     }
   }, [id]);
+
+  const fetchDepartmentsAndDesignations = async () => {
+    try {
+      const [deptsRes, desRes] = await Promise.all([
+        api.get('/departments'),
+        api.get('/designations'),
+      ]);
+      setDepartments(deptsRes.data);
+      setDesignations(desRes.data);
+    } catch (error) {
+      toast.error('Failed to load departments and designations');
+    } finally {
+      setLoadingOptions(false);
+    }
+  };
 
   const fetchEmployee = async () => {
     try {
@@ -225,23 +246,23 @@ const EmployeeForm = () => {
 
           <div>
             <label className="block text-sm font-medium text-dark-300 mb-1.5">Department</label>
-            <input
-              name="department"
+            <Select
               value={form.department}
-              onChange={handleChange}
-              className="input-dark"
-              placeholder="Engineering"
+              onChange={(v) => setForm({ ...form, department: v })}
+              options={departments.map(d => ({ value: d._id, label: d.name }))}
+              placeholder="Select Department"
+              disabled={loadingOptions}
             />
           </div>
 
           <div>
             <label className="block text-sm font-medium text-dark-300 mb-1.5">Designation</label>
-            <input
-              name="designation"
+            <Select
               value={form.designation}
-              onChange={handleChange}
-              className="input-dark"
-              placeholder="Software Developer"
+              onChange={(v) => setForm({ ...form, designation: v })}
+              options={designations.map(d => ({ value: d._id, label: d.name }))}
+              placeholder="Select Designation"
+              disabled={loadingOptions}
             />
           </div>
 

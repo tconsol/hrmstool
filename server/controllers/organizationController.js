@@ -19,6 +19,16 @@ exports.updateOrganization = async (req, res) => {
     delete updates.slug;
     delete updates.createdBy;
 
+    // Check if user is attempting to modify sensitive fields without being super-admin
+    const sensitiveFields = ['subscription', 'isActive', 'email'];
+    const isSuperAdmin = req.user.role === 'superadmin' || req.user.isSuperAdmin;
+    
+    if (!isSuperAdmin) {
+      sensitiveFields.forEach(field => {
+        delete updates[field];
+      });
+    }
+
     const org = await Organization.findByIdAndUpdate(
       req.orgId,
       updates,
@@ -55,7 +65,10 @@ exports.updateOrganizationSettings = async (req, res) => {
     }
 
     if (req.body.settings) {
-      org.settings = { ...org.settings.toObject(), ...req.body.settings };
+      org.settings = {
+        ...org.settings.toObject ? org.settings.toObject() : org.settings,
+        ...req.body.settings
+      };
     }
 
     await org.save();

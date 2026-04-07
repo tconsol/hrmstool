@@ -39,7 +39,7 @@ export default function MyAssets() {
                 </div>
                 <div>
                   <h3 className="font-semibold text-white">{a.name}</h3>
-                  <p className="text-dark-400 text-xs capitalize">{a.type.replace('_', ' ')}</p>
+                  <p className="text-dark-400 text-xs capitalize">{a.type.replace(/_/g, ' ')}</p>
                 </div>
               </div>
               <div className="mt-3 space-y-1 text-sm text-dark-400">
