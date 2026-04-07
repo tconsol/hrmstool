@@ -48,6 +48,9 @@ const EmployeeDashboard = () => {
     }
   };
 
+  // Call hooks before any early returns
+  const liveElapsed = useElapsed(data?.todayAttendance?.checkIn, data?.todayAttendance?.checkOut);
+
   const handleCheckIn = async () => {
     setCheckingIn(true);
     try {
@@ -84,7 +87,6 @@ const EmployeeDashboard = () => {
 
   const hasCheckedIn = data?.todayAttendance?.checkIn;
   const hasCheckedOut = data?.todayAttendance?.checkOut;
-  const liveElapsed = useElapsed(data?.todayAttendance?.checkIn, data?.todayAttendance?.checkOut);
 
   return (
     <div className="space-y-6">

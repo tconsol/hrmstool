@@ -206,8 +206,8 @@ const DocumentCreate = () => {
     setTemplateData(prev => ({ ...prev, [key]: value }));
   };
 
-  const handleSave = async (status: 'draft' | 'final' = 'draft') => {
-    if (!selectedEmployee) { toast.error('Please select an employee'); return; }
+  const handleSave = async (status: 'draft' | 'final' = 'draft'): Promise<string | null> => {
+    if (!selectedEmployee) { toast.error('Please select an employee'); return null; }
     setSaving(true);
     try {
       const payload = {
@@ -222,23 +222,26 @@ const DocumentCreate = () => {
       if (existingDocId) {
         await api.put(`/documents/${existingDocId}`, payload);
         toast.success('Document updated');
+        return existingDocId;
       } else {
         const { data } = await api.post('/documents', payload);
         setExistingDocId(data._id);
         toast.success('Document saved');
+        return data._id;
       }
     } catch (error: any) {
       toast.error(error.response?.data?.error || 'Failed to save');
+      return null;
     } finally {
       setSaving(false);
     }
   };
 
   const handleDownload = async (format: 'pdf' | 'docx' = downloadFormat) => {
-    if (!existingDocId) {
-      await handleSave('final');
+    let docId = existingDocId;
+    if (!docId) {
+      docId = await handleSave('final');
     }
-    const docId = existingDocId;
     if (!docId) return;
     try {
       const endpoint = format === 'docx' ? `/documents/${docId}/download-docx` : `/documents/${docId}/download`;
@@ -261,15 +264,21 @@ const DocumentCreate = () => {
   };
 
   const handlePrint = async () => {
-    if (!existingDocId) await handleSave('final');
-    const docId = existingDocId;
+    let docId = existingDocId;
+    if (!docId) {
+      docId = await handleSave('final');
+    }
     if (!docId) return;
     try {
       const response = await api.get(`/documents/${docId}/download`, { responseType: 'blob' });
       const blob = new Blob([response.data], { type: 'application/pdf' });
       const url = window.URL.createObjectURL(blob);
       const w = window.open(url, '_blank');
-      if (w) w.addEventListener('load', () => w.print());
+      if (w) {
+        w.onload = () => {
+          setTimeout(() => w.print(), 500);
+        };
+      }
     } catch (error) {
       toast.error('Failed to print');
     }
