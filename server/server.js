@@ -118,7 +118,11 @@ app.use('/api/assets', assetRoutes);
 app.use('/api/training', trainingRoutes);
 app.use('/api/superadmin', superAdminRoutes);
 
-// Health check
+// Health check endpoints
+app.get('/', (req, res) => {
+  res.json({ status: 'HRMS Server OK', timestamp: new Date().toISOString() });
+});
+
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });

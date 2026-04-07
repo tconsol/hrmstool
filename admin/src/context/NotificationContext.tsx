@@ -36,7 +36,20 @@ interface NotificationContextType {
 
 const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
 
-const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || 'http://localhost:5000';
+// Get socket URL from environment or construct from current origin
+const getSocketURL = (): string => {
+  const envURL = import.meta.env.VITE_SOCKET_URL;
+  if (envURL) return envURL;
+  
+  // Fallback: use current origin but keep localhost for dev
+  if (typeof window !== 'undefined' && window.location.hostname !== 'localhost') {
+    return window.location.origin;
+  }
+  
+  return 'http://localhost:5000';
+};
+
+const SOCKET_URL = getSocketURL();
 
 export const NotificationProvider = ({ children }: { children: ReactNode }) => {
   const { user, token } = useAuth();
@@ -60,6 +73,12 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
     const newSocket = io(SOCKET_URL, {
       auth: { userId: user._id },
       transports: ['websocket', 'polling'],
+      reconnection: true,
+      reconnectionDelay: 1000,
+      reconnectionDelayMax: 5000,
+      reconnectionAttempts: 5,
+      secure: true,
+      rejectUnauthorized: false,
     });
 
     newSocket.on('notification', (notif: Notification) => {
