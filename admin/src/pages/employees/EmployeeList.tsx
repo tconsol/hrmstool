@@ -39,8 +39,8 @@ const EmployeeList = () => {
 
   const fetchDepartments = async () => {
     try {
-      const { data } = await api.get('/employees/departments');
-      setDepartments(data);
+      const { data } = await api.get('/departments?limit=100');
+      setDepartments(data.departments?.map((d: any) => d.name) || []);
     } catch (error) {
       console.error('Failed to fetch departments');
     }

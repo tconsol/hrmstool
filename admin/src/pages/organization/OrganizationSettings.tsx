@@ -33,8 +33,8 @@ export default function OrganizationSettings() {
           name: orgRes.data.name || '', email: orgRes.data.email || '', phone: orgRes.data.phone || '',
           address: orgRes.data.address || '', website: orgRes.data.website || '', industry: orgRes.data.industry || '',
         });
-        if (settingsRes.data) {
-          setSettings(prev => ({ ...prev, ...settingsRes.data }));
+        if (settingsRes.data?.settings) {
+          setSettings(prev => ({ ...prev, ...settingsRes.data.settings }));
         }
       } catch { toast.error('Failed to load settings'); }
       finally { setLoading(false); }

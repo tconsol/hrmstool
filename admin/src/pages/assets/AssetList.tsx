@@ -75,7 +75,7 @@ export default function AssetList() {
   const handleAssign = async () => {
     if (!assignModal) return;
     try {
-      await api.patch(`/assets/${assignModal}/assign`, { userId: assignTo || null });
+      await api.patch(`/assets/${assignModal}/assign`, { assignedTo: assignTo || null });
       toast.success(assignTo ? 'Asset assigned' : 'Asset unassigned');
       setAssignModal(null);
       setAssignTo('');
