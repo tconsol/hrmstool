@@ -5,6 +5,10 @@ import { NotificationProvider } from './context/NotificationContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import Layout from './components/Layout/Layout';
 import SuperAdminLayout from './components/Layout/SuperAdminLayout';
+import ScrollToTop from './components/ScrollToTop';
+import Landing from './pages/Landing';
+import About from './pages/About';
+import PricingDetail from './pages/PricingDetail';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/dashboard/Dashboard';
@@ -48,7 +52,11 @@ function App() {
     <AuthProvider>
       <NotificationProvider>
         <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+          <ScrollToTop />
           <Routes>
+            <Route path="/" element={<Landing />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/pricing/:tierId" element={<PricingDetail />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/superadmin/login" element={<SuperAdminLogin />} />
