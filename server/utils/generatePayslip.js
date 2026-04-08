@@ -5,6 +5,14 @@ const MONTHS = [
   'July', 'August', 'September', 'October', 'November', 'December',
 ];
 
+// Safely extract name from a populated ref or plain string/ObjectId
+const getName = (val) => {
+  if (!val) return '';
+  if (typeof val === 'object' && val.name) return val.name;
+  if (typeof val === 'string') return val;
+  return '';
+};
+
 /**
  * @param {object} payroll  - populated payroll document
  * @param {boolean} bw      - true = black & white, false = colour (default)
@@ -64,8 +72,8 @@ const generatePayslipPDF = (payroll, bw = false) => {
     y += 9;
 
     const empRows = [
-      ['Employee ID',  emp.employeeId,                        'Department',   emp.department || 'N/A'],
-      ['Name',         emp.name,                              'Designation',  emp.designation || 'N/A'],
+      ['Employee ID',  emp.employeeId,                        'Department',   getName(emp.department) || 'N/A'],
+      ['Name',         emp.name,                              'Designation',  getName(emp.designation) || 'N/A'],
       ['Email',        emp.email,                             'Joining Date', emp.joiningDate
                                                                               ? new Date(emp.joiningDate).toLocaleDateString('en-IN')
                                                                               : 'N/A'],

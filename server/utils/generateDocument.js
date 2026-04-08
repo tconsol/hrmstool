@@ -12,6 +12,14 @@ const fmtDate = (d) => {
   return dt.toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' });
 };
 
+// Safely extract name from a populated ref or plain string/ObjectId
+const getName = (val) => {
+  if (!val) return '';
+  if (typeof val === 'object' && val.name) return val.name;
+  if (typeof val === 'string') return val;
+  return '';
+};
+
 /**
  * Generate a document PDF for any supported template type.
  * @param {object} document - populated document record with employee ref
@@ -191,7 +199,7 @@ function renderOfferLetter(doc, document, y, M, CW) {
   doc.font('Helvetica-Bold').text('Subject: Offer of Employment', M, y); y += 20;
   doc.font('Helvetica');
 
-  const body1 = `Dear ${name},\n\nWe are pleased to offer you the position of ${data.designation || emp.designation || '[Designation]'} in the ${data.department || emp.department || '[Department]'} department at ${companyName || '[Company Name]'}, effective from ${fmtDate(data.joiningDate || emp.joiningDate)}.`;
+  const body1 = `Dear ${name},\n\nWe are pleased to offer you the position of ${data.designation || getName(emp.designation) || '[Designation]'} in the ${data.department || getName(emp.department) || '[Department]'} department at ${companyName || '[Company Name]'}, effective from ${fmtDate(data.joiningDate || emp.joiningDate)}.`;
   doc.text(body1, M, y, { width: CW, lineGap: 3 });
   y += doc.heightOfString(body1, { width: CW, lineGap: 3 }) + 12;
   y = pageBreakCheck(doc, y, M);
@@ -275,7 +283,7 @@ function renderAppointmentLetter(doc, document, y, M, CW) {
   doc.font('Helvetica-Bold').text('Subject: Letter of Appointment', M, y); y += 20;
 
   doc.font('Helvetica');
-  const body = `Dear ${name},\n\nWith reference to your application and subsequent interview, we are pleased to appoint you as ${data.designation || emp.designation || '[Designation]'} in the ${data.department || emp.department || '[Department]'} department at ${companyName || '[Company Name]'}, with effect from ${fmtDate(data.joiningDate || emp.joiningDate)}.`;
+  const body = `Dear ${name},\n\nWith reference to your application and subsequent interview, we are pleased to appoint you as ${data.designation || getName(emp.designation) || '[Designation]'} in the ${data.department || getName(emp.department) || '[Department]'} department at ${companyName || '[Company Name]'}, with effect from ${fmtDate(data.joiningDate || emp.joiningDate)}.`;
   doc.text(body, M, y, { width: CW, lineGap: 3 });
   y += doc.heightOfString(body, { width: CW, lineGap: 3 }) + 16;
   y = pageBreakCheck(doc, y, M);
@@ -284,8 +292,8 @@ function renderAppointmentLetter(doc, document, y, M, CW) {
   doc.font('Helvetica');
 
   const clauses = [
-    `1. Designation: ${data.designation || emp.designation || '[Designation]'}`,
-    `2. Department: ${data.department || emp.department || '[Department]'}`,
+    `1. Designation: ${data.designation || getName(emp.designation) || '[Designation]'}`,
+    `2. Department: ${data.department || getName(emp.department) || '[Department]'}`,
     `3. Date of Joining: ${fmtDate(data.joiningDate || emp.joiningDate)}`,
     `4. Probation Period: ${data.probationPeriod || '6'} months from the date of joining.`,
     `5. Notice Period: ${data.noticePeriod || '1'} month(s) from either side.`,
@@ -328,8 +336,8 @@ function renderExperienceLetter(doc, document, y, M, CW) {
   doc.font('Helvetica');
   const joiningStr = fmtDate(data.joiningDate || emp.joiningDate);
   const leavingStr = fmtDate(data.lastWorkingDate);
-  const designation = data.designation || emp.designation || '[Designation]';
-  const department = data.department || emp.department || '[Department]';
+  const designation = data.designation || getName(emp.designation) || '[Designation]';
+  const department = data.department || getName(emp.department) || '[Department]';
 
   const body = `This is to certify that ${name} (Employee ID: ${emp.employeeId || '[ID]'}) was employed with ${companyName || '[Company Name]'} from ${joiningStr} to ${leavingStr} in the capacity of ${designation} in the ${department} department.`;
   doc.text(body, M, y, { width: CW, lineGap: 4 });
@@ -370,7 +378,7 @@ function renderRelievingLetter(doc, document, y, M, CW) {
   doc.text(body, M, y, { width: CW, lineGap: 3 });
   y += doc.heightOfString(body, { width: CW, lineGap: 3 }) + 16;
 
-  doc.text(`You were working as ${data.designation || emp.designation || '[Designation]'} in the ${data.department || emp.department || '[Department]'} department since ${fmtDate(data.joiningDate || emp.joiningDate)}.`, M, y, { width: CW, lineGap: 3 });
+  doc.text(`You were working as ${data.designation || getName(emp.designation) || '[Designation]'} in the ${data.department || getName(emp.department) || '[Department]'} department since ${fmtDate(data.joiningDate || emp.joiningDate)}.`, M, y, { width: CW, lineGap: 3 });
   y += 20;
 
   doc.text('We confirm that all company assets have been returned and all dues have been settled. You are released from all your obligations towards the company.', M, y, { width: CW, lineGap: 3 });
@@ -398,7 +406,7 @@ function renderIncrementLetter(doc, document, y, M, CW) {
   doc.font('Helvetica-Bold').text('To,', M, y); y += 14;
   doc.font('Helvetica').text(name, M, y); y += 12;
   doc.text(`Employee ID: ${emp.employeeId || '[ID]'}`, M, y); y += 12;
-  doc.text(`Department: ${data.department || emp.department || '[Department]'}`, M, y); y += 22;
+  doc.text(`Department: ${data.department || getName(emp.department) || '[Department]'}`, M, y); y += 22;
 
   doc.font('Helvetica-Bold').text('Subject: Salary Revision', M, y); y += 20;
   doc.font('Helvetica');

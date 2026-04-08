@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
-import { GraduationCap, Plus, Edit2, Trash2, Users, Calendar, UserPlus, X } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { GraduationCap, Plus, Edit2, Trash2, Users, Calendar, UserPlus, X, ArrowRight } from 'lucide-react';
 import api from '../../services/api';
 import { Training } from '../../types';
 import toast from 'react-hot-toast';
 import Select from '../../components/ui/Select';
 import DatePicker from '../../components/ui/DatePicker';
+import { useAuth } from '../../context/AuthContext';
 
 const statusColors: Record<string, string> = {
   upcoming: 'bg-blue-500/20 text-blue-400',
@@ -16,6 +18,9 @@ const statusColors: Record<string, string> = {
 const trainingTypes = ['online', 'classroom', 'workshop', 'certification', 'onboarding'];
 
 export default function TrainingList() {
+  const { user } = useAuth();
+  const canCreateTraining = user?.role && ['hr', 'manager', 'ceo'].includes(user.role);
+  
   const [trainings, setTrainings] = useState<Training[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
@@ -58,28 +63,13 @@ export default function TrainingList() {
     let endDateStr = '';
     
     if (t.startDate) {
-      if (t.startDate.includes('T')) {
-        startDateStr = t.startDate.split('T')[0];
-      } else {
-        const date = new Date(t.startDate);
-        startDateStr = date.toISOString().slice(0, 10);
-      }
+      startDateStr = t.startDate.includes('T') ? t.startDate.split('T')[0] : new Date(t.startDate).toISOString().slice(0, 10);
     }
-    
     if (t.endDate) {
-      if (t.endDate.includes('T')) {
-        endDateStr = t.endDate.split('T')[0];
-      } else {
-        const date = new Date(t.endDate);
-        endDateStr = date.toISOString().slice(0, 10);
-      }
+      endDateStr = t.endDate.includes('T') ? t.endDate.split('T')[0] : new Date(t.endDate).toISOString().slice(0, 10);
     }
     
-    setForm({
-      title: t.title, description: t.description || '', type: t.type, trainer: t.trainer || '',
-      startDate: startDateStr, endDate: endDateStr,
-      maxParticipants: t.maxParticipants ? String(t.maxParticipants) : '',
-    });
+    setForm({ title: t.title, description: t.description || '', type: t.type, trainer: t.trainer || '', startDate: startDateStr, endDate: endDateStr, maxParticipants: t.maxParticipants ? String(t.maxParticipants) : '' });
     setShowModal(true);
   };
 
@@ -106,47 +96,84 @@ export default function TrainingList() {
           <h1 className="text-2xl font-bold text-white">Training Programs</h1>
           <p className="text-dark-400 text-sm mt-1">{trainings.length} programs</p>
         </div>
-        <button onClick={() => { setEditId(null); resetForm(); setShowModal(true); }} className="btn-primary flex items-center gap-2">
-          <Plus className="w-4 h-4" /> Add Training
-        </button>
+        {canCreateTraining && (
+          <button onClick={() => { setEditId(null); resetForm(); setShowModal(true); }} className="btn-primary flex items-center gap-2">
+            <Plus className="w-4 h-4" /> Add Training
+          </button>
+        )}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {trainings.map(t => (
-          <div key={t._id} className="glass-card p-5">
-            <div className="flex items-start justify-between">
-              <div className="flex items-start gap-3">
-                <div className="w-10 h-10 rounded-lg bg-emerald-500/20 flex items-center justify-center mt-0.5">
-                  <GraduationCap className="w-5 h-5 text-emerald-400" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <h3 className="font-semibold text-white">{t.title}</h3>
-                    <span className={`px-2 py-0.5 rounded text-xs font-medium capitalize ${statusColors[t.status]}`}>{t.status}</span>
+        {trainings.map(t => {
+          const userEnrolled = t.participants?.some((p: any) => p.user?._id === user?._id);
+          return (
+            <div key={t._id} className="glass-card p-5 flex flex-col">
+              <div className="flex items-start justify-between mb-3">
+                <div className="flex items-start gap-3 flex-1">
+                  <div className="w-10 h-10 rounded-lg bg-emerald-500/20 flex items-center justify-center mt-0.5 flex-shrink-0">
+                    <GraduationCap className="w-5 h-5 text-emerald-400" />
                   </div>
-                  <span className="text-xs text-dark-400 capitalize">{t.type}</span>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h3 className="font-semibold text-white truncate">{t.title}</h3>
+                      <span className={`px-2 py-0.5 rounded text-xs font-medium capitalize ${statusColors[t.status]} flex-shrink-0`}>{t.status}</span>
+                    </div>
+                    <span className="text-xs text-dark-400 capitalize">{t.type}</span>
+                  </div>
                 </div>
+
+                {canCreateTraining && (
+                  <div className="flex gap-1 flex-shrink-0 ml-2">
+                    <button onClick={() => handleEdit(t)} className="p-1.5 text-dark-400 hover:text-brand-400 hover:bg-dark-700 rounded-lg transition-colors" title="Edit training">
+                      <Edit2 className="w-4 h-4" />
+                    </button>
+                    <button onClick={() => handleDelete(t._id)} className="p-1.5 text-dark-400 hover:text-red-400 hover:bg-dark-700 rounded-lg transition-colors" title="Delete training">
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                )}
               </div>
-              <div className="flex gap-1 flex-shrink-0">
-                <button onClick={() => handleEdit(t)} className="p-1.5 text-dark-400 hover:text-brand-400 hover:bg-dark-700 rounded-lg transition-colors"><Edit2 className="w-4 h-4" /></button>
-                <button onClick={() => handleDelete(t._id)} className="p-1.5 text-dark-400 hover:text-red-400 hover:bg-dark-700 rounded-lg transition-colors"><Trash2 className="w-4 h-4" /></button>
+
+              {t.description && <p className="text-dark-400 text-sm mb-3 line-clamp-2">{t.description}</p>}
+              
+              <div className="space-y-1 text-sm text-dark-400 flex-1">
+                {t.trainer && <p>Trainer: <span className="text-dark-300">{t.trainer}</span></p>}
+                <div className="flex items-center gap-1"><Calendar className="w-3.5 h-3.5" /> {new Date(t.startDate).toLocaleDateString()} – {new Date(t.endDate).toLocaleDateString()}</div>
+                <div className="flex items-center gap-1"><Users className="w-3.5 h-3.5" /> {t.participants?.length || 0}{t.maxParticipants ? ` / ${t.maxParticipants}` : ''} enrolled</div>
+              </div>
+
+              <div className="mt-4 flex gap-2">
+                {(t.status === 'upcoming' || t.status === 'ongoing') && !userEnrolled && (
+                  <button onClick={() => handleEnroll(t._id)} className="flex-1 flex items-center justify-center gap-1 px-3 py-1.5 text-sm bg-emerald-600/20 text-emerald-400 hover:bg-emerald-600/30 rounded-lg transition-colors">
+                    <UserPlus className="w-3.5 h-3.5" /> Enroll
+                  </button>
+                )}
+                {userEnrolled && (
+                  <span className="flex-1 flex items-center justify-center px-3 py-1.5 text-sm bg-emerald-600/10 text-emerald-400 rounded-lg">
+                    ✓ Enrolled
+                  </span>
+                )}
+
+                <Link
+                  to={`/training/${t._id}`}
+                  className="flex items-center justify-center gap-1 px-3 py-1.5 text-sm bg-dark-700 hover:bg-dark-600 border border-dark-600 text-dark-200 hover:text-white rounded-lg transition-colors"
+                  title="View details"
+                >
+                  <ArrowRight className="w-3.5 h-3.5" /> <span className="text-xs">View</span>
+                </Link>
               </div>
             </div>
-            {t.description && <p className="text-dark-400 text-sm mt-2 line-clamp-2">{t.description}</p>}
-            <div className="mt-3 space-y-1 text-sm text-dark-400">
-              {t.trainer && <p>Trainer: <span className="text-dark-300">{t.trainer}</span></p>}
-              <div className="flex items-center gap-1"><Calendar className="w-3.5 h-3.5" /> {new Date(t.startDate).toLocaleDateString()} – {new Date(t.endDate).toLocaleDateString()}</div>
-              <div className="flex items-center gap-1"><Users className="w-3.5 h-3.5" /> {t.participants?.length || 0}{t.maxParticipants ? ` / ${t.maxParticipants}` : ''} enrolled</div>
-            </div>
-            {(t.status === 'upcoming' || t.status === 'ongoing') && (
-              <button onClick={() => handleEnroll(t._id)} className="mt-3 flex items-center gap-1 px-3 py-1.5 text-sm bg-emerald-600/20 text-emerald-400 hover:bg-emerald-600/30 rounded-lg transition-colors w-full justify-center">
-                <UserPlus className="w-3.5 h-3.5" /> Enroll
-              </button>
-            )}
-          </div>
-        ))}
+          );
+        })}
       </div>
-      {trainings.length === 0 && <div className="text-center text-dark-400 py-16">No training programs yet</div>}
+
+      {trainings.length === 0 && (
+        <div className="text-center text-dark-400 py-16">
+          <GraduationCap className="w-12 h-12 mx-auto mb-3 opacity-50" />
+          <p>No training programs yet</p>
+          {canCreateTraining && <p className="text-xs mt-2">Click "Add Training" to create one</p>}
+        </div>
+      )}
 
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -168,12 +195,7 @@ export default function TrainingList() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-dark-300 mb-1.5">Type</label>
-                  <Select
-                    value={form.type}
-                    onChange={val => setForm({ ...form, type: val })}
-                    options={trainingTypes.map(t => ({ value: t, label: t.charAt(0).toUpperCase() + t.slice(1) }))}
-                    placeholder="Select type"
-                  />
+                  <Select value={form.type} onChange={val => setForm({ ...form, type: val })} options={trainingTypes.map(t => ({ value: t, label: t.charAt(0).toUpperCase() + t.slice(1) }))} placeholder="Select type" />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-dark-300 mb-1.5">Trainer</label>

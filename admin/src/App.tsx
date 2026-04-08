@@ -36,6 +36,7 @@ import ShiftList from './pages/shifts/ShiftList';
 import AssetList from './pages/assets/AssetList';
 import MyAssets from './pages/assets/MyAssets';
 import TrainingList from './pages/training/TrainingList';
+import TrainingDetail from './pages/training/TrainingDetail';
 import OrganizationSettings from './pages/organization/OrganizationSettings';
 
 // Super Admin Pages
@@ -233,6 +234,7 @@ function App() {
             <Route path="/my-expenses" element={<MyExpenses />} />
             <Route path="/my-assets" element={<MyAssets />} />
             <Route path="/training" element={<TrainingList />} />
+            <Route path="/training/:id" element={<TrainingDetail />} />
             <Route path="/profile" element={<MyProfile />} />
 
             {/* Notifications — all roles */}

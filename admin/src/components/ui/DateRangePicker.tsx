@@ -60,101 +60,143 @@ const DateRangePicker: React.FC<DateRangePickerProps> = ({
   const renderCalendar = () => {
     const daysInMonth = getDaysInMonth(currentMonth);
     const firstDay = getFirstDayOfMonth(currentMonth);
-    const days = [];
+    const days: (number | null)[] = [];
 
-    for (let i = 0; i < firstDay; i++) {
-      days.push(null);
-    }
+    for (let i = 0; i < firstDay; i++) days.push(null);
+    for (let day = 1; day <= daysInMonth; day++) days.push(day);
 
-    for (let day = 1; day <= daysInMonth; day++) {
-      days.push(day);
-    }
-
-    const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const weekDays = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
     const monthName = currentMonth.toLocaleDateString('en-IN', { month: 'long', year: 'numeric' });
+    const todayStr = new Date().toISOString().split('T')[0];
 
     return (
-      <div className="absolute top-full left-0 mt-2 bg-dark-800 border border-dark-700 rounded-lg shadow-2xl z-50 p-4 w-80">
+      <div
+        className="absolute top-full left-0 mt-2 z-50 rounded-2xl overflow-hidden border border-dark-600/50 shadow-2xl"
+        style={{ background: 'linear-gradient(160deg, #0f172a 0%, #1a2540 100%)', width: '292px' }}
+      >
         {/* Header */}
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-sm font-semibold text-white">{monthName}</h3>
-          <div className="flex gap-2">
-            <button
-              onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1))}
-              className="p-1 hover:bg-dark-700 rounded-lg text-dark-400 hover:text-white transition-colors"
-            >
-              <ChevronLeft size={16} />
-            </button>
+        <div
+          className="flex items-center justify-between px-4 py-3 border-b border-dark-700/60"
+          style={{ background: 'linear-gradient(to right, rgba(59,130,246,0.12), rgba(99,102,241,0.08))' }}
+        >
+          <button
+            onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1))}
+            className="p-1.5 rounded-lg bg-dark-700/40 hover:bg-dark-600/60 text-gray-400 hover:text-white transition-all"
+          >
+            <ChevronLeft size={14} />
+          </button>
+          <div className="flex items-center gap-2">
+            <h3 className="text-sm font-bold text-white tracking-wide">{monthName}</h3>
             <button
               onClick={() => setCurrentMonth(new Date())}
-              className="px-2 py-1 text-xs bg-brand-600/20 hover:bg-brand-600/30 text-brand-400 rounded transition-colors"
+              className="px-2 py-0.5 text-xs bg-brand-600/30 hover:bg-brand-600/50 text-brand-400 rounded-full font-medium transition-all"
             >
               Today
             </button>
-            <button
-              onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1))}
-              className="p-1 hover:bg-dark-700 rounded-lg text-dark-400 hover:text-white transition-colors"
-            >
-              <ChevronRight size={16} />
-            </button>
           </div>
+          <button
+            onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1))}
+            className="p-1.5 rounded-lg bg-dark-700/40 hover:bg-dark-600/60 text-gray-400 hover:text-white transition-all"
+          >
+            <ChevronRight size={14} />
+          </button>
         </div>
 
-        {/* Weekday Headers */}
-        <div className="grid grid-cols-7 gap-1 mb-2">
-          {weekDays.map((day) => (
-            <div key={day} className="text-center text-xs font-semibold text-dark-400 py-2">
-              {day}
-            </div>
-          ))}
-        </div>
-
-        {/* Days Grid */}
-        <div className="grid grid-cols-7 gap-1">
-          {days.map((day, idx) => {
-            if (day === null) {
-              return <div key={`empty-${idx}`} className="aspect-square" />;
-            }
-
-            const date = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), day);
-            const dateStr = date.toISOString().split('T')[0];
-            const isStartDate = dateStr === startDate;
-            const isEndDate = dateStr === endDate;
-            const isBetween = startDate && endDate && dateStr > startDate && dateStr < endDate;
-            const isToday = dateStr === new Date().toISOString().split('T')[0];
-
-            return (
-              <button
+        {/* Body */}
+        <div className="p-3">
+          {/* Weekday headers — Sunday (index 0) in red */}
+          <div className="grid grid-cols-7 mb-1">
+            {weekDays.map((day, i) => (
+              <div
                 key={day}
-                onClick={() => handleDateClick(day)}
-                className={`aspect-square rounded-lg text-sm font-medium transition-all flex items-center justify-center
-                  ${isStartDate || isEndDate
-                    ? 'bg-brand-600 text-white shadow-lg'
-                    : isBetween
-                    ? 'bg-brand-600/20 text-brand-300'
-                    : isToday
-                    ? 'border border-brand-500 text-white'
-                    : 'text-dark-300 hover:bg-dark-700 hover:text-white'
-                }`}
+                className={`text-center text-xs font-bold py-1.5 tracking-wide ${i === 0 ? 'text-red-400' : 'text-dark-500'}`}
               >
                 {day}
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Selection Info */}
-        {(startDate || endDate) && (
-          <div className="mt-4 pt-3 border-t border-dark-700 text-xs text-dark-300">
-            {startDate && <p>Start: {formatDate(startDate)}</p>}
-            {endDate && <p>End: {formatDate(endDate)}</p>}
-            {startDate && endDate && (
-              <p className="text-brand-400 mt-1">
-                {Math.ceil((new Date(endDate).getTime() - new Date(startDate).getTime()) / (1000 * 60 * 60 * 24)) + 1} day(s)
-              </p>
-            )}
+              </div>
+            ))}
           </div>
-        )}
+
+          {/* Days grid */}
+          <div className="grid grid-cols-7 gap-0.5">
+            {days.map((day, idx) => {
+              if (day === null) return <div key={`empty-${idx}`} className="h-8" />;
+
+              const dateStr = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), day).toISOString().split('T')[0];
+              const isStartDate = dateStr === startDate;
+              const isEndDate   = dateStr === endDate;
+              const isBetween   = !!(startDate && endDate && dateStr > startDate && dateStr < endDate);
+              const isToday     = dateStr === todayStr;
+              const isSunday    = (firstDay + day - 1) % 7 === 0;
+
+              if (isStartDate || isEndDate) {
+                return (
+                  <button
+                    key={day}
+                    onClick={() => handleDateClick(day)}
+                    className="h-8 w-full flex items-center justify-center rounded-lg text-xs font-bold text-white transition-all"
+                    style={{ background: 'linear-gradient(135deg,#3b82f6,#6366f1)', boxShadow: '0 4px 12px rgba(59,130,246,0.35)' }}
+                  >
+                    {day}
+                  </button>
+                );
+              }
+              if (isBetween) {
+                return (
+                  <button
+                    key={day}
+                    onClick={() => handleDateClick(day)}
+                    className="h-8 w-full flex items-center justify-center rounded-lg text-xs font-medium text-brand-300 bg-brand-600/15 hover:bg-brand-600/25 transition-all"
+                  >
+                    {day}
+                  </button>
+                );
+              }
+              if (isToday) {
+                return (
+                  <button
+                    key={day}
+                    onClick={() => handleDateClick(day)}
+                    className={`h-8 w-full flex items-center justify-center rounded-lg text-xs font-bold transition-all ring-1 ring-brand-500 hover:bg-brand-600/20 ${isSunday ? 'text-red-400' : 'text-brand-400'}`}
+                  >
+                    {day}
+                  </button>
+                );
+              }
+              return (
+                <button
+                  key={day}
+                  onClick={() => handleDateClick(day)}
+                  className={`h-8 w-full flex items-center justify-center rounded-lg text-xs font-medium transition-all hover:bg-dark-700/60 hover:text-white ${isSunday ? 'text-red-400' : 'text-emerald-400'}`}
+                >
+                  {day}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Selection summary */}
+          {(startDate || endDate) && (
+            <div className="mt-3 pt-2.5 border-t border-dark-700/50 space-y-1">
+              {startDate && (
+                <p className="text-xs">
+                  <span className="text-dark-500">From: </span>
+                  <span className="text-gray-300">{formatDate(startDate)}</span>
+                </p>
+              )}
+              {endDate && (
+                <p className="text-xs">
+                  <span className="text-dark-500">To: </span>
+                  <span className="text-gray-300">{formatDate(endDate)}</span>
+                </p>
+              )}
+              {startDate && endDate && (
+                <p className="text-xs font-semibold text-brand-400">
+                  {Math.ceil((new Date(endDate).getTime() - new Date(startDate).getTime()) / (1000 * 60 * 60 * 24)) + 1} day(s) selected
+                </p>
+              )}
+            </div>
+          )}
+        </div>
       </div>
     );
   };

@@ -203,6 +203,7 @@ module.exports = {
   deleteFolder,
   buildObjectPath,
   sanitizePath,
+  validateMagicBytes,
   ALLOWED_MIME_TYPES,
   MAX_FILE_SIZE,
 };
