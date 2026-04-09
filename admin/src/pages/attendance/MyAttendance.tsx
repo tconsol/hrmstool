@@ -3,6 +3,7 @@ import api from '../../services/api';
 import toast from 'react-hot-toast';
 import { CalendarCheck, LogIn, LogOut, Clock } from 'lucide-react';
 import Select from '../../components/ui/Select';
+import { getCurrentLocation } from '../../services/geolocation';
 
 const fmtHours = (h: number) => {
   if (!h && h !== 0) return '-';
@@ -68,12 +69,39 @@ const MyAttendance = () => {
   const handleCheckIn = async () => {
     setCheckingIn(true);
     try {
-      await api.post('/attendance/check-in');
+      // Get employee's current location
+      toast.loading('Getting your location...', { id: 'location-fetch' });
+      const location = await getCurrentLocation();
+
+      if (!location) {
+        toast.error('Unable to get location. Please enable location access and try again.', { id: 'location-fetch' });
+        setCheckingIn(false);
+        return;
+      }
+
+      // Submit check-in with location coordinates
+      const res = await api.post('/attendance/check-in', {
+        latitude: location.latitude,
+        longitude: location.longitude,
+      });
+
+      toast.dismiss('location-fetch');
       toast.success('Checked in!');
-      fetchTodayStatus();
+      setTodayStatus(res.data);
       fetchAttendance();
     } catch (error: any) {
-      toast.error(error.response?.data?.error || 'Check-in failed');
+      toast.dismiss('location-fetch');
+      
+      // Check if error is location-related
+      if (error.response?.data?.isLocationError) {
+        const radius = error.response?.data?.requiredRadius || 50;
+        toast.error(
+          `📍 Location Check Failed\n\nYou must be within ${radius}m of the office to check in.\n\nPlease reach the office first.`,
+          { duration: 5 }
+        );
+      } else {
+        toast.error(error.response?.data?.error || 'Check-in failed');
+      }
     } finally {
       setCheckingIn(false);
     }
