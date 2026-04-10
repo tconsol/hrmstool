@@ -10,6 +10,9 @@ const STATIC_CACHE = [
   '/manifest.json',
 ];
 
+// Skip all caching in development (localhost)
+const isDev = self.location.hostname === 'localhost' || self.location.hostname === '127.0.0.1';
+
 // ---------------- INSTALL ----------------
 self.addEventListener('install', (event) => {
   console.log('[SW] Installing...');
@@ -47,6 +50,9 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
+
+  // In development, bypass all caching to allow HMR to work
+  if (isDev) return;
 
   // Ignore non-GET requests
   if (request.method !== 'GET') return;

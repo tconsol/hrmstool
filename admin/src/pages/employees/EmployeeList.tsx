@@ -10,6 +10,7 @@ import {
   UserX,
   Edit,
   FileText,
+  Eye,
   ChevronLeft,
   ChevronRight,
 } from 'lucide-react';
@@ -34,19 +35,6 @@ const EmployeeList = () => {
     fetchEmployees();
   }, [page, search, statusFilter, departmentFilter]);
 
-  useEffect(() => {
-    fetchDepartments();
-  }, []);
-
-  const fetchDepartments = async () => {
-    try {
-      const { data } = await api.get('/departments?limit=100');
-      setDepartments(data.departments?.map((d: any) => d.name) || []);
-    } catch (error) {
-      console.error('Failed to fetch departments');
-    }
-  };
-
   const fetchEmployees = async () => {
     setLoading(true);
     try {
@@ -60,6 +48,14 @@ const EmployeeList = () => {
       const { data } = await api.get(`/employees?${params.toString()}`);
       setEmployees(data.employees);
       setTotalPages(data.pages);
+      
+      // Extract unique department names from employees
+      const uniqueDepts = [...new Set(
+        data.employees
+          .map((emp: any) => typeof emp.department === 'object' ? emp.department?.name : emp.department)
+          .filter(Boolean)
+      )] as string[];
+      setDepartments(uniqueDepts.sort());
     } catch (error) {
       toast.error('Failed to fetch employees');
     } finally {
@@ -165,6 +161,13 @@ const EmployeeList = () => {
                     </td>
                     <td>
                       <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => navigate(`/employees/${emp._id}`)}
+                          className="p-1.5 hover:bg-dark-700/50 rounded-lg text-dark-400 hover:text-blue-400 transition-colors"
+                          title="View Details"
+                        >
+                          <Eye size={16} />
+                        </button>
                         {isHR && (
                           <>
                             <button
@@ -195,13 +198,22 @@ const EmployeeList = () => {
                           </>
                         )}
                         {!isHR && (
-                          <button
-                            onClick={() => navigate(`/employees/${emp._id}/documents`)}
-                            className="p-1.5 hover:bg-dark-700/50 rounded-lg text-dark-400 hover:text-emerald-400 transition-colors"
-                            title="Documents"
-                          >
-                            <FileText size={16} />
-                          </button>
+                          <>
+                            <button
+                              onClick={() => navigate(`/employees/${emp._id}`)}
+                              className="p-1.5 hover:bg-dark-700/50 rounded-lg text-dark-400 hover:text-blue-400 transition-colors"
+                              title="View Details"
+                            >
+                              <Eye size={16} />
+                            </button>
+                            <button
+                              onClick={() => navigate(`/employees/${emp._id}/documents`)}
+                              className="p-1.5 hover:bg-dark-700/50 rounded-lg text-dark-400 hover:text-emerald-400 transition-colors"
+                              title="Documents"
+                            >
+                              <FileText size={16} />
+                            </button>
+                          </>
                         )}
                       </div>
                     </td>

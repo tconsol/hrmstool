@@ -12,6 +12,7 @@ const {
   updateEmployee,
   toggleStatus,
   getDepartments,
+  getDesignations,
   getEmployeeDocuments,
   uploadEmployeeDocument,
   updateEmployeePersonalDetails,
@@ -75,10 +76,12 @@ router.use(auth);
 router.use(orgScope);
 router.use(requireFeature('employees'));
 
-// Self-service profile picture upload - any employee can upload their own profilePictureLimiter, profilePictureUpload.single('file'), uploadProfilePicture);
+// Self-service profile picture upload - any employee can upload their own
+router.post('/profile/picture', profilePictureLimiter, profilePictureUpload.single('file'), uploadProfilePicture);
 
 router.get('/', authorize('hr', 'manager', 'ceo'), getEmployees);
 router.get('/departments', authorize('hr', 'manager', 'ceo'), getDepartments);
+router.get('/designations', authorize('hr', 'manager', 'ceo'), getDesignations);
 router.get('/:id', authorize('hr', 'manager', 'ceo'), getEmployee);
 router.get('/:id/documents', authorize('hr', 'manager', 'ceo'), getEmployeeDocuments);
 router.post('/:id/documents/upload', authorize('hr', 'manager', 'ceo'), uploadLimiter, upload.single('file'), uploadEmployeeDocument);

@@ -141,10 +141,21 @@ exports.toggleStatus = async (req, res) => {
 
 exports.getDepartments = async (req, res) => {
   try {
-    const departments = await User.distinct('department', { organization: req.orgId, department: { $ne: '' } });
-    res.json(departments.filter(Boolean));
+    const Department = require('../models/Department');
+    const departments = await Department.find({ organization: req.orgId }).sort('name');
+    res.json(departments);
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch departments' });
+  }
+};
+
+exports.getDesignations = async (req, res) => {
+  try {
+    const Designation = require('../models/Designation');
+    const designations = await Designation.find({ organization: req.orgId }).sort('name');
+    res.json(designations);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch designations' });
   }
 };
 

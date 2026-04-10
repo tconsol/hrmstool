@@ -34,7 +34,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { ChevronDown, Check } from 'lucide-react';
+import { ChevronDown } from 'lucide-react';
 
 export interface SelectOption {
   value: string;
@@ -142,7 +142,6 @@ const Select = ({ value, onChange, options, placeholder, className = '', disable
             onMouseDown={e => handleOption(e, '')}
             className={`w-full px-4 py-2.5 text-left text-sm flex items-center gap-2 transition-colors hover:bg-dark-700 ${value === '' ? 'text-brand-400 bg-brand-500/10' : 'text-dark-400'}`}
           >
-            {value === '' ? <Check size={14} className="flex-shrink-0" /> : <span className="w-[18px] flex-shrink-0" />}
             {placeholder}
           </button>
         )}
@@ -153,10 +152,7 @@ const Select = ({ value, onChange, options, placeholder, className = '', disable
             onMouseDown={e => handleOption(e, option.value)}
             className={`w-full px-4 py-2.5 text-left text-sm flex items-center gap-2 transition-colors hover:bg-dark-700/80 ${option.value === value ? 'text-brand-400 bg-brand-500/10' : 'text-gray-200'}`}
           >
-            {option.value === value
-              ? <Check size={14} className="flex-shrink-0 text-brand-400" />
-              : <span className="w-[18px] flex-shrink-0" />}
-            {option.label}
+            <span className="truncate">{option.label}</span>
           </button>
         ))}
       </div>

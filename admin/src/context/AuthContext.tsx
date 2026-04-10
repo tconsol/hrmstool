@@ -24,11 +24,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const savedToken = localStorage.getItem('hrms_token');
     const savedUser = localStorage.getItem('hrms_user');
 
-    if (savedToken && savedUser && savedUser !== 'undefined') {
+    // Clear invalid data if it exists
+    if (savedUser === 'undefined' || savedUser === 'null' || !savedUser) {
+      localStorage.removeItem('hrms_token');
+      localStorage.removeItem('hrms_user');
+      setLoading(false);
+      return;
+    }
+
+    if (savedToken && savedUser) {
       let parsedUser;
       try {
         parsedUser = JSON.parse(savedUser);
-      } catch {
+      } catch (error) {
+        console.error('Failed to parse stored user data:', error);
         localStorage.removeItem('hrms_token');
         localStorage.removeItem('hrms_user');
         setLoading(false);

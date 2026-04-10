@@ -78,6 +78,23 @@ export interface User {
     sick: number;
     paid: number;
   };
+  // Personal details
+  fatherName?: string;
+  dateOfBirth?: string;
+  bloodGroup?: string;
+  nomineeName?: string;
+  nomineeRelationship?: string;
+  emergencyContact?: {
+    name: string;
+    phone: string;
+    relationship: string;
+  };
+  aadhaarNumber?: string;
+  panNumber?: string;
+  bankName?: string;
+  bankAccountNumber?: string;
+  ifscCode?: string;
+  uan?: string;
   createdAt: string;
   updatedAt: string;
 }

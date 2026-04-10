@@ -2,7 +2,7 @@ import { useState, useEffect, FormEvent } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
-import { ArrowLeft, Save, ChevronDown, ChevronUp, Calculator, FileText } from 'lucide-react';
+import { ArrowLeft, Save, ChevronDown, ChevronUp, Calculator, FileText, Eye, EyeOff } from 'lucide-react';
 import Select from '../../components/ui/Select';
 import DatePicker from '../../components/ui/DatePicker';
 
@@ -34,6 +34,7 @@ const EmployeeForm = () => {
   const [departments, setDepartments] = useState<any[]>([]);
   const [designations, setDesignations] = useState<any[]>([]);
   const [loadingOptions, setLoadingOptions] = useState(true);
+  const [showPassword, setShowPassword] = useState(false);
 
   const [form, setForm] = useState({
     name: '',
@@ -60,12 +61,13 @@ const EmployeeForm = () => {
   const fetchDepartmentsAndDesignations = async () => {
     try {
       const [deptsRes, desRes] = await Promise.all([
-        api.get('/departments'),
-        api.get('/designations'),
+        api.get('/employees/departments'),
+        api.get('/employees/designations'),
       ]);
-      setDepartments(deptsRes.data);
-      setDesignations(desRes.data);
+      setDepartments(Array.isArray(deptsRes.data) ? deptsRes.data : []);
+      setDesignations(Array.isArray(desRes.data) ? desRes.data : []);
     } catch (error) {
+      console.error('Failed to load:', error);
       toast.error('Failed to load departments and designations');
     } finally {
       setLoadingOptions(false);
@@ -75,14 +77,17 @@ const EmployeeForm = () => {
   const fetchEmployee = async () => {
     try {
       const { data } = await api.get(`/employees/${id}`);
+      const departmentId = typeof data.department === 'object' ? data.department?._id : data.department;
+      const designationId = typeof data.designation === 'object' ? data.designation?._id : data.designation;
+      
       setForm({
         name: data.name || '',
         email: data.email || '',
         password: '',
         phone: data.phone || '',
         role: data.role || 'employee',
-        department: data.department || '',
-        designation: data.designation || '',
+        department: departmentId || '',
+        designation: designationId || '',
         salary: data.salary?.toString() || '',
         joiningDate: data.joiningDate?.split('T')[0] || '',
         address: data.address || '',
@@ -224,15 +229,25 @@ const EmployeeForm = () => {
           {!isEdit && (
             <div>
               <label className="block text-sm font-medium text-dark-300 mb-1.5">Password *</label>
-              <input
-                name="password"
-                type="password"
-                value={form.password}
-                onChange={handleChange}
-                className="input-dark"
-                placeholder="Min 6 characters"
-                minLength={6}
-              />
+              <div className="relative">
+                <input
+                  name="password"
+                  type={showPassword ? 'text' : 'password'}
+                  value={form.password}
+                  onChange={handleChange}
+                  className="input-dark pr-10"
+                  placeholder="Min 6 characters"
+                  minLength={6}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-dark-400 hover:text-dark-200 transition-colors"
+                  title={showPassword ? 'Hide password' : 'Show password'}
+                >
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
             </div>
           )}
 

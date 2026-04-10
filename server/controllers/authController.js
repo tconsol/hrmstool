@@ -266,14 +266,42 @@ exports.changePassword = async (req, res) => {
   }
 };
 
-// Update own profile (phone, address)
+// Update own profile (personal details)
 exports.updateProfile = async (req, res) => {
   try {
-    const { phone, address } = req.body;
+    const {
+      phone, address, email,
+      fatherName, dateOfBirth, bloodGroup,
+      nomineeName, nomineeRelationship,
+      contactName, contactPhone, emergencyRelationship,
+      aadhaarNumber, panNumber,
+      bankName, bankAccountNumber, ifscCode, uan
+    } = req.body;
 
     const updateData = {};
     if (phone !== undefined) updateData.phone = phone;
     if (address !== undefined) updateData.address = address;
+    if (email !== undefined) updateData.email = email;
+    if (fatherName !== undefined) updateData.fatherName = fatherName;
+    if (dateOfBirth !== undefined) updateData.dateOfBirth = dateOfBirth;
+    if (bloodGroup !== undefined) updateData.bloodGroup = bloodGroup;
+    if (nomineeName !== undefined) updateData.nomineeName = nomineeName;
+    if (nomineeRelationship !== undefined) updateData.nomineeRelationship = nomineeRelationship;
+    if (aadhaarNumber !== undefined) updateData.aadhaarNumber = aadhaarNumber;
+    if (panNumber !== undefined) updateData.panNumber = panNumber;
+    if (bankName !== undefined) updateData.bankName = bankName;
+    if (bankAccountNumber !== undefined) updateData.bankAccountNumber = bankAccountNumber;
+    if (ifscCode !== undefined) updateData.ifscCode = ifscCode;
+    if (uan !== undefined) updateData.uan = uan;
+    
+    // Emergency contact fields
+    if (contactName !== undefined || contactPhone !== undefined || emergencyRelationship !== undefined) {
+      updateData.emergencyContact = {
+        name: contactName || req.user.emergencyContact?.name || '',
+        phone: contactPhone || req.user.emergencyContact?.phone || '',
+        relationship: emergencyRelationship || req.user.emergencyContact?.relationship || '',
+      };
+    }
 
     const user = await User.findByIdAndUpdate(
       req.user._id,

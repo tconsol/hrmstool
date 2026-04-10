@@ -23,9 +23,9 @@ const CustomInput = forwardRef<HTMLButtonElement, { value?: string; onClick?: ()
       onClick={onClick}
       ref={ref}
       disabled={disabled}
-      className="input-dark flex items-center justify-between gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+      className="input-dark flex items-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
     >
-      <span className={value ? 'text-gray-100' : 'text-dark-400'}>
+      <span className={`flex-1 truncate text-left ${value ? 'text-gray-100' : 'text-dark-400'}`}>
         {value || placeholder || 'Select date'}
       </span>
       <CalendarDays size={16} className="text-gray-300 shrink-0" />

@@ -6,7 +6,6 @@ import {
   LogOut,
   Bell,
   UserCircle,
-  Settings,
   ChevronDown,
   CheckCheck,
   Trash2,
@@ -213,8 +212,12 @@ const Header = ({ onMenuToggle }: HeaderProps) => {
             onClick={() => { setUserOpen((o) => !o); setNotifOpen(false); }}
             className="flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-dark-700/60 transition-all text-dark-300 hover:text-white"
           >
-            <div className="w-8 h-8 bg-gradient-to-br from-brand-500 to-brand-700 rounded-xl flex items-center justify-center text-white text-sm font-bold flex-shrink-0">
-              {user?.name?.[0]?.toUpperCase() ?? 'U'}
+            <div className="w-8 h-8 bg-gradient-to-br from-brand-500 to-brand-700 rounded-xl flex items-center justify-center text-white text-sm font-bold flex-shrink-0 overflow-hidden">
+              {user?.profilePicture?.url ? (
+                <img src={user.profilePicture.url} alt={user?.name} className="w-full h-full object-cover" />
+              ) : (
+                user?.name?.[0]?.toUpperCase() ?? 'U'
+              )}
             </div>
             <div className="hidden sm:block text-left">
               <p className="text-xs font-semibold text-white leading-tight truncate max-w-[120px]">
@@ -237,14 +240,9 @@ const Header = ({ onMenuToggle }: HeaderProps) => {
             <div className="absolute right-0 top-full mt-2 w-56 bg-dark-800 border border-dark-700/60 rounded-2xl shadow-2xl shadow-black/40 overflow-hidden z-50">
               {/* Profile summary */}
               <div className="px-4 py-3.5 border-b border-dark-700/50">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-gradient-to-br from-brand-500 to-brand-700 rounded-xl flex items-center justify-center text-white font-bold">
-                    {user?.name?.[0]?.toUpperCase() ?? 'U'}
-                  </div>
-                  <div>
-                    <p className="text-sm font-semibold text-white truncate">{user?.name}</p>
-                    <p className="text-xs text-dark-400 truncate">{user?.email}</p>
-                  </div>
+                <div>
+                  <p className="text-sm font-semibold text-white truncate">{user?.name}</p>
+                  <p className="text-xs text-dark-400 truncate">{user?.email}</p>
                 </div>
               </div>
 
@@ -268,13 +266,6 @@ const Header = ({ onMenuToggle }: HeaderProps) => {
                       {unreadCount}
                     </span>
                   )}
-                </button>
-                <button
-                  onClick={() => { navigate('/profile'); setUserOpen(false); }}
-                  className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm text-dark-300 hover:text-white hover:bg-dark-700/60 transition-all"
-                >
-                  <Settings size={16} className="text-dark-400" />
-                  Settings
                 </button>
               </div>
 

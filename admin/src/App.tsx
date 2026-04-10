@@ -18,6 +18,7 @@ import ForgotUsername from './pages/ForgotUsername';
 import Dashboard from './pages/dashboard/Dashboard';
 import EmployeeList from './pages/employees/EmployeeList';
 import EmployeeForm from './pages/employees/EmployeeForm';
+import EmployeeDetail from './pages/employees/EmployeeDetail';
 import EmployeeDocuments from './pages/employees/EmployeeDocuments';
 import AttendanceDashboard from './pages/attendance/AttendanceDashboard';
 import MyAttendance from './pages/attendance/MyAttendance';
@@ -116,6 +117,14 @@ function App() {
               element={
                 <ProtectedRoute roles={['hr', 'manager', 'ceo']}>
                   <FeatureGate feature="employees"><EmployeeForm /></FeatureGate>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/employees/:id"
+              element={
+                <ProtectedRoute roles={['hr', 'manager', 'ceo', 'employee']}>
+                  <FeatureGate feature="employees"><EmployeeDetail /></FeatureGate>
                 </ProtectedRoute>
               }
             />
