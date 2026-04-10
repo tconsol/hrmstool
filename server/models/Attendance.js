@@ -41,6 +41,11 @@ const attendanceSchema = new mongoose.Schema({
     enum: ['self', 'hr'],
     default: 'self',
   },
+  checkInMode: {
+    type: String,
+    enum: ['office', 'remote'],
+    default: 'office',
+  },
   checkInLocation: {
     latitude: Number,
     longitude: Number,

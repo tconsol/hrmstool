@@ -9,6 +9,7 @@ export interface Organization {
   website: string;
   industry: string;
   employeeCount: string;
+  enabledFeatures?: string[];
   subscription: {
     plan: string;
     startDate: string;
@@ -91,6 +92,7 @@ export interface Attendance {
   workHours: number;
   notes: string;
   markedBy: 'self' | 'hr';
+  checkInMode?: 'office' | 'remote';
 }
 
 export interface Leave {

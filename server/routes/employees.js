@@ -3,6 +3,7 @@ const multer = require('multer');
 const rateLimit = require('express-rate-limit');
 const { auth, authorize } = require('../middleware/auth');
 const orgScope = require('../middleware/orgScope');
+const requireFeature = require('../middleware/requireFeature');
 const validate = require('../middleware/validate');
 const {
   getEmployees,
@@ -72,19 +73,19 @@ const profilePictureLimiter = rateLimit({
 
 router.use(auth);
 router.use(orgScope);
+router.use(requireFeature('employees'));
 
-// Self-service profile picture upload - any employee can upload their own
-router.post('/profile/picture', profilePictureLimiter, profilePictureUpload.single('file'), uploadProfilePicture);
+// Self-service profile picture upload - any employee can upload their own profilePictureLimiter, profilePictureUpload.single('file'), uploadProfilePicture);
 
 router.get('/', authorize('hr', 'manager', 'ceo'), getEmployees);
 router.get('/departments', authorize('hr', 'manager', 'ceo'), getDepartments);
 router.get('/:id', authorize('hr', 'manager', 'ceo'), getEmployee);
 router.get('/:id/documents', authorize('hr', 'manager', 'ceo'), getEmployeeDocuments);
-router.post('/:id/documents/upload', authorize('hr'), uploadLimiter, upload.single('file'), uploadEmployeeDocument);
-router.put('/:id/documents/personal', authorize('hr'), updateEmployeePersonalDetails);
-router.delete('/:id/documents/:docKey', authorize('hr'), removeEmployeeDocument);
-router.post('/', authorize('hr'), addEmployeeValidation, validate, addEmployee);
-router.put('/:id', authorize('hr'), updateEmployeeValidation, validate, updateEmployee);
-router.patch('/:id/toggle-status', authorize('hr'), toggleStatus);
+router.post('/:id/documents/upload', authorize('hr', 'manager', 'ceo'), uploadLimiter, upload.single('file'), uploadEmployeeDocument);
+router.put('/:id/documents/personal', authorize('hr', 'manager', 'ceo'), updateEmployeePersonalDetails);
+router.delete('/:id/documents/:docKey', authorize('hr', 'manager', 'ceo'), removeEmployeeDocument);
+router.post('/', authorize('hr', 'manager', 'ceo'), addEmployeeValidation, validate, addEmployee);
+router.put('/:id', authorize('hr', 'manager', 'ceo'), updateEmployeeValidation, validate, updateEmployee);
+router.patch('/:id/toggle-status', authorize('hr', 'manager', 'ceo'), toggleStatus);
 
 module.exports = router;

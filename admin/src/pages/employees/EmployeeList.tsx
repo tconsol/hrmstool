@@ -28,7 +28,7 @@ const EmployeeList = () => {
   const [totalPages, setTotalPages] = useState(1);
   const navigate = useNavigate();
   const { user } = useAuth();
-  const isHR = user?.role === 'hr';
+  const isHR = ['hr', 'ceo', 'manager'].includes(user?.role ?? '');
 
   useEffect(() => {
     fetchEmployees();

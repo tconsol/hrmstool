@@ -1,10 +1,23 @@
 const mongoose = require('mongoose');
+const { DEFAULT_FEATURES } = require('../config/features');
 
 const organizationSchema = new mongoose.Schema({
   name: {
     type: String,
     required: true,
     trim: true,
+  },
+  orgId: {
+    type: String,
+    unique: true,
+    sparse: true,
+    trim: true,
+    uppercase: true,
+  },
+  employeeIdPrefix: {
+    type: String,
+    trim: true,
+    uppercase: true,
   },
   slug: {
     type: String,
@@ -44,6 +57,10 @@ const organizationSchema = new mongoose.Schema({
     enum: ['1-10', '11-50', '51-200', '201-500', '500+'],
     default: '1-10',
   },
+  enabledFeatures: {
+    type: [String],
+    default: DEFAULT_FEATURES,
+  },
   subscription: {
     plan: { type: String, enum: ['free', 'starter', 'professional', 'enterprise'], default: 'free' },
     startDate: { type: Date, default: Date.now },
@@ -76,7 +93,20 @@ const organizationSchema = new mongoose.Schema({
   },
   isActive: {
     type: Boolean,
-    default: true,
+    default: false, // Default false - requires super admin activation
+  },
+  isVerified: {
+    type: Boolean,
+    default: false, // Email OTP verified
+  },
+  verificationStatus: {
+    type: String,
+    enum: ['pending_otp', 'pending_approval', 'approved', 'rejected'],
+    default: 'pending_otp',
+  },
+  otp: {
+    code: { type: String },
+    expiresAt: { type: Date },
   },
   createdBy: {
     type: mongoose.Schema.Types.ObjectId,

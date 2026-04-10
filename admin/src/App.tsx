@@ -3,6 +3,7 @@ import { Toaster } from 'react-hot-toast';
 import { AuthProvider } from './context/AuthContext';
 import { NotificationProvider } from './context/NotificationContext';
 import ProtectedRoute from './components/ProtectedRoute';
+import FeatureGate from './components/FeatureGate';
 import Layout from './components/Layout/Layout';
 import SuperAdminLayout from './components/Layout/SuperAdminLayout';
 import ScrollToTop from './components/ScrollToTop';
@@ -11,6 +12,9 @@ import About from './pages/About';
 import PricingDetail from './pages/PricingDetail';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
+import ForgotUsername from './pages/ForgotUsername';
 import Dashboard from './pages/dashboard/Dashboard';
 import EmployeeList from './pages/employees/EmployeeList';
 import EmployeeForm from './pages/employees/EmployeeForm';
@@ -60,6 +64,9 @@ function App() {
             <Route path="/pricing/:tierId" element={<PricingDetail />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/forgot-username" element={<ForgotUsername />} />
             <Route path="/superadmin/login" element={<SuperAdminLogin />} />
 
           {/* Super Admin Routes */}
@@ -92,23 +99,23 @@ function App() {
               path="/employees"
               element={
                 <ProtectedRoute roles={['hr', 'manager', 'ceo']}>
-                  <EmployeeList />
+                  <FeatureGate feature="employees"><EmployeeList /></FeatureGate>
                 </ProtectedRoute>
               }
             />
             <Route
               path="/employees/add"
               element={
-                <ProtectedRoute roles={['hr']}>
-                  <EmployeeForm />
+                <ProtectedRoute roles={['hr', 'manager', 'ceo']}>
+                  <FeatureGate feature="employees"><EmployeeForm /></FeatureGate>
                 </ProtectedRoute>
               }
             />
             <Route
               path="/employees/edit/:id"
               element={
-                <ProtectedRoute roles={['hr']}>
-                  <EmployeeForm />
+                <ProtectedRoute roles={['hr', 'manager', 'ceo']}>
+                  <FeatureGate feature="employees"><EmployeeForm /></FeatureGate>
                 </ProtectedRoute>
               }
             />
@@ -116,7 +123,7 @@ function App() {
               path="/employees/:id/documents"
               element={
                 <ProtectedRoute roles={['hr', 'manager', 'ceo']}>
-                  <EmployeeDocuments />
+                  <FeatureGate feature="employees"><EmployeeDocuments /></FeatureGate>
                 </ProtectedRoute>
               }
             />
@@ -124,7 +131,7 @@ function App() {
               path="/attendance"
               element={
                 <ProtectedRoute roles={['hr', 'manager', 'ceo']}>
-                  <AttendanceDashboard />
+                  <FeatureGate feature="attendance"><AttendanceDashboard /></FeatureGate>
                 </ProtectedRoute>
               }
             />
@@ -132,7 +139,7 @@ function App() {
               path="/leaves"
               element={
                 <ProtectedRoute roles={['hr', 'manager', 'ceo']}>
-                  <LeaveRequests />
+                  <FeatureGate feature="leaves"><LeaveRequests /></FeatureGate>
                 </ProtectedRoute>
               }
             />
@@ -140,23 +147,23 @@ function App() {
               path="/payroll"
               element={
                 <ProtectedRoute roles={['hr', 'manager', 'ceo']}>
-                  <PayrollDashboard />
+                  <FeatureGate feature="payroll"><PayrollDashboard /></FeatureGate>
                 </ProtectedRoute>
               }
             />
             <Route
               path="/documents"
               element={
-                <ProtectedRoute roles={['hr']}>
-                  <DocumentList />
+                <ProtectedRoute roles={['hr', 'manager', 'ceo']}>
+                  <FeatureGate feature="documents"><DocumentList /></FeatureGate>
                 </ProtectedRoute>
               }
             />
             <Route
               path="/documents/create"
               element={
-                <ProtectedRoute roles={['hr']}>
-                  <DocumentCreate />
+                <ProtectedRoute roles={['hr', 'manager', 'ceo']}>
+                  <FeatureGate feature="documents"><DocumentCreate /></FeatureGate>
                 </ProtectedRoute>
               }
             />
@@ -166,7 +173,7 @@ function App() {
               path="/departments"
               element={
                 <ProtectedRoute roles={['hr', 'manager', 'ceo']}>
-                  <DepartmentList />
+                  <FeatureGate feature="departments"><DepartmentList /></FeatureGate>
                 </ProtectedRoute>
               }
             />
@@ -174,7 +181,7 @@ function App() {
               path="/designations"
               element={
                 <ProtectedRoute roles={['hr', 'manager', 'ceo']}>
-                  <DesignationList />
+                  <FeatureGate feature="designations"><DesignationList /></FeatureGate>
                 </ProtectedRoute>
               }
             />
@@ -182,7 +189,7 @@ function App() {
               path="/holidays"
               element={
                 <ProtectedRoute roles={['hr', 'manager', 'ceo']}>
-                  <HolidayList />
+                  <FeatureGate feature="holidays"><HolidayList /></FeatureGate>
                 </ProtectedRoute>
               }
             />
@@ -190,7 +197,7 @@ function App() {
               path="/announcements"
               element={
                 <ProtectedRoute roles={['hr', 'manager', 'ceo']}>
-                  <AnnouncementList />
+                  <FeatureGate feature="announcements"><AnnouncementList /></FeatureGate>
                 </ProtectedRoute>
               }
             />
@@ -198,23 +205,23 @@ function App() {
               path="/expenses"
               element={
                 <ProtectedRoute roles={['hr', 'manager', 'ceo']}>
-                  <ExpenseManagement />
+                  <FeatureGate feature="expenses"><ExpenseManagement /></FeatureGate>
                 </ProtectedRoute>
               }
             />
             <Route
               path="/shifts"
               element={
-                <ProtectedRoute roles={['hr']}>
-                  <ShiftList />
+                <ProtectedRoute roles={['hr', 'manager', 'ceo']}>
+                  <FeatureGate feature="shifts"><ShiftList /></FeatureGate>
                 </ProtectedRoute>
               }
             />
             <Route
               path="/assets"
               element={
-                <ProtectedRoute roles={['hr']}>
-                  <AssetList />
+                <ProtectedRoute roles={['hr', 'manager', 'ceo']}>
+                  <FeatureGate feature="assets"><AssetList /></FeatureGate>
                 </ProtectedRoute>
               }
             />
@@ -222,26 +229,26 @@ function App() {
               path="/organization"
               element={
                 <ProtectedRoute roles={['hr', 'ceo']}>
-                  <OrganizationSettings />
+                  <FeatureGate feature="organization"><OrganizationSettings /></FeatureGate>
                 </ProtectedRoute>
               }
             />
 
             {/* Employee Routes */}
-            <Route path="/my-attendance" element={<MyAttendance />} />
-            <Route path="/my-leaves" element={<MyLeaves />} />
-            <Route path="/my-salary" element={<MySalary />} />
-            <Route path="/my-expenses" element={<MyExpenses />} />
-            <Route path="/my-assets" element={<MyAssets />} />
-            <Route path="/training" element={<TrainingList />} />
-            <Route path="/training/:id" element={<TrainingDetail />} />
+            <Route path="/my-attendance" element={<FeatureGate feature="attendance"><MyAttendance /></FeatureGate>} />
+            <Route path="/my-leaves" element={<FeatureGate feature="leaves"><MyLeaves /></FeatureGate>} />
+            <Route path="/my-salary" element={<FeatureGate feature="payroll"><MySalary /></FeatureGate>} />
+            <Route path="/my-expenses" element={<FeatureGate feature="expenses"><MyExpenses /></FeatureGate>} />
+            <Route path="/my-assets" element={<FeatureGate feature="assets"><MyAssets /></FeatureGate>} />
+            <Route path="/training" element={<FeatureGate feature="training"><TrainingList /></FeatureGate>} />
+            <Route path="/training/:id" element={<FeatureGate feature="training"><TrainingDetail /></FeatureGate>} />
             <Route path="/profile" element={<MyProfile />} />
 
             {/* Notifications — all roles */}
-            <Route path="/notifications" element={<NotificationsPage />} />
+            <Route path="/notifications" element={<FeatureGate feature="notifications"><NotificationsPage /></FeatureGate>} />
 
             {/* Calendar — all roles, HR can edit */}
-            <Route path="/calendar" element={<CompanyCalendar />} />
+            <Route path="/calendar" element={<FeatureGate feature="calendar"><CompanyCalendar /></FeatureGate>} />
           </Route>
 
           <Route path="*" element={<Navigate to="/dashboard" replace />} />

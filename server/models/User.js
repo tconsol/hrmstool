@@ -152,6 +152,8 @@ const userSchema = new mongoose.Schema({
   uan: { type: String, default: '' },
   panNumber: { type: String, default: '' },
   aadhaarNumber: { type: String, default: '' },
+  resetPasswordToken: { type: String },
+  resetPasswordExpires: { type: Date },
 }, {
   timestamps: true,
 });

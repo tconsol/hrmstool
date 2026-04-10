@@ -98,6 +98,16 @@ const Login = () => {
             </div>
           </div>
 
+          {/* Forgot Password & Username Links */}
+          <div className="flex justify-between text-sm">
+            <Link to="/forgot-username" className="text-brand-400 hover:text-brand-300 transition-colors">
+              Forgot Email?
+            </Link>
+            <Link to="/forgot-password" className="text-brand-400 hover:text-brand-300 transition-colors">
+              Forgot Password?
+            </Link>
+          </div>
+
           <button
             type="submit"
             disabled={loading}

@@ -7,7 +7,7 @@ interface AuthContextType {
   token: string | null;
   login: (email: string, password: string) => Promise<void>;
   superAdminLogin: (email: string, password: string) => Promise<void>;
-  register: (data: { orgName: string; name: string; email: string; password: string; phone?: string; industry?: string }) => Promise<void>;
+  register: (data: { orgName: string; name: string; email: string; password: string; phone?: string; industry?: string }) => Promise<{ organizationId: string; email: string }>;
   logout: () => void;
   loading: boolean;
   updateUser: (user: User) => void;
@@ -24,16 +24,41 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const savedToken = localStorage.getItem('hrms_token');
     const savedUser = localStorage.getItem('hrms_user');
 
-    if (savedToken && savedUser) {
+    if (savedToken && savedUser && savedUser !== 'undefined') {
+      let parsedUser;
+      try {
+        parsedUser = JSON.parse(savedUser);
+      } catch {
+        localStorage.removeItem('hrms_token');
+        localStorage.removeItem('hrms_user');
+        setLoading(false);
+        return;
+      }
       setToken(savedToken);
-      setUser(JSON.parse(savedUser));
-      // Fetch fresh user data with populated department/designation
-      api.get('/auth/me').then(({ data }) => {
-        if (data && data._id) {
-          localStorage.setItem('hrms_user', JSON.stringify(data));
-          setUser(data);
-        }
-      }).catch(() => {});
+      setUser(parsedUser);
+      
+      // Validate that user still exists in database
+      api.get('/auth/me')
+        .then(({ data }) => {
+          if (data && data._id) {
+            localStorage.setItem('hrms_user', JSON.stringify(data));
+            setUser(data);
+          } else {
+            // User not found, clear session
+            localStorage.removeItem('hrms_token');
+            localStorage.removeItem('hrms_user');
+            setToken(null);
+            setUser(null);
+          }
+        })
+        .catch((error) => {
+          // User validation failed (deleted from DB, token expired, etc)
+          console.log('User validation failed:', error);
+          localStorage.removeItem('hrms_token');
+          localStorage.removeItem('hrms_user');
+          setToken(null);
+          setUser(null);
+        });
     }
     setLoading(false);
   }, []);
@@ -60,12 +85,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const register = async (data: { orgName: string; name: string; email: string; password: string; phone?: string; industry?: string }) => {
     const response = await api.post('/auth/register', data);
-    const { token: authToken, user: authUser } = response.data;
-
-    localStorage.setItem('hrms_token', authToken);
-    localStorage.setItem('hrms_user', JSON.stringify(authUser));
-    setToken(authToken);
-    setUser(authUser);
+    return { organizationId: response.data.organizationId, email: response.data.email };
   };
 
   const logout = () => {

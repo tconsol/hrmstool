@@ -16,9 +16,9 @@ router.use(orgScope);
 router.get('/', getDesignations);
 
 // Management routes
-router.post('/', authorize('hr', 'ceo'), createDesignation);
-router.get('/:id', authorize('hr', 'ceo'), getDesignation);
-router.put('/:id', authorize('hr', 'ceo'), updateDesignation);
-router.delete('/:id', authorize('hr', 'ceo'), deleteDesignation);
+router.post('/', authorize('hr', 'manager', 'ceo'), createDesignation);
+router.get('/:id', authorize('hr', 'manager', 'ceo'), getDesignation);
+router.put('/:id', authorize('hr', 'manager', 'ceo'), updateDesignation);
+router.delete('/:id', authorize('hr', 'manager', 'ceo'), deleteDesignation);
 
 module.exports = router;

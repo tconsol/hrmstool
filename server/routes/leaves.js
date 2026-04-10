@@ -1,6 +1,7 @@
 const router = require('express').Router();
 const { auth, authorize } = require('../middleware/auth');
 const orgScope = require('../middleware/orgScope');
+const requireFeature = require('../middleware/requireFeature');
 const {
   applyLeave,
   getMyLeaves,
@@ -11,6 +12,7 @@ const {
 
 router.use(auth);
 router.use(orgScope);
+router.use(requireFeature('leaves'));
 
 // Employee routes
 router.post('/apply', applyLeave);

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import api from '../../services/api';
+import { getCurrentLocation } from '../../services/geolocation';
 import toast from 'react-hot-toast';
 import {
   CalendarCheck,
@@ -8,8 +9,12 @@ import {
   Clock,
   LogIn,
   LogOut,
+  AlertCircle,
+  Building2,
+  Wifi,
 } from 'lucide-react';
 import type { EmployeeDashboard as EmployeeDashData } from '../../types';
+import Modal from '../../components/ui/Modal';
 
 const useElapsed = (checkIn: string | null | undefined, checkOut: string | null | undefined) => {
   const [elapsed, setElapsed] = useState('');
@@ -32,6 +37,8 @@ const EmployeeDashboard = () => {
   const [data, setData] = useState<EmployeeDashData | null>(null);
   const [loading, setLoading] = useState(true);
   const [checkingIn, setCheckingIn] = useState(false);
+  const [checkInMode, setCheckInMode] = useState<'office' | 'remote'>('office');
+  const [locationError, setLocationError] = useState<{ message: string; locations: any[] } | null>(null);
 
   useEffect(() => {
     fetchDashboard();
@@ -54,11 +61,30 @@ const EmployeeDashboard = () => {
   const handleCheckIn = async () => {
     setCheckingIn(true);
     try {
-      await api.post('/attendance/check-in');
+      const body: any = { checkInMode };
+      if (checkInMode === 'office') {
+        toast.loading('Getting your location...', { id: 'location-fetch' });
+        const location = await getCurrentLocation();
+        if (location) {
+          body.latitude = location.latitude;
+          body.longitude = location.longitude;
+        }
+        toast.dismiss('location-fetch');
+      }
+      await api.post('/attendance/check-in', body);
       toast.success('Checked in successfully!');
       fetchDashboard();
     } catch (error: any) {
-      toast.error(error.response?.data?.error || 'Check-in failed');
+      toast.dismiss('location-fetch');
+      // If location error, show Modal instead of toast
+      if (error.response?.data?.isLocationError) {
+        setLocationError({
+          message: error.response.data.message,
+          locations: error.response.data.officeLocations || [],
+        });
+      } else {
+        toast.error(error.response?.data?.error || 'Check-in failed');
+      }
     } finally {
       setCheckingIn(false);
     }
@@ -124,7 +150,31 @@ const EmployeeDashboard = () => {
               </p>
             )}
           </div>
-          <div className="flex gap-3">
+          <div className="flex gap-3 items-center">
+            {!hasCheckedIn && (
+              <div className="flex rounded-lg border border-dark-600 overflow-hidden mr-1">
+                <button
+                  onClick={() => setCheckInMode('office')}
+                  className={`flex items-center gap-1 px-3 py-1.5 text-xs font-medium transition-colors ${
+                    checkInMode === 'office'
+                      ? 'bg-brand-500 text-white'
+                      : 'bg-dark-700 text-dark-400 hover:text-white'
+                  }`}
+                >
+                  <Building2 size={14} /> In Office
+                </button>
+                <button
+                  onClick={() => setCheckInMode('remote')}
+                  className={`flex items-center gap-1 px-3 py-1.5 text-xs font-medium transition-colors ${
+                    checkInMode === 'remote'
+                      ? 'bg-brand-500 text-white'
+                      : 'bg-dark-700 text-dark-400 hover:text-white'
+                  }`}
+                >
+                  <Wifi size={14} /> Remote
+                </button>
+              </div>
+            )}
             {!hasCheckedIn ? (
               <button
                 onClick={handleCheckIn}
@@ -257,6 +307,45 @@ const EmployeeDashboard = () => {
           <p className="text-sm text-dark-500 text-center py-4">No recent leave requests</p>
         )}
       </div>
+
+      {/* Location Error Modal */}
+      {locationError && (
+        <Modal onClose={() => setLocationError(null)}>
+          <div className="glass-card p-6 w-full max-w-md space-y-4">
+            <div className="flex items-start gap-3">
+              <div className="p-2 rounded-lg bg-red-500/20">
+                <AlertCircle className="w-6 h-6 text-red-400" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-lg font-semibold text-white">Location Check-in Failed</h3>
+                <p className="text-sm text-dark-400 mt-1">{locationError.message}</p>
+              </div>
+            </div>
+
+            {locationError.locations.length > 0 && (
+              <div className="bg-dark-700/50 rounded-lg p-4 space-y-2">
+                <p className="text-xs font-semibold text-dark-300 uppercase tracking-wide">Required Office Locations</p>
+                {locationError.locations.map((loc: any, idx: number) => (
+                  <div key={idx} className="text-sm">
+                    <p className="font-medium text-white">{loc.name}</p>
+                    <p className="text-xs text-dark-400">{loc.address}</p>
+                    <p className="text-xs text-dark-500 mt-0.5">📍 Radius: {loc.radiusMeters}m</p>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <div className="flex justify-end pt-2 border-t border-dark-600">
+              <button
+                onClick={() => setLocationError(null)}
+                className="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white rounded-lg font-medium transition-colors"
+              >
+                OK
+              </button>
+            </div>
+          </div>
+        </Modal>
+      )}
     </div>
   );
 };

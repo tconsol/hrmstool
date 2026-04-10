@@ -1,6 +1,8 @@
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useNotifications } from '../../context/NotificationContext';
+import { ROUTE_FEATURE_MAP } from '../../config/features';
+import { Organization } from '../../types';
 import { useState, useEffect, useMemo } from 'react';
 import {
   LayoutDashboard,
@@ -130,11 +132,14 @@ const Sidebar = ({ isOpen, onClose, isCollapsed = false, onToggleCollapse }: Sid
         { to: '/attendance', label: 'Attendance', icon: CalendarCheck },
         { to: '/leaves', label: 'Leave Requests', icon: CalendarOff },
         { to: '/payroll', label: 'Payroll', icon: Wallet },
+        { to: '/documents', label: 'Documents', icon: FileText },
         { to: '/departments', label: 'Departments', icon: Building2 },
         { to: '/designations', label: 'Designations', icon: Layers },
         { to: '/holidays', label: 'Holidays', icon: CalendarHeart },
         { to: '/announcements', label: 'Announcements', icon: Megaphone },
         { to: '/expenses', label: 'Expenses', icon: Receipt },
+        { to: '/shifts', label: 'Shifts', icon: Clock },
+        { to: '/assets', label: 'Assets', icon: Monitor },
         { to: '/training', label: 'Training', icon: GraduationCap },
       ],
     },
@@ -152,6 +157,44 @@ const Sidebar = ({ isOpen, onClose, isCollapsed = false, onToggleCollapse }: Sid
     },
     { to: '/calendar', label: 'Calendar', icon: CalendarDays },
     { to: '/notifications', label: 'Notifications', icon: Bell, badge: unreadCount },
+  ];
+
+  const ceoItems: SidebarItem[] = [
+    { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    {
+      label: 'Management',
+      icon: Briefcase,
+      links: [
+        { to: '/employees', label: 'Employees', icon: Users },
+        { to: '/attendance', label: 'Attendance', icon: CalendarCheck },
+        { to: '/leaves', label: 'Leave Requests', icon: CalendarOff },
+        { to: '/payroll', label: 'Payroll', icon: Wallet },
+        { to: '/documents', label: 'Documents', icon: FileText },
+        { to: '/departments', label: 'Departments', icon: Building2 },
+        { to: '/designations', label: 'Designations', icon: Layers },
+        { to: '/holidays', label: 'Holidays', icon: CalendarHeart },
+        { to: '/announcements', label: 'Announcements', icon: Megaphone },
+        { to: '/expenses', label: 'Expenses', icon: Receipt },
+        { to: '/shifts', label: 'Shifts', icon: Clock },
+        { to: '/assets', label: 'Assets', icon: Monitor },
+        { to: '/training', label: 'Training', icon: GraduationCap },
+      ],
+    },
+    {
+      label: 'My Space',
+      icon: User,
+      links: [
+        { to: '/my-attendance', label: 'My Attendance', icon: CalendarCheck },
+        { to: '/my-leaves', label: 'My Leaves', icon: CalendarOff },
+        { to: '/my-salary', label: 'My Salary', icon: Wallet },
+        { to: '/my-expenses', label: 'My Expenses', icon: Receipt },
+        { to: '/my-assets', label: 'My Assets', icon: Monitor },
+        { to: '/profile', label: 'My Profile', icon: UserCircle },
+      ],
+    },
+    { to: '/calendar', label: 'Calendar', icon: CalendarDays },
+    { to: '/notifications', label: 'Notifications', icon: Bell, badge: unreadCount },
+    { to: '/organization', label: 'Organization', icon: Settings },
   ];
 
   const employeeItems: SidebarItem[] = [
@@ -175,14 +218,42 @@ const Sidebar = ({ isOpen, onClose, isCollapsed = false, onToggleCollapse }: Sid
 
   let items: SidebarItem[] = employeeItems;
   if (user?.role === 'hr') items = hrItems;
-  else if (isManagement) items = managerItems;
+  else if (user?.role === 'ceo') items = ceoItems;
+  else if (user?.role === 'manager') items = managerItems;
+
+  // Get enabled features from user's organization
+  const org = user?.organization as Organization | undefined;
+  const enabledFeatures = org?.enabledFeatures;
+
+  // Filter items by enabled features
+  const featureFilteredItems = useMemo(() => {
+    if (!enabledFeatures || enabledFeatures.length === 0) return items; // no restriction if empty/unset
+    // Core routes that should never be hidden by feature flags
+    const ALWAYS_VISIBLE = ['/dashboard', '/organization', '/notifications', '/profile'];
+    const isFeatureEnabled = (path: string) => {
+      if (ALWAYS_VISIBLE.includes(path)) return true;
+      const featureKey = ROUTE_FEATURE_MAP[path];
+      if (!featureKey) return true; // unmapped routes are always shown
+      return enabledFeatures.includes(featureKey);
+    };
+    const result: SidebarItem[] = [];
+    for (const item of items) {
+      if (isGroup(item)) {
+        const filtered = item.links.filter(l => isFeatureEnabled(l.to));
+        if (filtered.length > 0) result.push({ ...item, links: filtered });
+      } else {
+        if (isFeatureEnabled((item as LinkItem).to)) result.push(item);
+      }
+    }
+    return result;
+  }, [items, enabledFeatures]);
 
   // Filter items by search query
   const filteredItems = useMemo(() => {
-    if (!search.trim()) return items;
+    if (!search.trim()) return featureFilteredItems;
     const q = search.toLowerCase();
     const result: SidebarItem[] = [];
-    for (const item of items) {
+    for (const item of featureFilteredItems) {
       if (isGroup(item)) {
         const matched = item.links.filter(l => l.label.toLowerCase().includes(q));
         if (matched.length > 0) result.push({ ...item, links: matched });
@@ -191,7 +262,7 @@ const Sidebar = ({ isOpen, onClose, isCollapsed = false, onToggleCollapse }: Sid
       }
     }
     return result;
-  }, [items, search]);
+  }, [featureFilteredItems, search]);
 
   const renderLink = (link: LinkItem, indent = false) => (
     <NavLink

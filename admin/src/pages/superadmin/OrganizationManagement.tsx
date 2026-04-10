@@ -15,6 +15,9 @@ import {
   X,
   CreditCard,
   AlertTriangle,
+  CheckCircle2,
+  XCircle,
+  Clock,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import Select from '../../components/ui/Select';
@@ -27,6 +30,7 @@ interface OrgData {
   phone: string;
   industry: string;
   isActive: boolean;
+  verificationStatus?: string;
   subscription: {
     plan: string;
     startDate: string;
@@ -35,6 +39,17 @@ interface OrgData {
   };
   createdAt: string;
   actualEmployeeCount: number;
+}
+
+interface PendingOrg {
+  _id: string;
+  name: string;
+  email: string;
+  phone: string;
+  industry: string;
+  verificationStatus: string;
+  createdAt: string;
+  creator?: { name: string; email: string; phone: string } | null;
 }
 
 interface OrgDetails {
@@ -48,7 +63,10 @@ interface OrgDetails {
 }
 
 const OrganizationManagement = () => {
+  const [activeTab, setActiveTab] = useState<'all' | 'pending'>('all');
   const [organizations, setOrganizations] = useState<OrgData[]>([]);
+  const [pendingOrgs, setPendingOrgs] = useState<PendingOrg[]>([]);
+  const [pendingLoading, setPendingLoading] = useState(false);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
@@ -61,6 +79,7 @@ const OrganizationManagement = () => {
 
   useEffect(() => {
     fetchOrganizations();
+    fetchPendingOrganizations();
   }, [page, statusFilter, planFilter]);
 
   const fetchOrganizations = async () => {
@@ -85,6 +104,40 @@ const OrganizationManagement = () => {
     e.preventDefault();
     setPage(1);
     fetchOrganizations();
+  };
+
+  const fetchPendingOrganizations = async () => {
+    try {
+      setPendingLoading(true);
+      const { data } = await api.get('/superadmin/organizations/pending');
+      setPendingOrgs(data.organizations);
+    } catch (error) {
+      // Silently fail for pending orgs
+    } finally {
+      setPendingLoading(false);
+    }
+  };
+
+  const approveOrganization = async (id: string) => {
+    try {
+      const { data } = await api.patch(`/superadmin/organizations/${id}/approve`);
+      toast.success(data.message);
+      fetchPendingOrganizations();
+      fetchOrganizations();
+    } catch (error) {
+      toast.error('Failed to approve organization');
+    }
+  };
+
+  const rejectOrganization = async (id: string) => {
+    try {
+      const { data } = await api.patch(`/superadmin/organizations/${id}/reject`);
+      toast.success(data.message);
+      fetchPendingOrganizations();
+      fetchOrganizations();
+    } catch (error) {
+      toast.error('Failed to reject organization');
+    }
   };
 
   const toggleStatus = async (id: string) => {
@@ -140,6 +193,103 @@ const OrganizationManagement = () => {
         </div>
       </div>
 
+      {/* Tabs */}
+      <div className="flex gap-1 bg-dark-800 rounded-lg p-1 border border-dark-700 w-fit">
+        <button
+          onClick={() => setActiveTab('all')}
+          className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+            activeTab === 'all' ? 'bg-brand-600 text-white' : 'text-dark-400 hover:text-white'
+          }`}
+        >
+          All Organizations
+        </button>
+        <button
+          onClick={() => setActiveTab('pending')}
+          className={`px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center gap-2 ${
+            activeTab === 'pending' ? 'bg-amber-600 text-white' : 'text-dark-400 hover:text-white'
+          }`}
+        >
+          <Clock size={16} />
+          Pending Approval
+          {pendingOrgs.length > 0 && (
+            <span className="bg-red-500 text-white text-xs px-1.5 py-0.5 rounded-full min-w-[20px] text-center">
+              {pendingOrgs.length}
+            </span>
+          )}
+        </button>
+      </div>
+
+      {/* Pending Approvals Tab */}
+      {activeTab === 'pending' && (
+        <div className="space-y-4">
+          {pendingLoading ? (
+            <div className="bg-dark-800 rounded-xl border border-dark-700 p-12 text-center">
+              <div className="w-6 h-6 border-2 border-amber-500 border-t-transparent rounded-full animate-spin mx-auto" />
+            </div>
+          ) : pendingOrgs.length === 0 ? (
+            <div className="bg-dark-800 rounded-xl border border-dark-700 p-12 text-center">
+              <CheckCircle2 size={48} className="mx-auto text-green-400 mb-3" />
+              <p className="text-dark-400">No pending organizations to review</p>
+            </div>
+          ) : (
+            <div className="grid gap-4">
+              {pendingOrgs.map(org => (
+                <div key={org._id} className="bg-dark-800 rounded-xl border border-dark-700 p-5">
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3 mb-2">
+                        <div className="w-10 h-10 rounded-lg bg-amber-500/20 flex items-center justify-center">
+                          <Building2 size={20} className="text-amber-400" />
+                        </div>
+                        <div>
+                          <h3 className="text-white font-semibold">{org.name}</h3>
+                          <p className="text-xs text-dark-400">Registered {new Date(org.createdAt).toLocaleDateString()} at {new Date(org.createdAt).toLocaleTimeString()}</p>
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-3">
+                        <div>
+                          <p className="text-xs text-dark-500">Organization Email</p>
+                          <p className="text-sm text-dark-300">{org.email}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-dark-500">Phone</p>
+                          <p className="text-sm text-dark-300">{org.phone || '-'}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-dark-500">Industry</p>
+                          <p className="text-sm text-dark-300">{org.industry || '-'}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-dark-500">CEO</p>
+                          <p className="text-sm text-dark-300">{org.creator?.name || '-'}</p>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex gap-2 ml-4 flex-shrink-0">
+                      <button
+                        onClick={() => approveOrganization(org._id)}
+                        className="flex items-center gap-1.5 px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg transition-colors"
+                      >
+                        <CheckCircle2 size={16} /> Approve
+                      </button>
+                      <button
+                        onClick={() => rejectOrganization(org._id)}
+                        className="flex items-center gap-1.5 px-4 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-400 text-sm font-medium rounded-lg transition-colors"
+                      >
+                        <XCircle size={16} /> Reject
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* All Organizations Tab */}
+      {activeTab === 'all' && (
+        <>
       {/* Filters */}
       <div className="flex flex-wrap gap-3">
         <form onSubmit={handleSearch} className="flex-1 min-w-[200px]">
@@ -293,107 +443,116 @@ const OrganizationManagement = () => {
           </div>
         )}
       </div>
+      </>
+      )}
 
       {/* Details Modal */}
       {selectedOrg && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="modal-overlay" onClick={() => setSelectedOrg(null)} />
-          <div className="glass-card p-6 w-full max-w-2xl max-h-[80vh] overflow-y-auto relative z-10" onClick={e => e.stopPropagation()}>
-            <div className="flex items-center justify-between mb-5">
-              <h3 className="text-lg font-semibold text-white">{selectedOrg.organization.name}</h3>
-              <button onClick={() => setSelectedOrg(null)} className="p-1.5 text-dark-400 hover:text-white hover:bg-dark-700 rounded-lg transition-colors"><X className="w-4 h-4" /></button>
+          <div className="bg-dark-800 rounded-xl border border-dark-700 w-full max-w-2xl flex flex-col max-h-[90vh] relative z-10" onClick={e => e.stopPropagation()}>
+            {/* Sticky Header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-dark-700 flex-shrink-0">
+              <h3 className="text-lg font-bold text-white">{selectedOrg.organization.name}</h3>
+              <button onClick={() => setSelectedOrg(null)} className="p-1.5 text-dark-400 hover:text-white hover:bg-dark-700 rounded-lg transition-colors flex-shrink-0">
+                <X size={18} />
+              </button>
             </div>
-            {detailsLoading ? (
-              <div className="flex items-center justify-center p-12">
-                <div className="w-8 h-8 border-2 border-brand-500 border-t-transparent rounded-full animate-spin" />
-              </div>
-            ) : (
-              <div className="space-y-5">
-                {/* Info Grid */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-xs text-dark-400 mb-1">Email</p>
-                    <p className="text-sm text-white">{selectedOrg.organization.email}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-dark-400 mb-1">Industry</p>
-                    <p className="text-sm text-white">{selectedOrg.organization.industry || '-'}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-dark-400 mb-1">Plan</p>
-                    <p className="text-sm text-white capitalize">{selectedOrg.organization.subscription?.plan || 'free'}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-dark-400 mb-1">Status</p>
-                    <p className={`text-sm ${selectedOrg.organization.isActive ? 'text-green-400' : 'text-red-400'}`}>
-                      {selectedOrg.organization.isActive ? 'Active' : 'Suspended'}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-dark-400 mb-1">Employees</p>
-                    <p className="text-sm text-white">{selectedOrg.stats.employeeCount}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-dark-400 mb-1">Departments</p>
-                    <p className="text-sm text-white">{selectedOrg.stats.departmentCount}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-dark-400 mb-1">Max Employees</p>
-                    <p className="text-sm text-white">{selectedOrg.organization.subscription?.maxEmployees || '-'}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-dark-400 mb-1">Subscription Ends</p>
-                    <p className="text-sm text-white">
-                      {selectedOrg.organization.subscription?.endDate
-                        ? new Date(selectedOrg.organization.subscription.endDate).toLocaleDateString()
-                        : '-'}
-                    </p>
-                  </div>
-                </div>
 
-                {/* Role Distribution */}
-                <div>
-                  <p className="text-xs text-dark-400 mb-2">Role Distribution</p>
-                  <div className="flex flex-wrap gap-2">
-                    {selectedOrg.stats.roleDistribution.map(r => (
-                      <span key={r._id} className="px-2 py-1 bg-brand-500/10 text-brand-400 rounded-lg text-xs font-medium">
-                        {r._id}: {r.count}
-                      </span>
-                    ))}
-                  </div>
+            {/* Scrollable Content */}
+            <div className="flex-1 overflow-y-auto px-6 py-4">
+              {detailsLoading ? (
+                <div className="flex items-center justify-center p-12">
+                  <div className="w-8 h-8 border-2 border-brand-500 border-t-transparent rounded-full animate-spin" />
                 </div>
+              ) : (
+                <div className="space-y-5">
+                  {/* Info Grid */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-xs text-dark-400 mb-1">Email</p>
+                      <p className="text-sm text-white">{selectedOrg.organization.email}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-dark-400 mb-1">Industry</p>
+                      <p className="text-sm text-white">{selectedOrg.organization.industry || '-'}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-dark-400 mb-1">Plan</p>
+                      <p className="text-sm text-white capitalize">{selectedOrg.organization.subscription?.plan || 'free'}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-dark-400 mb-1">Status</p>
+                      <p className={`text-sm ${selectedOrg.organization.isActive ? 'text-green-400' : 'text-red-400'}`}>
+                        {selectedOrg.organization.isActive ? 'Active' : 'Suspended'}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-dark-400 mb-1">Employees</p>
+                      <p className="text-sm text-white">{selectedOrg.stats.employeeCount}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-dark-400 mb-1">Departments</p>
+                      <p className="text-sm text-white">{selectedOrg.stats.departmentCount}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-dark-400 mb-1">Max Employees</p>
+                      <p className="text-sm text-white">{selectedOrg.organization.subscription?.maxEmployees || '-'}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-dark-400 mb-1">Subscription Ends</p>
+                      <p className="text-sm text-white">
+                        {selectedOrg.organization.subscription?.endDate
+                          ? new Date(selectedOrg.organization.subscription.endDate).toLocaleDateString()
+                          : '-'}
+                      </p>
+                    </div>
+                  </div>
 
-                {/* Recent Users */}
-                <div>
-                  <p className="text-xs text-dark-400 mb-2">Recent Users</p>
-                  <div className="space-y-2">
-                    {selectedOrg.recentUsers.map(u => (
-                      <div key={u._id} className="flex items-center justify-between p-2 bg-dark-700/50 rounded-lg">
-                        <div>
-                          <p className="text-sm text-white">{u.name}</p>
-                          <p className="text-xs text-dark-400">{u.email}</p>
+                  {/* Role Distribution */}
+                  <div>
+                    <p className="text-xs text-dark-400 mb-2">Role Distribution</p>
+                    <div className="flex flex-wrap gap-2">
+                      {selectedOrg.stats.roleDistribution.map(r => (
+                        <span key={r._id} className="px-2 py-1 bg-brand-500/10 text-brand-400 rounded-lg text-xs font-medium">
+                          {r._id}: {r.count}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Recent Users */}
+                  <div>
+                    <p className="text-xs text-dark-400 mb-2">Recent Users</p>
+                    <div className="space-y-2">
+                      {selectedOrg.recentUsers.map(u => (
+                        <div key={u._id} className="flex items-center justify-between p-2 bg-dark-700/50 rounded-lg">
+                          <div>
+                            <p className="text-sm text-white">{u.name}</p>
+                            <p className="text-xs text-dark-400">{u.email}</p>
+                          </div>
+                          <span className="text-xs text-dark-400 capitalize">{u.role}</span>
                         </div>
-                        <span className="text-xs text-dark-400 capitalize">{u.role}</span>
-                      </div>
-                    ))}
+                      ))}
+                    </div>
                   </div>
                 </div>
+              )}
+            </div>
 
-                {/* Actions */}
-                <div className="flex gap-2 pt-4 border-t border-dark-700">
-                  <button
-                    onClick={() => toggleStatus(selectedOrg.organization._id)}
-                    className={`flex-1 py-2 rounded-lg text-sm font-medium transition-colors ${
-                      selectedOrg.organization.isActive
-                        ? 'bg-red-500/20 text-red-400 hover:bg-red-500/30'
-                        : 'bg-green-500/20 text-green-400 hover:bg-green-500/30'
-                    }`}
-                  >
-                    {selectedOrg.organization.isActive ? 'Suspend Organization' : 'Activate Organization'}
-                  </button>
-                </div>
-              </div>
-            )}
+            {/* Sticky Footer */}
+            <div className="px-6 py-4 border-t rounded-b-xl border-dark-700 bg-dark-800/50 backdrop-blur flex-shrink-0">
+              <button
+                onClick={() => toggleStatus(selectedOrg.organization._id)}
+                className={`w-full py-2 rounded-lg text-sm font-medium transition-colors ${
+                  selectedOrg.organization.isActive
+                    ? 'bg-red-500/20 text-red-400 hover:bg-red-500/30'
+                    : 'bg-green-500/20 text-green-400 hover:bg-green-500/30'
+                }`}
+              >
+                {selectedOrg.organization.isActive ? 'Suspend Organization' : 'Activate Organization'}
+              </button>
+            </div>
           </div>
         </div>
       )}

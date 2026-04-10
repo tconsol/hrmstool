@@ -12,31 +12,33 @@ const getToday = () => {
 
 exports.checkIn = async (req, res) => {
   try {
-    const { latitude, longitude } = req.body;
+    const { latitude, longitude, checkInMode = 'office' } = req.body;
 
     const org = await Organization.findById(req.orgId).select('officeLocations settings');
 
-    // Location check — only if org has configured active locations AND employee sent coordinates
-    const activeLocations = (org?.officeLocations || []).filter(l => l.isActive && l.latitude);
-    if (activeLocations.length > 0) {
-      if (latitude === undefined || longitude === undefined) {
-        return res.status(403).json({
-          error: 'Location required',
-          message: 'This organization requires location access for check-in. Please allow location permission.',
-          isLocationError: true,
-        });
-      }
-      const isInAnyOffice = activeLocations.some(loc =>
-        isWithinOfficeRange(latitude, longitude, loc.latitude, loc.longitude, loc.radiusMeters)
-      );
-      if (!isInAnyOffice) {
-        const names = activeLocations.map(l => l.name).join(', ');
-        return res.status(403).json({
-          error: 'Location check-in failed',
-          message: `You are not within the required range of any office location (${names}). Please reach the office first.`,
-          isLocationError: true,
-          officeLocations: activeLocations.map(l => ({ name: l.name, address: l.address, radiusMeters: l.radiusMeters })),
-        });
+    // Location check — skip if remote mode, otherwise check if org has configured active locations
+    if (checkInMode !== 'remote') {
+      const activeLocations = (org?.officeLocations || []).filter(l => l.isActive && l.latitude);
+      if (activeLocations.length > 0) {
+        if (latitude === undefined || longitude === undefined) {
+          return res.status(403).json({
+            error: 'Location required',
+            message: 'This organization requires location access for check-in. Please allow location permission.',
+            isLocationError: true,
+          });
+        }
+        const isInAnyOffice = activeLocations.some(loc =>
+          isWithinOfficeRange(latitude, longitude, loc.latitude, loc.longitude, loc.radiusMeters)
+        );
+        if (!isInAnyOffice) {
+          const names = activeLocations.map(l => l.name).join(', ');
+          return res.status(403).json({
+            error: 'Location check-in failed',
+            message: `You are not within the required range of any office location (${names}). Please reach the office first.`,
+            isLocationError: true,
+            officeLocations: activeLocations.map(l => ({ name: l.name, address: l.address, radiusMeters: l.radiusMeters })),
+          });
+        }
       }
     }
 
@@ -68,6 +70,7 @@ exports.checkIn = async (req, res) => {
     attendance.checkIn = now;
     attendance.status = status;
     attendance.markedBy = 'self';
+    attendance.checkInMode = checkInMode;
     attendance.checkInLocation = latitude && longitude ? { latitude, longitude } : undefined;
     await attendance.save();
 

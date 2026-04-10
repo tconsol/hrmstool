@@ -1,8 +1,11 @@
 const jwt = require('jsonwebtoken');
+const crypto = require('crypto');
 const SuperAdmin = require('../models/SuperAdmin');
 const Organization = require('../models/Organization');
 const User = require('../models/User');
 const Payroll = require('../models/Payroll');
+const { FEATURES, ALL_FEATURE_KEYS, DEFAULT_FEATURES } = require('../config/features');
+const { sendActivationEmail, sendPasswordResetEmail } = require('../utils/email');
 
 const generateToken = (id) => {
   return jwt.sign({ id, isSuperAdmin: true }, process.env.JWT_SECRET, {
@@ -94,12 +97,14 @@ exports.getDashboardStats = async (req, res) => {
       totalOrgs,
       activeOrgs,
       suspendedOrgs,
+      pendingOrgs,
       totalUsers,
       activeUsers,
     ] = await Promise.all([
       Organization.countDocuments(),
-      Organization.countDocuments({ isActive: true }),
-      Organization.countDocuments({ isActive: false }),
+      Organization.countDocuments({ isActive: true, verificationStatus: 'approved' }),
+      Organization.countDocuments({ isActive: false, verificationStatus: { $nin: ['pending_otp', 'pending_approval'] } }),
+      Organization.countDocuments({ verificationStatus: 'pending_approval' }),
       User.countDocuments(),
       User.countDocuments({ status: 'active' }),
     ]);
@@ -156,6 +161,7 @@ exports.getDashboardStats = async (req, res) => {
         total: totalOrgs,
         active: activeOrgs,
         suspended: suspendedOrgs,
+        pendingApproval: pendingOrgs,
         recentSignups: recentOrgs,
       },
       users: {
@@ -280,8 +286,25 @@ exports.toggleOrganizationStatus = async (req, res) => {
       return res.status(404).json({ error: 'Organization not found' });
     }
 
+    const wasActive = org.isActive;
     org.isActive = !org.isActive;
+
+    // If activating for the first time (from pending_approval), update verification status
+    if (org.isActive && org.verificationStatus === 'pending_approval') {
+      org.verificationStatus = 'approved';
+    }
+
     await org.save();
+
+    // Send activation confirmation email when organization is activated
+    if (!wasActive && org.isActive) {
+      try {
+        await sendActivationEmail(org.email, org.name);
+        console.log(`Activation email sent to ${org.email}`);
+      } catch (emailError) {
+        console.error('Failed to send activation email:', emailError);
+      }
+    }
 
     res.json({
       message: `Organization ${org.isActive ? 'activated' : 'suspended'} successfully`,
@@ -460,6 +483,181 @@ exports.getAuditLog = async (req, res) => {
       recentUserRegistrations: recentUsers,
     });
   } catch (error) {
+    res.status(500).json({ error: 'Server error' });
+  }
+};
+
+// ==================== FEATURE MANAGEMENT ====================
+
+exports.getFeatureList = async (req, res) => {
+  try {
+    res.json({ features: FEATURES, defaults: DEFAULT_FEATURES });
+  } catch (error) {
+    res.status(500).json({ error: 'Server error' });
+  }
+};
+
+exports.getOrganizationFeatures = async (req, res) => {
+  try {
+    const org = await Organization.findById(req.params.id).select('name enabledFeatures');
+    if (!org) {
+      return res.status(404).json({ error: 'Organization not found' });
+    }
+    res.json({ organization: org.name, enabledFeatures: org.enabledFeatures });
+  } catch (error) {
+    res.status(500).json({ error: 'Server error' });
+  }
+};
+
+exports.updateOrganizationFeatures = async (req, res) => {
+  try {
+    const { enabledFeatures } = req.body;
+    if (!Array.isArray(enabledFeatures)) {
+      return res.status(400).json({ error: 'enabledFeatures must be an array' });
+    }
+
+    // Validate all feature keys
+    const invalid = enabledFeatures.filter(f => !ALL_FEATURE_KEYS.includes(f));
+    if (invalid.length > 0) {
+      return res.status(400).json({ error: `Invalid feature keys: ${invalid.join(', ')}` });
+    }
+
+    const org = await Organization.findById(req.params.id);
+    if (!org) {
+      return res.status(404).json({ error: 'Organization not found' });
+    }
+
+    org.enabledFeatures = enabledFeatures;
+    await org.save();
+
+    res.json({
+      message: 'Organization features updated successfully',
+      enabledFeatures: org.enabledFeatures,
+    });
+  } catch (error) {
+    console.error('Update org features error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+};
+
+// ==================== PENDING ORGANIZATIONS ====================
+
+exports.getPendingOrganizations = async (req, res) => {
+  try {
+    const pendingOrgs = await Organization.find({ verificationStatus: 'pending_approval' })
+      .sort({ createdAt: -1 });
+
+    // Get creator info for each pending org
+    const orgIds = pendingOrgs.map(o => o._id);
+    const creators = await User.find({ organization: { $in: orgIds }, role: 'ceo' })
+      .select('name email phone organization');
+
+    const creatorMap = {};
+    creators.forEach(c => {
+      creatorMap[c.organization.toString()] = { name: c.name, email: c.email, phone: c.phone };
+    });
+
+    const orgsWithCreators = pendingOrgs.map(org => ({
+      ...org.toJSON(),
+      creator: creatorMap[org._id.toString()] || null,
+    }));
+
+    res.json({ organizations: orgsWithCreators });
+  } catch (error) {
+    console.error('Get pending orgs error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+};
+
+exports.approveOrganization = async (req, res) => {
+  try {
+    const org = await Organization.findById(req.params.id);
+    if (!org) {
+      return res.status(404).json({ error: 'Organization not found' });
+    }
+
+    if (org.verificationStatus !== 'pending_approval') {
+      return res.status(400).json({ error: 'Organization is not pending approval' });
+    }
+
+    org.isActive = true;
+    org.verificationStatus = 'approved';
+    await org.save();
+
+    // Send activation email
+    try {
+      await sendActivationEmail(org.email, org.name);
+      console.log(`Activation email sent to ${org.email}`);
+    } catch (emailError) {
+      console.error('Failed to send activation email:', emailError);
+    }
+
+    res.json({
+      message: 'Organization approved and activated successfully',
+      organization: org,
+    });
+  } catch (error) {
+    console.error('Approve org error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+};
+
+exports.rejectOrganization = async (req, res) => {
+  try {
+    const org = await Organization.findById(req.params.id);
+    if (!org) {
+      return res.status(404).json({ error: 'Organization not found' });
+    }
+
+    org.verificationStatus = 'rejected';
+    org.isActive = false;
+    await org.save();
+
+    res.json({
+      message: 'Organization rejected',
+      organization: org,
+    });
+  } catch (error) {
+    console.error('Reject org error:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+};
+
+// ==================== SUPER ADMIN FORGOT PASSWORD ====================
+
+exports.forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ error: 'Email is required' });
+    }
+
+    const admin = await SuperAdmin.findOne({ email });
+    if (!admin) {
+      return res.json({ message: 'If an account with that email exists, a password reset link has been sent.' });
+    }
+
+    const resetToken = crypto.randomBytes(32).toString('hex');
+    const resetTokenHash = crypto.createHash('sha256').update(resetToken).digest('hex');
+
+    admin.resetPasswordToken = resetTokenHash;
+    admin.resetPasswordExpires = new Date(Date.now() + 60 * 60 * 1000);
+    await admin.save();
+
+    try {
+      await sendPasswordResetEmail(email, resetToken, admin.name);
+    } catch (emailError) {
+      console.error('Failed to send reset email:', emailError);
+      admin.resetPasswordToken = undefined;
+      admin.resetPasswordExpires = undefined;
+      await admin.save();
+      return res.status(500).json({ error: 'Failed to send reset email.' });
+    }
+
+    res.json({ message: 'If an account with that email exists, a password reset link has been sent.' });
+  } catch (error) {
+    console.error('Super admin forgot password error:', error);
     res.status(500).json({ error: 'Server error' });
   }
 };

@@ -9,6 +9,7 @@ import {
   ArrowDownRight,
   CreditCard,
   AlertCircle,
+  Clock,
 } from 'lucide-react';
 
 interface DashboardStats {
@@ -16,6 +17,7 @@ interface DashboardStats {
     total: number;
     active: number;
     suspended: number;
+    pendingApproval: number;
     recentSignups: number;
   };
   users: {
@@ -84,6 +86,14 @@ const SuperAdminDashboard = () => {
       icon: Activity,
       color: 'text-green-500',
       bg: 'bg-green-500/10',
+    },
+    {
+      label: 'Pending Approval',
+      value: stats.organizations.pendingApproval,
+      subtitle: 'Organizations awaiting review',
+      icon: Clock,
+      color: 'text-amber-500',
+      bg: 'bg-amber-500/10',
     },
     {
       label: 'Total Users',
