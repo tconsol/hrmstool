@@ -75,11 +75,11 @@ const userSchema = new mongoose.Schema({
     trim: true,
   },
   profilePicture: {
-    gcsPath: String,
-    fileName: String,
-    mimeType: String,
-    fileSize: Number,
-    uploadedAt: Date,
+    gcsPath: { type: String },
+    fileName: { type: String },
+    mimeType: { type: String },
+    fileSize: { type: Number },
+    uploadedAt: { type: Date },
   },
   status: {
     type: String,

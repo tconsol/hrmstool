@@ -366,7 +366,7 @@ exports.uploadProfilePicture = async (req, res) => {
     }
 
     // Get employee (user is authenticated and req.user contains the logged-in user)
-    const employee = await User.findById(req.user.id).select('name employeeId profilePicture');
+    const employee = await User.findById(req.user._id).select('name employeeId profilePicture');
     if (!employee) {
       return res.status(404).json({ error: 'Employee not found' });
     }
@@ -391,7 +391,7 @@ exports.uploadProfilePicture = async (req, res) => {
 
     // Update database
     const updated = await User.findByIdAndUpdate(
-      req.user.id,
+      req.user._id,
       {
         $set: {
           profilePicture: {
@@ -408,6 +408,8 @@ exports.uploadProfilePicture = async (req, res) => {
 
     // Return signed URL for the profile picture
     const signedUrl = await getSignedUrl(gcsPath);
+
+    console.log('✅ Profile picture uploaded:', { userId: req.user._id, gcsPath, fileName: req.file.originalname });
 
     res.json({
       profilePicture: {

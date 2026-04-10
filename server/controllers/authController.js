@@ -240,9 +240,13 @@ exports.getMe = async (req, res) => {
         ...user.profilePicture.toObject ? user.profilePicture.toObject() : user.profilePicture,
         url: await getSignedUrl(user.profilePicture.gcsPath),
       };
+      console.log('✅ Profile picture found on login:', { userId: req.user._id, gcsPath: user.profilePicture.gcsPath });
+    } else {
+      console.log('⚠️  No profile picture found on login:', { userId: req.user._id });
     }
     res.json(userData);
   } catch (error) {
+    console.error('❌ Error in getMe:', error);
     res.status(500).json({ error: 'Server error' });
   }
 };
@@ -323,6 +327,7 @@ exports.updateProfile = async (req, res) => {
         ...user.profilePicture.toObject ? user.profilePicture.toObject() : user.profilePicture,
         url: await getSignedUrl(user.profilePicture.gcsPath),
       };
+      console.log('✅ Profile picture preserved after update:', { userId: req.user._id, gcsPath: user.profilePicture.gcsPath });
     }
 
     res.json(userData);
