@@ -3,6 +3,7 @@ import { CalendarDays, Plus, Edit2, Trash2, X } from 'lucide-react';
 import api from '../../services/api';
 import { Holiday } from '../../types';
 import Select from '../../components/ui/Select';
+import DatePicker from '../../components/ui/DatePicker';
 import toast from 'react-hot-toast';
 
 const typeColors: Record<string, string> = {
@@ -135,7 +136,7 @@ export default function HolidayList() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-dark-300 mb-1.5">Date *</label>
-                <input type="date" value={form.date} onChange={e => setForm({ ...form, date: e.target.value })} className="input-dark" required />
+                <DatePicker value={form.date} onChange={(val) => setForm({ ...form, date: val })} required />
               </div>
               <div>
                 <label className="block text-sm font-medium text-dark-300 mb-1.5">Type</label>

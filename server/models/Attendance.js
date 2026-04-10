@@ -41,6 +41,10 @@ const attendanceSchema = new mongoose.Schema({
     enum: ['self', 'hr'],
     default: 'self',
   },
+  checkInLocation: {
+    latitude: Number,
+    longitude: Number,
+  },
 }, {
   timestamps: true,
 });

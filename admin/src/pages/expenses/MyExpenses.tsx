@@ -4,6 +4,7 @@ import api from '../../services/api';
 import { Expense } from '../../types';
 import toast from 'react-hot-toast';
 import Select from '../../components/ui/Select';
+import DatePicker from '../../components/ui/DatePicker';
 
 const statusColors: Record<string, string> = {
   pending: 'bg-amber-500/20 text-amber-400',
@@ -157,7 +158,7 @@ export default function MyExpenses() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-dark-300 mb-1.5">Date *</label>
-                <input type="date" value={form.date} onChange={e => setForm({ ...form, date: e.target.value })} className="input-dark" required />
+                <DatePicker value={form.date} onChange={(val) => setForm({ ...form, date: val })} required />
               </div>
               <div>
                 <label className="block text-sm font-medium text-dark-300 mb-1.5">Description *</label>

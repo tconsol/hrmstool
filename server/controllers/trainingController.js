@@ -181,3 +181,89 @@ exports.deleteTraining = async (req, res) => {
     res.status(500).json({ error: 'Failed to delete training' });
   }
 };
+
+exports.updateParticipantStatus = async (req, res) => {
+  try {
+    const { userId, status } = req.body;
+    
+    if (!userId || !status) {
+      return res.status(400).json({ error: 'User ID and status are required' });
+    }
+
+    if (!['enrolled', 'completed', 'dropped', 'suspended'].includes(status)) {
+      return res.status(400).json({ error: 'Invalid status' });
+    }
+
+    const training = await Training.findOneAndUpdate(
+      { 
+        _id: req.params.id, 
+        organization: req.orgId,
+        'participants.user': userId
+      },
+      { 
+        $set: { 'participants.$[elem].status': status }
+      },
+      { 
+        arrayFilters: [{ 'elem.user': userId }],
+        new: true,
+        runValidators: true
+      }
+    )
+      .populate('participants.user', 'name employeeId department designation')
+      .populate({
+        path: 'participants.user',
+        populate: [
+          { path: 'department', select: 'name code' },
+          { path: 'designation', select: 'name code level' }
+        ]
+      })
+      .populate('createdBy', 'name');
+
+    if (!training) {
+      return res.status(404).json({ error: 'Training or participant not found' });
+    }
+
+    res.json(training);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to update participant status' });
+  }
+};
+
+exports.removeParticipant = async (req, res) => {
+  try {
+    const { userId } = req.body;
+    
+    if (!userId) {
+      return res.status(400).json({ error: 'User ID is required' });
+    }
+
+    const training = await Training.findOneAndUpdate(
+      { 
+        _id: req.params.id, 
+        organization: req.orgId,
+        'participants.user': userId
+      },
+      { 
+        $pull: { participants: { user: userId } }
+      },
+      { new: true, runValidators: true }
+    )
+      .populate('participants.user', 'name employeeId department designation')
+      .populate({
+        path: 'participants.user',
+        populate: [
+          { path: 'department', select: 'name code' },
+          { path: 'designation', select: 'name code level' }
+        ]
+      })
+      .populate('createdBy', 'name');
+
+    if (!training) {
+      return res.status(404).json({ error: 'Training or participant not found' });
+    }
+
+    res.json(training);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to remove participant' });
+  }
+};

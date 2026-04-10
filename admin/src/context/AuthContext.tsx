@@ -27,6 +27,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if (savedToken && savedUser) {
       setToken(savedToken);
       setUser(JSON.parse(savedUser));
+      // Fetch fresh user data with populated department/designation
+      api.get('/auth/me').then(({ data }) => {
+        if (data && data._id) {
+          localStorage.setItem('hrms_user', JSON.stringify(data));
+          setUser(data);
+        }
+      }).catch(() => {});
     }
     setLoading(false);
   }, []);

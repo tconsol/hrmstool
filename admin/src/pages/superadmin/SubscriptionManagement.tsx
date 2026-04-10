@@ -3,6 +3,7 @@ import api from '../../services/api';
 import { CreditCard, Save, X, Building2, Calendar, Users } from 'lucide-react';
 import toast from 'react-hot-toast';
 import Select from '../../components/ui/Select';
+import DatePicker from '../../components/ui/DatePicker';
 
 interface OrgSub {
   _id: string;
@@ -195,11 +196,9 @@ const SubscriptionManagement = () => {
                     </td>
                     <td className="px-4 py-3">
                       {isEditing ? (
-                        <input
-                          type="date"
+                        <DatePicker
                           value={editing.endDate}
-                          onChange={e => setEditing({ ...editing, endDate: e.target.value })}
-                          className="px-2 py-1 bg-dark-700 border border-dark-600 rounded text-sm text-white focus:outline-none focus:ring-1 focus:ring-red-500"
+                          onChange={(val) => setEditing({ ...editing, endDate: val })}
                         />
                       ) : (
                         <div className="flex items-center gap-1">

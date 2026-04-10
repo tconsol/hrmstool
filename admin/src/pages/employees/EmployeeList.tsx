@@ -9,6 +9,7 @@ import {
   UserCheck,
   UserX,
   Edit,
+  FileText,
   ChevronLeft,
   ChevronRight,
 } from 'lucide-react';
@@ -174,6 +175,13 @@ const EmployeeList = () => {
                               <Edit size={16} />
                             </button>
                             <button
+                              onClick={() => navigate(`/employees/${emp._id}/documents`)}
+                              className="p-1.5 hover:bg-dark-700/50 rounded-lg text-dark-400 hover:text-emerald-400 transition-colors"
+                              title="Documents"
+                            >
+                              <FileText size={16} />
+                            </button>
+                            <button
                               onClick={() => handleToggleStatus(emp._id)}
                               className={`p-1.5 hover:bg-dark-700/50 rounded-lg transition-colors ${
                                 emp.status === 'active'
@@ -186,7 +194,15 @@ const EmployeeList = () => {
                             </button>
                           </>
                         )}
-                        {!isHR && <span className="text-xs text-dark-500">—</span>}
+                        {!isHR && (
+                          <button
+                            onClick={() => navigate(`/employees/${emp._id}/documents`)}
+                            className="p-1.5 hover:bg-dark-700/50 rounded-lg text-dark-400 hover:text-emerald-400 transition-colors"
+                            title="Documents"
+                          >
+                            <FileText size={16} />
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>

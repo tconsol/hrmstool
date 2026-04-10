@@ -63,6 +63,14 @@ export interface User {
   joiningDate: string;
   address: string;
   avatar: string;
+  profilePicture?: {
+    gcsPath?: string;
+    fileName?: string;
+    mimeType?: string;
+    fileSize?: number;
+    url?: string;
+    uploadedAt?: string;
+  };
   status: 'active' | 'inactive';
   leaveBalance: {
     casual: number;

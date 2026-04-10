@@ -5,11 +5,16 @@ import { NotificationProvider } from './context/NotificationContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import Layout from './components/Layout/Layout';
 import SuperAdminLayout from './components/Layout/SuperAdminLayout';
+import ScrollToTop from './components/ScrollToTop';
+import Landing from './pages/Landing';
+import About from './pages/About';
+import PricingDetail from './pages/PricingDetail';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/dashboard/Dashboard';
 import EmployeeList from './pages/employees/EmployeeList';
 import EmployeeForm from './pages/employees/EmployeeForm';
+import EmployeeDocuments from './pages/employees/EmployeeDocuments';
 import AttendanceDashboard from './pages/attendance/AttendanceDashboard';
 import MyAttendance from './pages/attendance/MyAttendance';
 import LeaveRequests from './pages/leaves/LeaveRequests';
@@ -31,6 +36,7 @@ import ShiftList from './pages/shifts/ShiftList';
 import AssetList from './pages/assets/AssetList';
 import MyAssets from './pages/assets/MyAssets';
 import TrainingList from './pages/training/TrainingList';
+import TrainingDetail from './pages/training/TrainingDetail';
 import OrganizationSettings from './pages/organization/OrganizationSettings';
 
 // Super Admin Pages
@@ -47,7 +53,11 @@ function App() {
     <AuthProvider>
       <NotificationProvider>
         <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+          <ScrollToTop />
           <Routes>
+            <Route path="/" element={<Landing />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/pricing/:tierId" element={<PricingDetail />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/superadmin/login" element={<SuperAdminLogin />} />
@@ -99,6 +109,14 @@ function App() {
               element={
                 <ProtectedRoute roles={['hr']}>
                   <EmployeeForm />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/employees/:id/documents"
+              element={
+                <ProtectedRoute roles={['hr', 'manager', 'ceo']}>
+                  <EmployeeDocuments />
                 </ProtectedRoute>
               }
             />
@@ -216,6 +234,7 @@ function App() {
             <Route path="/my-expenses" element={<MyExpenses />} />
             <Route path="/my-assets" element={<MyAssets />} />
             <Route path="/training" element={<TrainingList />} />
+            <Route path="/training/:id" element={<TrainingDetail />} />
             <Route path="/profile" element={<MyProfile />} />
 
             {/* Notifications — all roles */}

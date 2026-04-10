@@ -62,7 +62,8 @@ const seedData = async () => {
       slug: 'techcorp-solutions',
       email: 'admin@hrms.com',
       phone: '+91-9876543210',
-      address: 'Mumbai, Maharashtra, India',
+      address: '123 Tech Park, Mumbai, Maharashtra 400001, India',
+      logo: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect fill="%234F46E5" width="100" height="100"/><text x="50" y="50" font-size="40" fill="white" text-anchor="middle" dominant-baseline="middle">TC</text></svg>',
       website: 'https://techcorp.com',
       industry: 'Technology',
       employeeCount: '51-200',
@@ -148,7 +149,7 @@ const seedData = async () => {
       { employeeId: 'EMP0010', name: 'Divya Singh',  email: 'divya@hrms.com', password: 'employee123', phone: '9876543218', department: org1Depts[1]._id, designation: org1Designations[6]._id, salary: 50000, joiningDate: new Date('2024-01-15') },
     ];
     for (const d of org1EmpData) {
-      const u = new User({ ...d, role: 'employee', organization: org1._id, address: 'India', status: 'active' });
+      const u = new User({ ...d, role: 'employee', organization: org1._id, address: 'India', status: 'active', profilePicture: { fileName: d.name.replace(/\s+/g, '_') + '.jpg', uploadedAt: new Date() }, onboardingDocuments: { aadhaarCard: { fileName: 'aadhaar.pdf', uploadedAt: new Date(), mimeType: 'application/pdf', fileSize: 250000 }, panCard: { fileName: 'pan.pdf', uploadedAt: new Date(), mimeType: 'application/pdf', fileSize: 150000 }, addressProof: { fileName: 'address.pdf', uploadedAt: new Date(), mimeType: 'application/pdf', fileSize: 300000 }, bankPassbook: { fileName: 'bank.pdf', uploadedAt: new Date(), mimeType: 'application/pdf', fileSize: 500000 } } });
       await u.save();
       org1Emps.push(u);
     }
@@ -245,7 +246,7 @@ const seedData = async () => {
     console.log('\n🏢 [2/4] Creating MediCare Hospital...');
     const org2 = new Organization({
       name: 'MediCare Hospital', slug: 'medicare-hospital', email: 'admin@medicare.com',
-      phone: '+91-9876500001', address: 'Bengaluru, Karnataka, India', website: 'https://medicare.com',
+      phone: '+91-9876500001', address: '456 Hospital Road, Bengaluru, Karnataka 560001, India', logo: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect fill="%23EF4444" width="100" height="100"/><text x="50" y="50" font-size="40" fill="white" text-anchor="middle" dominant-baseline="middle">MH</text></svg>', website: 'https://medicare.com',
       industry: 'Healthcare', employeeCount: '201-500',
       subscription: { plan: 'enterprise', startDate: new Date(), endDate: new Date(new Date().setFullYear(currentYear + 2)), maxEmployees: 500 },
       settings: { fiscalYearStart: 4, workingDays: ['Mon','Tue','Wed','Thu','Fri','Sat'], shiftStartTime: '08:00', shiftEndTime: '20:00', lateThresholdMinutes: 10, currency: 'INR', dateFormat: 'DD/MM/YYYY' },
@@ -297,7 +298,7 @@ const seedData = async () => {
       { employeeId: 'EMP0006', name: 'Sunita Nair',      email: 'sunita@medicare.com', password: 'employee123', phone: '9876500006', department: org2Depts[4]._id, designation: org2Designations[5]._id, salary: 55000,  joiningDate: new Date('2022-08-01') },
       { employeeId: 'EMP0007', name: 'Dr. Arjun Pillai', email: 'arjun@medicare.com',  password: 'employee123', phone: '9876500007', department: org2Depts[2]._id, designation: org2Designations[6]._id, salary: 145000, joiningDate: new Date('2020-11-15') },
     ];
-    for (const d of org2EmpData) { const u = new User({ ...d, role: 'employee', organization: org2._id, address: 'Bengaluru, India', status: 'active' }); await u.save(); org2Emps.push(u); }
+    for (const d of org2EmpData) { const u = new User({ ...d, role: 'employee', organization: org2._id, address: 'Bengaluru, India', status: 'active', profilePicture: { fileName: d.name.replace(/\s+/g, '_') + '.jpg', uploadedAt: new Date(), mimeType: 'image/jpeg', fileSize: 350000 }, onboardingDocuments: { aadhaarCard: { fileName: 'aadhaar.pdf', uploadedAt: new Date(), mimeType: 'application/pdf', fileSize: 250000 }, medicalCertificate: { fileName: 'medical.pdf', uploadedAt: new Date(), mimeType: 'application/pdf', fileSize: 180000 }, cancelledCheque: { fileName: 'cheque.pdf', uploadedAt: new Date(), mimeType: 'application/pdf', fileSize: 120000 } } }); await u.save(); org2Emps.push(u); }
 
     await new Holiday({ name: 'Republic Day', date: new Date(currentYear, 0, 26), type: 'national', organization: org2._id }).save();
     await new Holiday({ name: 'Independence Day', date: new Date(currentYear, 7, 15), type: 'national', organization: org2._id }).save();
@@ -335,7 +336,7 @@ const seedData = async () => {
     console.log('\n🏢 [3/4] Creating EduPrime Academy...');
     const org3 = new Organization({
       name: 'EduPrime Academy', slug: 'eduprime-academy', email: 'admin@eduprime.com',
-      phone: '+91-9876600001', address: 'Hyderabad, Telangana, India', website: 'https://eduprime.com',
+      phone: '+91-9876600001', address: '789 Education Complex, Hyderabad, Telangana 500001, India', logo: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect fill="%238B5CF6" width="100" height="100"/><text x="50" y="50" font-size="40" fill="white" text-anchor="middle" dominant-baseline="middle">EA</text></svg>', website: 'https://eduprime.com',
       industry: 'Education', employeeCount: '11-50',
       subscription: { plan: 'starter', startDate: new Date(), endDate: new Date(new Date().setFullYear(currentYear + 1)), maxEmployees: 50 },
       settings: { fiscalYearStart: 6, workingDays: ['Mon','Tue','Wed','Thu','Fri'], shiftStartTime: '08:30', shiftEndTime: '17:00', lateThresholdMinutes: 10, currency: 'INR', dateFormat: 'DD/MM/YYYY' },
@@ -379,7 +380,7 @@ const seedData = async () => {
       { employeeId: 'EMP0004', name: 'Mr. Aryan Kapoor', email: 'aryan@eduprime.com',  password: 'employee123', phone: '9876600004', department: org3Depts[2]._id, designation: org3Designations[3]._id, salary: 40000, joiningDate: new Date('2020-06-01') },
       { employeeId: 'EMP0005', name: 'Ms. Rekha Mishra', email: 'rekha@eduprime.com',  password: 'employee123', phone: '9876600005', department: org3Depts[3]._id, designation: org3Designations[4]._id, salary: 32000, joiningDate: new Date('2022-01-10') },
     ];
-    for (const d of org3EmpData) { const u = new User({ ...d, role: 'employee', organization: org3._id, address: 'Hyderabad, India', status: 'active' }); await u.save(); org3Emps.push(u); }
+    for (const d of org3EmpData) { const u = new User({ ...d, role: 'employee', organization: org3._id, address: 'Hyderabad, India', status: 'active', profilePicture: { fileName: d.name.replace(/\s+/g, '_') + '.jpg', uploadedAt: new Date(), mimeType: 'image/jpeg', fileSize: 320000 }, onboardingDocuments: { graduationDegree: { fileName: 'degree.pdf', uploadedAt: new Date(), mimeType: 'application/pdf', fileSize: 290000 }, aadhaarCard: { fileName: 'aadhaar.pdf', uploadedAt: new Date(), mimeType: 'application/pdf', fileSize: 250000 } } }); await u.save(); org3Emps.push(u); }
 
     await new Holiday({ name: 'Republic Day',     date: new Date(currentYear, 0, 26), type: 'national', organization: org3._id }).save();
     await new Holiday({ name: 'Teachers Day',     date: new Date(currentYear, 8,  5), type: 'company', description: 'National Teachers Day', organization: org3._id }).save();
@@ -406,7 +407,7 @@ const seedData = async () => {
     console.log('\n🏢 [4/4] Creating RetailMax Stores...');
     const org4 = new Organization({
       name: 'RetailMax Stores', slug: 'retailmax-stores', email: 'admin@retailmax.com',
-      phone: '+91-9876700001', address: 'Delhi, India', website: 'https://retailmax.com',
+      phone: '+91-9876700001', address: '321 Shopping Mall, Delhi 110001, India', logo: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect fill="%239333EA" width="100" height="100"/><text x="50" y="50" font-size="40" fill="white" text-anchor="middle" dominant-baseline="middle">RM</text></svg>', website: 'https://retailmax.com',
       industry: 'Retail', employeeCount: '51-200',
       subscription: { plan: 'professional', startDate: new Date(), endDate: new Date(new Date().setFullYear(currentYear + 1)), maxEmployees: 200 },
       settings: { fiscalYearStart: 4, workingDays: ['Mon','Tue','Wed','Thu','Fri','Sat'], shiftStartTime: '09:00', shiftEndTime: '21:00', lateThresholdMinutes: 15, currency: 'INR', dateFormat: 'DD/MM/YYYY' },
@@ -453,7 +454,7 @@ const seedData = async () => {
       { employeeId: 'EMP0005', name: 'Kavita Yadav', email: 'kavita@retailmax.com', password: 'employee123', phone: '9876700005', department: org4Depts[3]._id, designation: org4Designations[4]._id, salary: 45000, joiningDate: new Date('2022-06-01') },
       { employeeId: 'EMP0006', name: 'Mohit Sharma', email: 'mohit@retailmax.com',  password: 'employee123', phone: '9876700006', department: org4Depts[0]._id, designation: org4Designations[5]._id, salary: 30000, joiningDate: new Date('2023-01-15') },
     ];
-    for (const d of org4EmpData) { const u = new User({ ...d, role: 'employee', organization: org4._id, address: 'Delhi, India', status: 'active' }); await u.save(); org4Emps.push(u); }
+    for (const d of org4EmpData) { const u = new User({ ...d, role: 'employee', organization: org4._id, address: 'Delhi, India', status: 'active', profilePicture: { fileName: d.name.replace(/\s+/g, '_') + '.jpg', uploadedAt: new Date(), mimeType: 'image/jpeg', fileSize: 340000 }, onboardingDocuments: { aadhaarCard: { fileName: 'aadhaar.pdf', uploadedAt: new Date(), mimeType: 'application/pdf', fileSize: 250000 }, panCard: { fileName: 'pan.pdf', uploadedAt: new Date(), mimeType: 'application/pdf', fileSize: 150000 }, bankPassbook: { fileName: 'bank.pdf', uploadedAt: new Date(), mimeType: 'application/pdf', fileSize: 500000 } } }); await u.save(); org4Emps.push(u); }
 
     await new Holiday({ name: 'Republic Day',     date: new Date(currentYear, 0, 26), type: 'national', organization: org4._id }).save();
     await new Holiday({ name: 'Independence Day', date: new Date(currentYear, 7, 15), type: 'national', organization: org4._id }).save();

@@ -1,5 +1,7 @@
 const Attendance = require('../models/Attendance');
 const User = require('../models/User');
+const Organization = require('../models/Organization');
+const { isWithinOfficeRange } = require('./organizationController');
 
 // Get today's date normalized to midnight
 const getToday = () => {
@@ -10,6 +12,34 @@ const getToday = () => {
 
 exports.checkIn = async (req, res) => {
   try {
+    const { latitude, longitude } = req.body;
+
+    const org = await Organization.findById(req.orgId).select('officeLocations settings');
+
+    // Location check — only if org has configured active locations AND employee sent coordinates
+    const activeLocations = (org?.officeLocations || []).filter(l => l.isActive && l.latitude);
+    if (activeLocations.length > 0) {
+      if (latitude === undefined || longitude === undefined) {
+        return res.status(403).json({
+          error: 'Location required',
+          message: 'This organization requires location access for check-in. Please allow location permission.',
+          isLocationError: true,
+        });
+      }
+      const isInAnyOffice = activeLocations.some(loc =>
+        isWithinOfficeRange(latitude, longitude, loc.latitude, loc.longitude, loc.radiusMeters)
+      );
+      if (!isInAnyOffice) {
+        const names = activeLocations.map(l => l.name).join(', ');
+        return res.status(403).json({
+          error: 'Location check-in failed',
+          message: `You are not within the required range of any office location (${names}). Please reach the office first.`,
+          isLocationError: true,
+          officeLocations: activeLocations.map(l => ({ name: l.name, address: l.address, radiusMeters: l.radiusMeters })),
+        });
+      }
+    }
+
     const today = getToday();
     const existingRecord = await Attendance.findOne({
       user: req.user._id,
@@ -23,7 +53,9 @@ exports.checkIn = async (req, res) => {
 
     const now = new Date();
     const lateThreshold = new Date(today);
-    lateThreshold.setHours(9, 30, 0, 0); // 9:30 AM
+    const shiftTime = org?.settings?.shiftStartTime || '09:00';
+    const [hours, mins] = shiftTime.split(':');
+    lateThreshold.setHours(parseInt(hours), parseInt(mins), 0, 0);
 
     const status = now > lateThreshold ? 'late' : 'present';
 
@@ -36,6 +68,7 @@ exports.checkIn = async (req, res) => {
     attendance.checkIn = now;
     attendance.status = status;
     attendance.markedBy = 'self';
+    attendance.checkInLocation = latitude && longitude ? { latitude, longitude } : undefined;
     await attendance.save();
 
     res.json(attendance);

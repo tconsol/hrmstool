@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import Modal from '../../components/ui/Modal';
 import Select from '../../components/ui/Select';
+import DatePicker from '../../components/ui/DatePicker';
 import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek, addDays, isSameMonth, isSameDay, parseISO } from 'date-fns';
 
 interface CalendarEvent {
@@ -376,21 +377,17 @@ const CompanyCalendar = () => {
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="block text-sm font-medium text-dark-300 mb-1.5">Start Date *</label>
-                <input
-                  type="date"
+                <DatePicker
                   value={form.startDate}
-                  onChange={(e) => setForm({ ...form, startDate: e.target.value, endDate: form.endDate || e.target.value })}
-                  className="input-dark"
+                  onChange={(val) => setForm({ ...form, startDate: val, endDate: form.endDate || val })}
                   required
                 />
               </div>
               <div>
                 <label className="block text-sm font-medium text-dark-300 mb-1.5">End Date *</label>
-                <input
-                  type="date"
+                <DatePicker
                   value={form.endDate}
-                  onChange={(e) => setForm({ ...form, endDate: e.target.value })}
-                  className="input-dark"
+                  onChange={(val) => setForm({ ...form, endDate: val })}
                   min={form.startDate}
                   required
                 />

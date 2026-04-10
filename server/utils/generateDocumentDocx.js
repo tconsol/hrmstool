@@ -16,6 +16,14 @@ const fmtDate = (d) => {
   return dt.toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' });
 };
 
+// Safely extract name from a populated ref or plain string/ObjectId
+const getName = (val) => {
+  if (!val) return '';
+  if (typeof val === 'object' && val.name) return val.name;
+  if (typeof val === 'string') return val;
+  return '';
+};
+
 function logoImage(base64, width = 100, height = 40) {
   if (!base64) return null;
   try {
@@ -199,7 +207,7 @@ function buildOfferLetter(document) {
   children.push(para('Subject: Offer of Employment', { bold: true }));
   children.push(emptyLine());
   children.push(para(`Dear ${name},`));
-  children.push(para(`We are pleased to offer you the position of ${data.designation || emp.designation || '[Designation]'} in the ${data.department || emp.department || '[Department]'} department at ${companyName || '[Company Name]'}, effective from ${fmtDate(data.joiningDate || emp.joiningDate)}.`));
+  children.push(para(`We are pleased to offer you the position of ${data.designation || getName(emp.designation) || '[Designation]'} in the ${data.department || getName(emp.department) || '[Department]'} department at ${companyName || '[Company Name]'}, effective from ${fmtDate(data.joiningDate || emp.joiningDate)}.`));
 
   if (data.annualCTC) {
     children.push(para(`Your annual compensation (CTC) will be Rs. ${Number(data.annualCTC).toLocaleString('en-IN')} (Cost to Company) per annum.`));
@@ -265,13 +273,13 @@ function buildAppointmentLetter(document) {
   children.push(para('Subject: Letter of Appointment', { bold: true }));
   children.push(emptyLine());
   children.push(para(`Dear ${name},`));
-  children.push(para(`With reference to your application and subsequent interview, we are pleased to appoint you as ${data.designation || emp.designation || '[Designation]'} in the ${data.department || emp.department || '[Department]'} department at ${companyName || '[Company Name]'}, with effect from ${fmtDate(data.joiningDate || emp.joiningDate)}.`));
+  children.push(para(`With reference to your application and subsequent interview, we are pleased to appoint you as ${data.designation || getName(emp.designation) || '[Designation]'} in the ${data.department || getName(emp.department) || '[Department]'} department at ${companyName || '[Company Name]'}, with effect from ${fmtDate(data.joiningDate || emp.joiningDate)}.`));
   children.push(emptyLine());
   children.push(para('Terms of Appointment:', { bold: true }));
 
   const clauses = [
-    `1. Designation: ${data.designation || emp.designation || '[Designation]'}`,
-    `2. Department: ${data.department || emp.department || '[Department]'}`,
+    `1. Designation: ${data.designation || getName(emp.designation) || '[Designation]'}`,
+    `2. Department: ${data.department || getName(emp.department) || '[Department]'}`,
     `3. Date of Joining: ${fmtDate(data.joiningDate || emp.joiningDate)}`,
     `4. Probation Period: ${data.probationPeriod || '6'} months from the date of joining.`,
     `5. Notice Period: ${data.noticePeriod || '1'} month(s) from either side.`,
@@ -302,7 +310,7 @@ function buildExperienceLetter(document) {
   children.push(emptyLine());
   children.push(para('TO WHOM IT MAY CONCERN', { bold: true, align: AlignmentType.CENTER }));
   children.push(emptyLine());
-  children.push(para(`This is to certify that ${name} (Employee ID: ${emp.employeeId || '[ID]'}) was employed with ${companyName || '[Company Name]'} from ${fmtDate(data.joiningDate || emp.joiningDate)} to ${fmtDate(data.lastWorkingDate)} in the capacity of ${data.designation || emp.designation || '[Designation]'} in the ${data.department || emp.department || '[Department]'} department.`));
+  children.push(para(`This is to certify that ${name} (Employee ID: ${emp.employeeId || '[ID]'}) was employed with ${companyName || '[Company Name]'} from ${fmtDate(data.joiningDate || emp.joiningDate)} to ${fmtDate(data.lastWorkingDate)} in the capacity of ${data.designation || getName(emp.designation) || '[Designation]'} in the ${data.department || getName(emp.department) || '[Department]'} department.`));
   children.push(para(`During the tenure with us, we found ${name} to be sincere, dedicated, and hardworking. ${data.performanceNote || 'Their conduct and performance have been satisfactory throughout their employment.'}`));
   children.push(para(`We wish ${name} all the best in future endeavors.`));
   children.push(para('This certificate is issued on request for any purpose it may serve.'));
@@ -328,7 +336,7 @@ function buildRelievingLetter(document) {
   children.push(emptyLine());
   children.push(para(`Dear ${name},`));
   children.push(para(`This is to inform you that your resignation has been accepted and you are relieved from your duties at ${companyName || '[Company Name]'} effective ${fmtDate(data.lastWorkingDate)}.`));
-  children.push(para(`You were working as ${data.designation || emp.designation || '[Designation]'} in the ${data.department || emp.department || '[Department]'} department since ${fmtDate(data.joiningDate || emp.joiningDate)}.`));
+  children.push(para(`You were working as ${data.designation || getName(emp.designation) || '[Designation]'} in the ${data.department || getName(emp.department) || '[Department]'} department since ${fmtDate(data.joiningDate || emp.joiningDate)}.`));
   children.push(para('We confirm that all company assets have been returned and all dues have been settled. You are released from all your obligations towards the company.'));
   children.push(para(`We thank you for your contributions to ${companyName || '[Company Name]'} and wish you all the best in your future endeavors.`));
   children.push(...signBlock(companyName, data.hrName, data.hrDesignation));
@@ -349,7 +357,7 @@ function buildIncrementLetter(document) {
   children.push(para('To,', { bold: true }));
   children.push(para(name));
   children.push(para(`Employee ID: ${emp.employeeId || '[ID]'}`, { color: '666666' }));
-  children.push(para(`Department: ${data.department || emp.department || '[Department]'}`, { color: '666666' }));
+  children.push(para(`Department: ${data.department || getName(emp.department) || '[Department]'}`, { color: '666666' }));
   children.push(emptyLine());
   children.push(para('Subject: Salary Revision', { bold: true }));
   children.push(emptyLine());

@@ -1,8 +1,11 @@
 const Document = require('../models/Document');
 const User = require('../models/User');
+const Organization = require('../models/Organization');
 const { generateDocumentPDF } = require('../utils/generateDocument');
 const { generateDocumentDocx } = require('../utils/generateDocumentDocx');
 const { compressImage } = require('../utils/compressImage');
+const { uploadFile, getSignedUrl, deleteFile } = require('../utils/gcpStorage');
+const { generateAndUploadPDF, generateAndUploadDocx, cleanupOldDocuments } = require('../utils/generateDocumentGCS');
 
 const DOCUMENT_TYPES = {
   offer_letter: 'Offer Letter',
@@ -78,6 +81,13 @@ exports.getDocuments = async (req, res) => {
     const total = await Document.countDocuments(query);
     const documents = await Document.find(query)
       .populate('employee', 'name email employeeId department designation')
+      .populate({
+        path: 'employee',
+        populate: [
+          { path: 'department', select: 'name code' },
+          { path: 'designation', select: 'name code level' }
+        ]
+      })
       .populate('generatedBy', 'name')
       .select('-companyLogo')
       .sort({ createdAt: -1 })
@@ -99,6 +109,13 @@ exports.getDocument = async (req, res) => {
   try {
     const document = await Document.findOne({ _id: req.params.id, organization: req.orgId })
       .populate('employee', 'name email employeeId department designation joiningDate address salary ctc')
+      .populate({
+        path: 'employee',
+        populate: [
+          { path: 'department', select: 'name code' },
+          { path: 'designation', select: 'name code level' }
+        ]
+      })
       .populate('generatedBy', 'name');
 
     if (!document) {
@@ -120,6 +137,13 @@ exports.updateDocument = async (req, res) => {
       return res.status(404).json({ error: 'Document not found' });
     }
 
+    // If data changes, clean up cached PDFs/DOCXs so they'll be regenerated
+    if (data && JSON.stringify(data) !== JSON.stringify(document.data)) {
+      await cleanupOldDocuments(document);
+      document.pdfFile = undefined;
+      document.docxFile = undefined;
+    }
+
     if (data) document.data = data;
     if (companyName !== undefined) document.companyName = companyName;
     if (companyAddress !== undefined) document.companyAddress = companyAddress;
@@ -136,18 +160,27 @@ exports.updateDocument = async (req, res) => {
 
     res.json(populated);
   } catch (error) {
+    console.error('Update document error:', error);
     res.status(500).json({ error: 'Failed to update document' });
   }
 };
 
 exports.deleteDocument = async (req, res) => {
   try {
-    const document = await Document.findOneAndDelete({ _id: req.params.id, organization: req.orgId });
+    const document = await Document.findOne({ _id: req.params.id, organization: req.orgId });
     if (!document) {
       return res.status(404).json({ error: 'Document not found' });
     }
+
+    // Clean up generated documents from GCS
+    await cleanupOldDocuments(document);
+
+    // Delete the document record
+    await Document.findByIdAndDelete(req.params.id);
+
     res.json({ message: 'Document deleted' });
   } catch (error) {
+    console.error('Delete document error:', error);
     res.status(500).json({ error: 'Failed to delete document' });
   }
 };
@@ -155,13 +188,45 @@ exports.deleteDocument = async (req, res) => {
 exports.downloadDocument = async (req, res) => {
   try {
     const document = await Document.findOne({ _id: req.params.id, organization: req.orgId })
-      .populate('employee', 'name email employeeId department designation joiningDate address salary ctc');
+      .populate({
+        path: 'employee',
+        select: 'name email employeeId department designation joiningDate address salary ctc',
+        populate: [
+          { path: 'department', select: 'name code' },
+          { path: 'designation', select: 'name code level' },
+        ],
+      });
 
     if (!document) {
       return res.status(404).json({ error: 'Document not found' });
     }
 
+    // Generate the PDF
     const pdfBuffer = await generateDocumentPDF(document);
+
+    // Try to upload to GCS (non-blocking, best-effort)
+    if (!document.pdfFile?.gcsPath) {
+      try {
+        const org = await Organization.findById(req.orgId).select('slug');
+        if (org) {
+          const uploadResult = await generateAndUploadPDF(
+            document,
+            org.slug,
+            document.employee.employeeId,
+            document.employee.name
+          );
+          document.pdfFile = {
+            gcsPath: uploadResult.gcsPath,
+            fileName: uploadResult.fileName,
+            fileSize: uploadResult.fileSize,
+            generatedAt: new Date(),
+          };
+        }
+      } catch (uploadErr) {
+        // GCS not configured or upload failed — continue without caching
+        console.warn('GCS upload skipped:', uploadErr.message);
+      }
+    }
 
     // Track download
     document.downloads.push({ format: 'pdf', downloadedBy: req.user._id });
@@ -182,13 +247,45 @@ exports.downloadDocument = async (req, res) => {
 exports.downloadDocx = async (req, res) => {
   try {
     const document = await Document.findOne({ _id: req.params.id, organization: req.orgId })
-      .populate('employee', 'name email employeeId department designation joiningDate address salary ctc');
+      .populate({
+        path: 'employee',
+        select: 'name email employeeId department designation joiningDate address salary ctc',
+        populate: [
+          { path: 'department', select: 'name code' },
+          { path: 'designation', select: 'name code level' },
+        ],
+      });
 
     if (!document) {
       return res.status(404).json({ error: 'Document not found' });
     }
 
+    // Generate the DOCX
     const docxBuffer = await generateDocumentDocx(document);
+
+    // Try to upload to GCS (non-blocking, best-effort)
+    if (!document.docxFile?.gcsPath) {
+      try {
+        const org = await Organization.findById(req.orgId).select('slug');
+        if (org) {
+          const uploadResult = await generateAndUploadDocx(
+            document,
+            org.slug,
+            document.employee.employeeId,
+            document.employee.name
+          );
+          document.docxFile = {
+            gcsPath: uploadResult.gcsPath,
+            fileName: uploadResult.fileName,
+            fileSize: uploadResult.fileSize,
+            generatedAt: new Date(),
+          };
+        }
+      } catch (uploadErr) {
+        // GCS not configured or upload failed — continue without caching
+        console.warn('GCS upload skipped:', uploadErr.message);
+      }
+    }
 
     // Track download
     document.downloads.push({ format: 'docx', downloadedBy: req.user._id });

@@ -9,7 +9,7 @@ export default function ShiftList() {
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
-  const [form, setForm] = useState({ name: '', startTime: '09:00', endTime: '18:00', graceMinutes: '15', isDefault: false });
+  const [form, setForm] = useState({ name: '', startTime: '09:00', endTime: '18:00', graceMinutes: 15, isDefault: false });
 
   useEffect(() => { fetchShifts(); }, []);
 
@@ -24,24 +24,23 @@ export default function ShiftList() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const payload = { ...form, graceMinutes: Number(form.graceMinutes) };
       if (editId) {
-        await api.put(`/shifts/${editId}`, payload);
+        await api.put(`/shifts/${editId}`, form);
         toast.success('Shift updated');
       } else {
-        await api.post('/shifts', payload);
+        await api.post('/shifts', form);
         toast.success('Shift created');
       }
       setShowModal(false);
       setEditId(null);
-      setForm({ name: '', startTime: '09:00', endTime: '18:00', graceMinutes: '15', isDefault: false });
+      setForm({ name: '', startTime: '09:00', endTime: '18:00', graceMinutes: 15, isDefault: false });
       fetchShifts();
     } catch (err: any) { toast.error(err.response?.data?.error || 'Failed'); }
   };
 
   const handleEdit = (s: Shift) => {
     setEditId(s._id);
-    setForm({ name: s.name, startTime: s.startTime, endTime: s.endTime, graceMinutes: String(s.graceMinutes || 15), isDefault: s.isDefault || false });
+    setForm({ name: s.name, startTime: s.startTime, endTime: s.endTime, graceMinutes: s.graceMinutes || 15, isDefault: s.isDefault || false });
     setShowModal(true);
   };
 
@@ -60,7 +59,7 @@ export default function ShiftList() {
           <h1 className="text-2xl font-bold text-white">Shifts</h1>
           <p className="text-dark-400 text-sm mt-1">{shifts.length} shifts configured</p>
         </div>
-        <button onClick={() => { setEditId(null); setForm({ name: '', startTime: '09:00', endTime: '18:00', graceMinutes: '15', isDefault: false }); setShowModal(true); }} className="btn-primary flex items-center gap-2">
+        <button onClick={() => { setEditId(null); setForm({ name: '', startTime: '09:00', endTime: '18:00', graceMinutes: 15, isDefault: false }); setShowModal(true); }} className="btn-primary flex items-center gap-2">
           <Plus className="w-4 h-4" /> Add Shift
         </button>
       </div>

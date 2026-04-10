@@ -109,7 +109,10 @@ exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    const user = await User.findOne({ email }).populate('organization', 'name slug logo isActive');
+    const user = await User.findOne({ email })
+      .populate('organization', 'name slug logo isActive')
+      .populate('department', 'name code')
+      .populate('designation', 'name code level');
     if (!user) {
       return res.status(401).json({ error: 'Invalid email or password' });
     }
@@ -143,7 +146,17 @@ exports.getMe = async (req, res) => {
       .populate('organization', 'name slug logo settings')
       .populate('department', 'name code')
       .populate('designation', 'name code level');
-    res.json(user);
+    
+    const userData = user.toJSON();
+    // Generate signed URL for profile picture if exists
+    if (user.profilePicture?.gcsPath) {
+      const { getSignedUrl } = require('../utils/gcpStorage');
+      userData.profilePicture = {
+        ...user.profilePicture.toObject ? user.profilePicture.toObject() : user.profilePicture,
+        url: await getSignedUrl(user.profilePicture.gcsPath),
+      };
+    }
+    res.json(userData);
   } catch (error) {
     res.status(500).json({ error: 'Server error' });
   }
@@ -165,6 +178,44 @@ exports.changePassword = async (req, res) => {
     res.json({ message: 'Password updated successfully' });
   } catch (error) {
     res.status(500).json({ error: 'Server error' });
+  }
+};
+
+// Update own profile (phone, address)
+exports.updateProfile = async (req, res) => {
+  try {
+    const { phone, address } = req.body;
+
+    const updateData = {};
+    if (phone !== undefined) updateData.phone = phone;
+    if (address !== undefined) updateData.address = address;
+
+    const user = await User.findByIdAndUpdate(
+      req.user._id,
+      { $set: updateData },
+      { new: true }
+    ).populate('organization', 'name slug logo settings')
+     .populate('department', 'name code')
+     .populate('designation', 'name code level');
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const userData = user.toJSON();
+    // Generate signed URL for profile picture if exists
+    if (user.profilePicture?.gcsPath) {
+      const { getSignedUrl } = require('../utils/gcpStorage');
+      userData.profilePicture = {
+        ...user.profilePicture.toObject ? user.profilePicture.toObject() : user.profilePicture,
+        url: await getSignedUrl(user.profilePicture.gcsPath),
+      };
+    }
+
+    res.json(userData);
+  } catch (error) {
+    console.error('Failed to update profile:', error);
+    res.status(500).json({ error: 'Failed to update profile' });
   }
 };
 

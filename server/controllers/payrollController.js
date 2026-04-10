@@ -90,6 +90,13 @@ exports.getPayrollList = async (req, res) => {
     const total = await Payroll.countDocuments(query);
     const payrolls = await Payroll.find(query)
       .populate('user', 'name email employeeId department designation')
+      .populate({
+        path: 'user',
+        populate: [
+          { path: 'department', select: 'name code' },
+          { path: 'designation', select: 'name code level' }
+        ]
+      })
       .sort({ createdAt: -1 })
       .skip((page - 1) * limit)
       .limit(parseInt(limit));
@@ -145,7 +152,14 @@ exports.updatePaymentStatus = async (req, res) => {
 exports.downloadPayslip = async (req, res) => {
   try {
     const payroll = await Payroll.findOne({ _id: req.params.id, organization: req.orgId })
-      .populate('user', 'name email employeeId department designation joiningDate');
+      .populate({
+        path: 'user',
+        select: 'name email employeeId department designation joiningDate',
+        populate: [
+          { path: 'department', select: 'name code' },
+          { path: 'designation', select: 'name code level' },
+        ],
+      });
 
     if (!payroll) {
       return res.status(404).json({ error: 'Payroll record not found' });

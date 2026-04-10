@@ -50,6 +50,16 @@ const organizationSchema = new mongoose.Schema({
     endDate: { type: Date },
     maxEmployees: { type: Number, default: 25 },
   },
+  officeLocations: [
+    {
+      name: { type: String, required: true, trim: true },
+      address: { type: String, default: '', trim: true },
+      latitude: { type: Number, required: true },
+      longitude: { type: Number, required: true },
+      radiusMeters: { type: Number, default: 50 }, // Check-in radius
+      isActive: { type: Boolean, default: true },
+    }
+  ],
   settings: {
     fiscalYearStart: { type: Number, default: 4 }, // April
     workingDays: { type: [String], default: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'] },

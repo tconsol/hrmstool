@@ -74,9 +74,12 @@ const userSchema = new mongoose.Schema({
     type: String,
     trim: true,
   },
-  avatar: {
-    type: String,
-    default: '',
+  profilePicture: {
+    gcsPath: String,
+    fileName: String,
+    mimeType: String,
+    fileSize: Number,
+    uploadedAt: Date,
   },
   status: {
     type: String,
@@ -88,6 +91,67 @@ const userSchema = new mongoose.Schema({
     sick: { type: Number, default: 12 },
     paid: { type: Number, default: 15 },
   },
+  // Onboarding Documents (stored in GCP Cloud Storage)
+  onboardingDocuments: {
+    // Identity Proof
+    aadhaarCard: { gcsPath: String, fileName: String, mimeType: String, fileSize: Number, uploadedAt: Date },
+    panCard: { gcsPath: String, fileName: String, mimeType: String, fileSize: Number, uploadedAt: Date },
+    passport: { gcsPath: String, fileName: String, mimeType: String, fileSize: Number, uploadedAt: Date },
+    voterId: { gcsPath: String, fileName: String, mimeType: String, fileSize: Number, uploadedAt: Date },
+    drivingLicense: { gcsPath: String, fileName: String, mimeType: String, fileSize: Number, uploadedAt: Date },
+    // Address Proof
+    addressProof: { gcsPath: String, fileName: String, mimeType: String, fileSize: Number, uploadedAt: Date },
+    // Educational Documents
+    sscCertificate: { gcsPath: String, fileName: String, mimeType: String, fileSize: Number, uploadedAt: Date },
+    hscCertificate: { gcsPath: String, fileName: String, mimeType: String, fileSize: Number, uploadedAt: Date },
+    graduationDegree: { gcsPath: String, fileName: String, mimeType: String, fileSize: Number, uploadedAt: Date },
+    postGraduationDegree: { gcsPath: String, fileName: String, mimeType: String, fileSize: Number, uploadedAt: Date },
+    otherCertifications: { gcsPath: String, fileName: String, mimeType: String, fileSize: Number, uploadedAt: Date },
+    // Previous Employment
+    previousOfferLetter: { gcsPath: String, fileName: String, mimeType: String, fileSize: Number, uploadedAt: Date },
+    previousAppointmentLetter: { gcsPath: String, fileName: String, mimeType: String, fileSize: Number, uploadedAt: Date },
+    salarySlips: { gcsPath: String, fileName: String, mimeType: String, fileSize: Number, uploadedAt: Date },
+    relievingLetter: { gcsPath: String, fileName: String, mimeType: String, fileSize: Number, uploadedAt: Date },
+    experienceLetter: { gcsPath: String, fileName: String, mimeType: String, fileSize: Number, uploadedAt: Date },
+    form16: { gcsPath: String, fileName: String, mimeType: String, fileSize: Number, uploadedAt: Date },
+    // Bank Details
+    bankPassbook: { gcsPath: String, fileName: String, mimeType: String, fileSize: Number, uploadedAt: Date },
+    cancelledCheque: { gcsPath: String, fileName: String, mimeType: String, fileSize: Number, uploadedAt: Date },
+    // Tax & Statutory
+    pfForm11: { gcsPath: String, fileName: String, mimeType: String, fileSize: Number, uploadedAt: Date },
+    uanCard: { gcsPath: String, fileName: String, mimeType: String, fileSize: Number, uploadedAt: Date },
+    // Medical & Insurance
+    medicalCertificate: { gcsPath: String, fileName: String, mimeType: String, fileSize: Number, uploadedAt: Date },
+    healthInsurance: { gcsPath: String, fileName: String, mimeType: String, fileSize: Number, uploadedAt: Date },
+    // Photographs
+    passportPhoto: { gcsPath: String, fileName: String, mimeType: String, fileSize: Number, uploadedAt: Date },
+    // Company-Specific
+    signedOfferLetter: { gcsPath: String, fileName: String, mimeType: String, fileSize: Number, uploadedAt: Date },
+    employmentAgreement: { gcsPath: String, fileName: String, mimeType: String, fileSize: Number, uploadedAt: Date },
+    ndaAgreement: { gcsPath: String, fileName: String, mimeType: String, fileSize: Number, uploadedAt: Date },
+    codeOfConduct: { gcsPath: String, fileName: String, mimeType: String, fileSize: Number, uploadedAt: Date },
+    itAssetAcknowledgment: { gcsPath: String, fileName: String, mimeType: String, fileSize: Number, uploadedAt: Date },
+    // Additional
+    policeVerification: { gcsPath: String, fileName: String, mimeType: String, fileSize: Number, uploadedAt: Date },
+    bgvConsent: { gcsPath: String, fileName: String, mimeType: String, fileSize: Number, uploadedAt: Date },
+  },
+  // Emergency & Personal Details
+  emergencyContact: {
+    name: { type: String, default: '' },
+    phone: { type: String, default: '' },
+    relationship: { type: String, default: '' },
+  },
+  nomineeName: { type: String, default: '' },
+  nomineeRelationship: { type: String, default: '' },
+  bloodGroup: { type: String, default: '' },
+  fatherName: { type: String, default: '' },
+  dateOfBirth: { type: Date },
+  bankAccountNumber: { type: String, default: '' },
+  ifscCode: { type: String, default: '' },
+  bankName: { type: String, default: '' },
+  uan: { type: String, default: '' },
+  panNumber: { type: String, default: '' },
+  aadhaarNumber: { type: String, default: '' },
 }, {
   timestamps: true,
 });
