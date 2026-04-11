@@ -166,8 +166,8 @@ exports.getAllAttendance = async (req, res) => {
     const query = { organization: req.orgId };
 
     if (date) {
-      const targetDate = new Date(date);
-      targetDate.setHours(0, 0, 0, 0);
+      const [y, m, d] = date.split('-').map(Number);
+      const targetDate = new Date(y, m - 1, d); // local midnight, matches how records are stored
       query.date = targetDate;
     }
 
@@ -225,8 +225,8 @@ exports.markAttendance = async (req, res) => {
   try {
     const { userId, date, status, notes, checkInMode = 'office' } = req.body;
 
-    const targetDate = new Date(date);
-    targetDate.setHours(0, 0, 0, 0);
+    const [yd, md, dd] = date.split('-').map(Number);
+    const targetDate = new Date(yd, md - 1, dd); // local midnight
 
     let attendance = await Attendance.findOne({
       user: userId,
