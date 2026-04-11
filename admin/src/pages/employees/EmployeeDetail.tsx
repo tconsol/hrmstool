@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
-import { ArrowLeft, Mail, Phone, Briefcase, Users, Calendar, FileText, Heart, User } from 'lucide-react';
+import { ArrowLeft, Mail, Phone, Briefcase, Users, Calendar, FileText, Heart, User, Lock, Copy, Check } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
 
 interface EmployeeDetail {
   _id: string;
@@ -22,12 +23,21 @@ interface EmployeeDetail {
   bloodGroup: string;
   nomineeName: string;
   nomineeRelationship: string;
+  nomineephone?: string;
   aadhaarNumber: string;
   panNumber: string;
   bankAccountNumber: string;
   ifscCode: string;
   bankName: string;
   uan: string;
+  profilePicture?: {
+    gcsPath?: string;
+    fileName?: string;
+    mimeType?: string;
+    fileSize?: number;
+    url?: string;
+    uploadedAt?: string;
+  };
   ctc?: {
     annualCTC: number;
     basic: number;
@@ -38,8 +48,13 @@ interface EmployeeDetail {
 export default function EmployeeDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [employee, setEmployee] = useState<EmployeeDetail | null>(null);
   const [loading, setLoading] = useState(true);
+  const [copiedField, setCopiedField] = useState<string | null>(null);
+  
+  // Check if user is HR, CEO, or Manager
+  const canViewSensitiveData = ['hr', 'ceo', 'manager'].includes(user?.role ?? '');
 
   useEffect(() => {
     fetchEmployee();
@@ -57,6 +72,13 @@ export default function EmployeeDetail() {
     }
   };
 
+  const handleCopyToClipboard = (text: string, fieldName: string) => {
+    navigator.clipboard.writeText(text);
+    setCopiedField(fieldName);
+    toast.success(`${fieldName} copied!`);
+    setTimeout(() => setCopiedField(null), 2000);
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -68,7 +90,7 @@ export default function EmployeeDetail() {
   if (!employee) return null;
 
   return (
-    <div className="max-w-5xl mx-auto space-y-6">
+    <div className="max-w-6xl mx-auto space-y-6">
       {/* Header */}
       <div className="flex items-center gap-4 mb-6">
         <button
@@ -77,188 +99,250 @@ export default function EmployeeDetail() {
         >
           <ArrowLeft size={20} />
         </button>
-        <div>
-          <h1 className="text-3xl font-bold text-white">{employee.name}</h1>
-          <p className="text-dark-400 text-sm mt-1">{employee.employeeId}</p>
+        <div className="flex items-center gap-4 flex-1">
+          {employee.profilePicture?.url ? (
+            <img
+              src={employee.profilePicture.url}
+              alt={employee.name}
+              className="w-16 h-16 rounded-2xl object-cover flex-shrink-0 border-2 border-brand-500/30"
+            />
+          ) : (
+            <div className="w-16 h-16 rounded-2xl bg-brand-600/20 flex items-center justify-center text-2xl font-bold text-brand-400 flex-shrink-0 border-2 border-brand-500/30">
+              {employee.name?.charAt(0).toUpperCase()}
+            </div>
+          )}
+          <div>
+            <h1 className="text-3xl font-bold text-white">{employee.name}</h1>
+            <p className="text-dark-400 text-sm mt-1">{employee.employeeId}</p>
+          </div>
         </div>
-      </div>
-
-      {/* Status Badge */}
-      <div className="mb-4">
         <span className={employee.status === 'active' ? 'badge-success' : 'badge-danger'}>
           {employee.status?.charAt(0).toUpperCase() + employee.status?.slice(1)}
         </span>
       </div>
 
-      {/* Grid Layout */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      {/* Work Information Row */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Contact Information */}
-        <div className="glass-card p-6">
+        <div className="glass-card p-6 rounded-2xl border border-white/5 hover:border-white/10 transition-all">
           <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-            <Mail size={20} className="text-brand-400" />
+            <Mail size={20} className="text-blue-400" />
             Contact Information
           </h2>
-          <div className="space-y-3">
+          <div className="space-y-4">
             <div>
-              <p className="text-sm text-dark-400">Email</p>
-              <p className="text-white">{employee.email}</p>
+              <p className="text-xs text-dark-400 uppercase tracking-wide">Email</p>
+              <p className="text-white font-medium">{employee.email}</p>
             </div>
             <div>
-              <p className="text-sm text-dark-400">Phone</p>
-              <p className="text-white">{employee.phone || 'N/A'}</p>
+              <p className="text-xs text-dark-400 uppercase tracking-wide">Phone</p>
+              <p className="text-white font-medium">{employee.phone || 'N/A'}</p>
             </div>
             <div>
-              <p className="text-sm text-dark-400">Address</p>
-              <p className="text-white">{employee.address || 'N/A'}</p>
+              <p className="text-xs text-dark-400 uppercase tracking-wide">Address</p>
+              <p className="text-white font-medium text-sm">{employee.address || 'N/A'}</p>
             </div>
           </div>
         </div>
 
         {/* Job Information */}
-        <div className="glass-card p-6">
+        <div className="glass-card p-6 rounded-2xl border border-white/5 hover:border-white/10 transition-all">
           <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-            <Briefcase size={20} className="text-brand-400" />
+            <Briefcase size={20} className="text-cyan-400" />
             Job Information
           </h2>
-          <div className="space-y-3">
+          <div className="space-y-4">
             <div>
-              <p className="text-sm text-dark-400">Role</p>
-              <p className="text-white capitalize">{employee.role}</p>
+              <p className="text-xs text-dark-400 uppercase tracking-wide">Role</p>
+              <p className="text-white font-medium capitalize">{employee.role}</p>
             </div>
             <div>
-              <p className="text-sm text-dark-400">Department</p>
-              <p className="text-white">
+              <p className="text-xs text-dark-400 uppercase tracking-wide">Department</p>
+              <p className="text-white font-medium">
                 {typeof employee.department === 'object' ? employee.department?.name : employee.department || 'N/A'}
               </p>
             </div>
             <div>
-              <p className="text-sm text-dark-400">Designation</p>
-              <p className="text-white">
+              <p className="text-xs text-dark-400 uppercase tracking-wide">Designation</p>
+              <p className="text-white font-medium">
                 {typeof employee.designation === 'object' ? employee.designation?.name : employee.designation || 'N/A'}
               </p>
             </div>
           </div>
         </div>
 
-        {/* Salary Information */}
-        <div className="glass-card p-6">
+        {/* Salary & CTC */}
+        <div className="glass-card p-6 rounded-2xl border border-white/5 hover:border-white/10 transition-all">
           <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-            <Users size={20} className="text-brand-400" />
+            <Users size={20} className="text-green-400" />
             Salary Information
           </h2>
-          <div className="space-y-3">
+          <div className="space-y-4">
             <div>
-              <p className="text-sm text-dark-400">Monthly Salary</p>
-              <p className="text-white">₹{employee.salary?.toLocaleString() || 'N/A'}</p>
+              <p className="text-xs text-dark-400 uppercase tracking-wide">Monthly Salary</p>
+              <p className="text-white font-medium">₹{employee.salary?.toLocaleString() || 'N/A'}</p>
             </div>
             {employee.ctc?.annualCTC && (
               <>
                 <div>
-                  <p className="text-sm text-dark-400">Annual CTC</p>
-                  <p className="text-white">₹{employee.ctc.annualCTC?.toLocaleString() || 'N/A'}</p>
+                  <p className="text-xs text-dark-400 uppercase tracking-wide">Annual CTC</p>
+                  <p className="text-white font-medium">₹{employee.ctc.annualCTC?.toLocaleString() || 'N/A'}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-dark-400">Basic Salary</p>
-                  <p className="text-white">₹{employee.ctc.basic?.toLocaleString() || 'N/A'}</p>
+                  <p className="text-xs text-dark-400 uppercase tracking-wide">Basic Salary</p>
+                  <p className="text-white font-medium">₹{employee.ctc.basic?.toLocaleString() || 'N/A'}</p>
                 </div>
               </>
             )}
           </div>
         </div>
+      </div>
 
+      {/* Personal Information Row */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Personal Information */}
-        <div className="glass-card p-6">
+        <div className="glass-card p-6 rounded-2xl border border-white/5 hover:border-white/10 transition-all">
           <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-            <User size={20} className="text-brand-400" />
+            <User size={20} className="text-purple-400" />
             Personal Information
           </h2>
-          <div className="space-y-3">
+          <div className="space-y-4">
             <div>
-              <p className="text-sm text-dark-400">Date of Birth</p>
-              <p className="text-white">{employee.dateOfBirth ? new Date(employee.dateOfBirth).toLocaleDateString() : 'N/A'}</p>
+              <p className="text-xs text-dark-400 uppercase tracking-wide">Date of Birth</p>
+              <p className="text-white font-medium">{employee.dateOfBirth ? new Date(employee.dateOfBirth).toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' }) : 'N/A'}</p>
             </div>
             <div>
-              <p className="text-sm text-dark-400">Father's Name</p>
-              <p className="text-white">{employee.fatherName || 'N/A'}</p>
+              <p className="text-xs text-dark-400 uppercase tracking-wide">Father's Name</p>
+              <p className="text-white font-medium">{employee.fatherName || 'N/A'}</p>
             </div>
             <div>
-              <p className="text-sm text-dark-400">Blood Group</p>
-              <p className="text-white">{employee.bloodGroup || 'N/A'}</p>
+              <p className="text-xs text-dark-400 uppercase tracking-wide">Blood Group</p>
+              <p className="text-white font-medium">{employee.bloodGroup || 'N/A'}</p>
             </div>
           </div>
         </div>
 
-        {/* Emergency & Documents */}
-        <div className="glass-card p-6">
+        {/* Emergency Contact */}
+        <div className="glass-card p-6 rounded-2xl border border-white/5 hover:border-white/10 transition-all">
           <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-            <Heart size={20} className="text-brand-400" />
+            <Heart size={20} className="text-red-400" />
             Emergency Contact
           </h2>
-          <div className="space-y-3">
+          <div className="space-y-4">
             <div>
-              <p className="text-sm text-dark-400">Nominee Name</p>
-              <p className="text-white">{employee.nomineeName || 'N/A'}</p>
+              <p className="text-xs text-dark-400 uppercase tracking-wide">Nominee Name</p>
+              <p className="text-white font-medium">{employee.nomineeName || 'N/A'}</p>
             </div>
             <div>
-              <p className="text-sm text-dark-400">Nominee Relationship</p>
-              <p className="text-white">{employee.nomineeRelationship || 'N/A'}</p>
+              <p className="text-xs text-dark-400 uppercase tracking-wide">Relationship</p>
+              <p className="text-white font-medium">{employee.nomineeRelationship || 'N/A'}</p>
             </div>
-          </div>
-        </div>
-
-        {/* Government IDs */}
-        <div className="glass-card p-6">
-          <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-            <FileText size={20} className="text-brand-400" />
-            Government IDs
-          </h2>
-          <div className="space-y-3">
-            <div>
-              <p className="text-sm text-dark-400">Aadhaar Number</p>
-              <p className="text-white font-mono">{employee.aadhaarNumber ? employee.aadhaarNumber.replace(/\d(?=\d{4})/g, '*') : 'N/A'}</p>
-            </div>
-            <div>
-              <p className="text-sm text-dark-400">PAN Number</p>
-              <p className="text-white font-mono">{employee.panNumber || 'N/A'}</p>
-            </div>
-            <div>
-              <p className="text-sm text-dark-400">UAN</p>
-              <p className="text-white font-mono">{employee.uan || 'N/A'}</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Bank Details */}
-        <div className="glass-card p-6">
-          <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-            <Calendar size={20} className="text-brand-400" />
-            Bank Details
-          </h2>
-          <div className="space-y-3">
-            <div>
-              <p className="text-sm text-dark-400">Bank Name</p>
-              <p className="text-white">{employee.bankName || 'N/A'}</p>
-            </div>
-            <div>
-              <p className="text-sm text-dark-400">Account Number</p>
-              <p className="text-white font-mono">{employee.bankAccountNumber ? employee.bankAccountNumber.slice(-4).padStart(employee.bankAccountNumber.length, '*') : 'N/A'}</p>
-            </div>
-            <div>
-              <p className="text-sm text-dark-400">IFSC Code</p>
-              <p className="text-white font-mono">{employee.ifscCode || 'N/A'}</p>
-            </div>
+            {employee.nomineephone && (
+              <div>
+                <p className="text-xs text-dark-400 uppercase tracking-wide">Contact Phone</p>
+                <p className="text-white font-medium">{employee.nomineephone}</p>
+              </div>
+            )}
           </div>
         </div>
       </div>
 
+      {/* Sensitive Information - Only for HR/Managers */}
+      {canViewSensitiveData ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Government IDs */}
+          <div className="glass-card p-6 rounded-2xl border border-white/5 hover:border-white/10 transition-all">
+            <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+              <FileText size={20} className="text-yellow-400" />
+              Government IDs
+            </h2>
+            <div className="space-y-4">
+              <div>
+                <p className="text-xs text-dark-400 uppercase tracking-wide">Aadhaar Number</p>
+                <p className="text-white font-mono text-sm">{employee.aadhaarNumber || 'N/A'}</p>
+              </div>
+              <div>
+                <p className="text-xs text-dark-400 uppercase tracking-wide">PAN Number</p>
+                <p className="text-white font-mono text-sm">{employee.panNumber || 'N/A'}</p>
+              </div>
+              <div>
+                <p className="text-xs text-dark-400 uppercase tracking-wide">UAN</p>
+                <p className="text-white font-mono text-sm">{employee.uan || 'N/A'}</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Bank Details */}
+          <div className="glass-card p-6 rounded-2xl border border-white/5 hover:border-white/10 transition-all">
+            <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+              <Calendar size={20} className="text-emerald-400" />
+              Bank Details
+            </h2>
+            <div className="space-y-4">
+              <div>
+                <p className="text-xs text-dark-400 uppercase tracking-wide">Bank Name</p>
+                <p className="text-white font-medium">{employee.bankName || 'N/A'}</p>
+              </div>
+              <div className="flex items-center justify-between">
+                <div className="flex-1">
+                  <p className="text-xs text-dark-400 uppercase tracking-wide mb-1">Account Number</p>
+                  <p className="text-white font-mono text-sm">{employee.bankAccountNumber || 'N/A'}</p>
+                </div>
+                {employee.bankAccountNumber && (
+                  <button
+                    onClick={() => handleCopyToClipboard(employee.bankAccountNumber, 'Account Number')}
+                    className={`ml-3 p-2 rounded-lg transition-all ${
+                      copiedField === 'Account Number'
+                        ? 'bg-emerald-500/20 text-emerald-400'
+                        : 'hover:bg-dark-700/50 text-dark-400 hover:text-emerald-400'
+                    }`}
+                    title="Copy Account Number"
+                  >
+                    {copiedField === 'Account Number' ? <Check size={16} /> : <Copy size={16} />}
+                  </button>
+                )}
+              </div>
+              <div className="flex items-center justify-between">
+                <div className="flex-1">
+                  <p className="text-xs text-dark-400 uppercase tracking-wide mb-1">IFSC Code</p>
+                  <p className="text-white font-mono text-sm">{employee.ifscCode || 'N/A'}</p>
+                </div>
+                {employee.ifscCode && (
+                  <button
+                    onClick={() => handleCopyToClipboard(employee.ifscCode, 'IFSC Code')}
+                    className={`ml-3 p-2 rounded-lg transition-all ${
+                      copiedField === 'IFSC Code'
+                        ? 'bg-emerald-500/20 text-emerald-400'
+                        : 'hover:bg-dark-700/50 text-dark-400 hover:text-emerald-400'
+                    }`}
+                    title="Copy IFSC Code"
+                  >
+                    {copiedField === 'IFSC Code' ? <Check size={16} /> : <Copy size={16} />}
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div className="glass-card p-6 rounded-2xl border border-yellow-500/20 bg-yellow-500/5">
+          <div className="flex items-center gap-3 text-yellow-400">
+            <Lock size={20} />
+            <p className="text-sm font-medium">Sensitive information is only visible to HR, Management, and authorized personnel.</p>
+          </div>
+        </div>
+      )}
+
       {/* Action Buttons */}
-      <div className="flex gap-3 pt-4">
-        <button
-          onClick={() => navigate(`/employees/edit/${employee._id}`)}
-          className="btn-primary"
-        >
-          Edit Employee
-        </button>
+      <div className="flex gap-3 pt-4 flex-wrap">
+        {canViewSensitiveData && (
+          <button
+            onClick={() => navigate(`/employees/edit/${employee._id}`)}
+            className="btn-primary"
+          >
+            Edit Employee
+          </button>
+        )}
         <button
           onClick={() => navigate(`/employees/${employee._id}/documents`)}
           className="btn-secondary"

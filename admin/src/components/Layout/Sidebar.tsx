@@ -1,6 +1,7 @@
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useNotifications } from '../../context/NotificationContext';
+import { useTheme } from '../../context/ThemeContext';
 import { ROUTE_FEATURE_MAP } from '../../config/features';
 import { Organization } from '../../types';
 import { useState, useEffect, useMemo } from 'react';
@@ -61,6 +62,7 @@ function isGroup(item: SidebarItem): item is LinkGroup {
 const Sidebar = ({ isOpen, onClose, isCollapsed = false, onToggleCollapse }: SidebarProps) => {
   const { user } = useAuth();
   const { unreadCount } = useNotifications();
+  const { theme } = useTheme();
   const isManagement = ['hr', 'manager', 'ceo'].includes(user?.role ?? '');
   const isHROnly = user?.role === 'hr';
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({ 'My Space': true });
@@ -119,7 +121,6 @@ const Sidebar = ({ isOpen, onClose, isCollapsed = false, onToggleCollapse }: Sid
     },
     { to: '/calendar', label: 'Calendar', icon: CalendarDays },
     { to: '/notifications', label: 'Notifications', icon: Bell, badge: unreadCount },
-    { to: '/organization', label: 'Organization', icon: Settings },
   ];
 
   const managerItems: SidebarItem[] = [
@@ -296,11 +297,12 @@ const Sidebar = ({ isOpen, onClose, isCollapsed = false, onToggleCollapse }: Sid
 
       {/* Sidebar */}
       <aside
-        className={`fixed top-0 left-0 h-full bg-dark-800 border-r border-dark-700/50 z-50 
+        className={`fixed top-0 left-0 h-full border-r z-50 
         transform transition-all duration-300 ease-in-out flex flex-col
         ${isOpen ? 'translate-x-0' : '-translate-x-full'}
         lg:translate-x-0 lg:static lg:z-auto 
-        ${isCollapsed ? 'w-20' : 'w-64'}`}
+        ${isCollapsed ? 'w-20' : 'w-64'}
+        ${theme === 'light' ? 'bg-white border-gray-200' : 'bg-dark-800 border-dark-700/50'}`}
       >
         {/* Logo */}
         <div className="flex items-center justify-between h-16 px-6 border-b border-dark-700/50 flex-shrink-0">
@@ -337,7 +339,11 @@ const Sidebar = ({ isOpen, onClose, isCollapsed = false, onToggleCollapse }: Sid
                 placeholder="Search menu..."
                 value={search}
                 onChange={e => setSearch(e.target.value)}
-                className="w-full pl-8 pr-3 py-2 text-xs bg-dark-700/50 border border-dark-600/50 rounded-lg text-gray-300 placeholder-dark-500 focus:outline-none focus:border-brand-500/50"
+                className={`w-full pl-8 pr-3 py-2 text-xs rounded-lg focus:outline-none focus:border-brand-500/50 ${
+                  theme === 'light'
+                    ? 'bg-white border border-gray-200 text-gray-800 placeholder-gray-400'
+                    : 'bg-dark-700/50 border border-dark-600/50 text-gray-300 placeholder-dark-500'
+                }`}
               />
             </div>
           </div>

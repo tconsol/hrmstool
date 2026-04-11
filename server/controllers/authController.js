@@ -216,9 +216,25 @@ exports.login = async (req, res) => {
     }
 
     const token = generateToken(user._id);
+    const userData = user.toJSON();
+    
+    // Generate signed URL for profile picture if exists
+    if (user.profilePicture?.gcsPath) {
+      const { getSignedUrl } = require('../utils/gcpStorage');
+      try {
+        userData.profilePicture = {
+          ...user.profilePicture.toObject ? user.profilePicture.toObject() : user.profilePicture,
+          url: await getSignedUrl(user.profilePicture.gcsPath),
+        };
+      } catch (err) {
+        console.error('Failed to generate signed URL for profile picture:', err);
+        if (userData.profilePicture) userData.profilePicture.url = null;
+      }
+    }
+
     res.json({
       token,
-      user: user.toJSON(),
+      user: userData,
     });
   } catch (error) {
     res.status(500).json({ error: 'Server error during login' });

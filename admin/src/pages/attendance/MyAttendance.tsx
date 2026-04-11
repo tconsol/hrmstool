@@ -328,8 +328,8 @@ const MyAttendance = () => {
             </div>
 
             {locationError.locations.length > 0 && (
-              <div className="bg-dark-700/50 rounded-lg p-4 space-y-2">
-                <p className="text-xs font-semibold text-dark-300 uppercase tracking-wide">Required Office Locations</p>
+              <div className="rounded-lg p-4 space-y-2" style={{ backgroundColor: 'var(--theme-bg-elevated)', border: '1px solid var(--theme-border)' }}>
+                <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: 'var(--theme-text-muted)' }}>Required Office Locations</p>
                 {locationError.locations.map((loc: any, idx: number) => (
                   <div key={idx} className="text-sm">
                     <p className="font-medium text-white">{loc.name}</p>

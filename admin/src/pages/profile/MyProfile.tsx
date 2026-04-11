@@ -12,6 +12,7 @@ const MyProfile = () => {
   const [activeTab, setActiveTab] = useState<Tab>('personal');
   const [loading, setLoading] = useState(false);
   const [uploadingPic, setUploadingPic] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
   const picInputRef = useRef<HTMLInputElement>(null);
   const [documents, setDocuments] = useState<Record<string, any>>({});
   const [loadingDocs, setLoadingDocs] = useState(false);
@@ -106,6 +107,7 @@ const MyProfile = () => {
       });
       updateUser(data);
       toast.success('Profile updated successfully');
+      setIsEditMode(false);
     } catch (error: any) {
       toast.error(error.response?.data?.error || 'Failed to update profile');
     } finally {
@@ -235,9 +237,9 @@ const MyProfile = () => {
             {[{ label: 'Casual', value: user.leaveBalance?.casual || 0, color: 'text-emerald-400' },
               { label: 'Sick', value: user.leaveBalance?.sick || 0, color: 'text-blue-400' },
               { label: 'Paid', value: user.leaveBalance?.paid || 0, color: 'text-purple-400' }].map(({ label, value, color }) => (
-              <div key={label} className="text-center px-3 py-2 bg-dark-700/40 rounded-lg">
+              <div key={label} className="leave-balance-box text-center px-3 py-2 rounded-lg">
                 <p className={`text-xl font-bold ${color}`}>{value}</p>
-                <p className="text-xs text-dark-500 mt-0.5">{label}</p>
+                <p className="leave-balance-label text-xs mt-0.5">{label}</p>
               </div>
             ))}
           </div>
@@ -278,15 +280,15 @@ const MyProfile = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-dark-300 mb-1.5">Email</label>
-                    <input value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} className="input-dark" type="email" />
+                    <input disabled={!isEditMode} value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} className="input-dark disabled:opacity-50 disabled:cursor-not-allowed" type="email" />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-dark-300 mb-1.5">Phone</label>
-                    <input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} className="input-dark" placeholder="Phone number" />
+                    <input disabled={!isEditMode} value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} className="input-dark disabled:opacity-50 disabled:cursor-not-allowed" placeholder="Phone number" />
                   </div>
                   <div className="md:col-span-2">
                     <label className="block text-sm font-medium text-dark-300 mb-1.5">Address</label>
-                    <textarea value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} className="input-dark min-h-[80px]" placeholder="Your address" />
+                    <textarea disabled={!isEditMode} value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} className="input-dark disabled:opacity-50 disabled:cursor-not-allowed min-h-[80px]" placeholder="Your address" />
                   </div>
                 </div>
               </div>
@@ -298,23 +300,23 @@ const MyProfile = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-dark-300 mb-1.5">Father's Name</label>
-                    <input value={form.fatherName} onChange={(e) => setForm({ ...form, fatherName: e.target.value })} className="input-dark" placeholder="Father's name" />
+                    <input disabled={!isEditMode} value={form.fatherName} onChange={(e) => setForm({ ...form, fatherName: e.target.value })} className="input-dark disabled:opacity-50 disabled:cursor-not-allowed" placeholder="Father's name" />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-dark-300 mb-1.5">Date of Birth</label>
-                    <DatePicker value={form.dateOfBirth} onChange={(v) => setForm({ ...form, dateOfBirth: v })} />
+                    <DatePicker disabled={!isEditMode} value={form.dateOfBirth} onChange={(v) => setForm({ ...form, dateOfBirth: v })} />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-dark-300 mb-1.5">Blood Group</label>
-                    <input value={form.bloodGroup} onChange={(e) => setForm({ ...form, bloodGroup: e.target.value })} className="input-dark" placeholder="e.g., O+" />
+                    <input disabled={!isEditMode} value={form.bloodGroup} onChange={(e) => setForm({ ...form, bloodGroup: e.target.value })} className="input-dark disabled:opacity-50 disabled:cursor-not-allowed" placeholder="e.g., O+" />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-dark-300 mb-1.5">Aadhaar Number</label>
-                    <input value={form.aadhaarNumber} onChange={(e) => setForm({ ...form, aadhaarNumber: e.target.value })} className="input-dark" placeholder="XXXX XXXX XXXX" maxLength={14} />
+                    <input disabled={!isEditMode} value={form.aadhaarNumber} onChange={(e) => setForm({ ...form, aadhaarNumber: e.target.value })} className="input-dark disabled:opacity-50 disabled:cursor-not-allowed" placeholder="XXXX XXXX XXXX" maxLength={14} />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-dark-300 mb-1.5">PAN Number</label>
-                    <input value={form.panNumber} onChange={(e) => setForm({ ...form, panNumber: e.target.value.toUpperCase() })} className="input-dark" placeholder="e.g., ABCDE1234F" maxLength={10} />
+                    <input disabled={!isEditMode} value={form.panNumber} onChange={(e) => setForm({ ...form, panNumber: e.target.value.toUpperCase() })} className="input-dark disabled:opacity-50 disabled:cursor-not-allowed" placeholder="e.g., ABCDE1234F" maxLength={10} />
                   </div>
                 </div>
               </div>
@@ -324,15 +326,15 @@ const MyProfile = () => {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-dark-300 mb-1.5">Contact Name</label>
-                    <input value={form.contactName} onChange={(e) => setForm({ ...form, contactName: e.target.value })} className="input-dark" placeholder="Name" />
+                    <input disabled={!isEditMode} value={form.contactName} onChange={(e) => setForm({ ...form, contactName: e.target.value })} className="input-dark disabled:opacity-50 disabled:cursor-not-allowed" placeholder="Name" />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-dark-300 mb-1.5">Contact Phone</label>
-                    <input value={form.contactPhone} onChange={(e) => setForm({ ...form, contactPhone: e.target.value })} className="input-dark" placeholder="Phone" />
+                    <input disabled={!isEditMode} value={form.contactPhone} onChange={(e) => setForm({ ...form, contactPhone: e.target.value })} className="input-dark disabled:opacity-50 disabled:cursor-not-allowed" placeholder="Phone" />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-dark-300 mb-1.5">Relationship</label>
-                    <input value={form.emergencyRelationship} onChange={(e) => setForm({ ...form, emergencyRelationship: e.target.value })} className="input-dark" placeholder="e.g., Spouse, Parent" />
+                    <input disabled={!isEditMode} value={form.emergencyRelationship} onChange={(e) => setForm({ ...form, emergencyRelationship: e.target.value })} className="input-dark disabled:opacity-50 disabled:cursor-not-allowed" placeholder="e.g., Spouse, Parent" />
                   </div>
                 </div>
               </div>
@@ -342,20 +344,39 @@ const MyProfile = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-dark-300 mb-1.5">Nominee Name</label>
-                    <input value={form.nomineeName} onChange={(e) => setForm({ ...form, nomineeName: e.target.value })} className="input-dark" placeholder="Nominee name" />
+                    <input disabled={!isEditMode} value={form.nomineeName} onChange={(e) => setForm({ ...form, nomineeName: e.target.value })} className="input-dark disabled:opacity-50 disabled:cursor-not-allowed" placeholder="Nominee name" />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-dark-300 mb-1.5">Nominee Relationship</label>
-                    <input value={form.nomineeRelationship} onChange={(e) => setForm({ ...form, nomineeRelationship: e.target.value })} className="input-dark" placeholder="e.g., Spouse, Child" />
+                    <input disabled={!isEditMode} value={form.nomineeRelationship} onChange={(e) => setForm({ ...form, nomineeRelationship: e.target.value })} className="input-dark disabled:opacity-50 disabled:cursor-not-allowed" placeholder="e.g., Spouse, Child" />
                   </div>
                 </div>
               </div>
 
-              <div className="flex justify-end pt-2">
-                <button type="submit" disabled={loading} className="btn-primary flex items-center gap-2">
-                  {loading ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <Save size={16} />}
-                  Save Changes
-                </button>
+              <div className="flex justify-end gap-3 pt-2">
+                {!isEditMode ? (
+                  <button
+                    type="button"
+                    onClick={() => setIsEditMode(true)}
+                    className="btn-primary flex items-center gap-2"
+                  >
+                    Edit Details
+                  </button>
+                ) : (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => setIsEditMode(false)}
+                      className="px-5 py-2 text-sm font-medium text-gray-300 border border-dark-600 rounded-lg hover:bg-dark-700/50 transition-all"
+                    >
+                      Cancel
+                    </button>
+                    <button type="submit" disabled={loading} className="btn-primary flex items-center gap-2">
+                      {loading ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <Save size={16} />}
+                      Save Changes
+                    </button>
+                  </>
+                )}
               </div>
             </form>
           )}
@@ -370,27 +391,46 @@ const MyProfile = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-dark-300 mb-1.5">Bank Name</label>
-                    <input value={form.bankName} onChange={(e) => setForm({ ...form, bankName: e.target.value })} className="input-dark" placeholder="e.g., HDFC Bank" />
+                    <input disabled={!isEditMode} value={form.bankName} onChange={(e) => setForm({ ...form, bankName: e.target.value })} className="input-dark disabled:opacity-50 disabled:cursor-not-allowed" placeholder="e.g., HDFC Bank" />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-dark-300 mb-1.5">Account Number</label>
-                    <input value={form.bankAccountNumber} onChange={(e) => setForm({ ...form, bankAccountNumber: e.target.value })} className="input-dark" placeholder="Account number" />
+                    <input disabled={!isEditMode} value={form.bankAccountNumber} onChange={(e) => setForm({ ...form, bankAccountNumber: e.target.value })} className="input-dark disabled:opacity-50 disabled:cursor-not-allowed" placeholder="Account number" />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-dark-300 mb-1.5">IFSC Code</label>
-                    <input value={form.ifscCode} onChange={(e) => setForm({ ...form, ifscCode: e.target.value.toUpperCase() })} className="input-dark" placeholder="e.g., HDFC0001234" />
+                    <input disabled={!isEditMode} value={form.ifscCode} onChange={(e) => setForm({ ...form, ifscCode: e.target.value.toUpperCase() })} className="input-dark disabled:opacity-50 disabled:cursor-not-allowed" placeholder="e.g., HDFC0001234" />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-dark-300 mb-1.5">UAN Number</label>
-                    <input value={form.uan} onChange={(e) => setForm({ ...form, uan: e.target.value })} className="input-dark" placeholder="UAN number" />
+                    <input disabled={!isEditMode} value={form.uan} onChange={(e) => setForm({ ...form, uan: e.target.value })} className="input-dark disabled:opacity-50 disabled:cursor-not-allowed" placeholder="UAN number" />
                   </div>
                 </div>
               </div>
-              <div className="flex justify-end pt-2">
-                <button type="submit" disabled={loading} className="btn-primary flex items-center gap-2">
-                  {loading ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <Save size={16} />}
-                  Save Changes
-                </button>
+              <div className="flex justify-end gap-3 pt-2">
+                {!isEditMode ? (
+                  <button
+                    type="button"
+                    onClick={() => setIsEditMode(true)}
+                    className="btn-primary flex items-center gap-2"
+                  >
+                    Edit Details
+                  </button>
+                ) : (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => setIsEditMode(false)}
+                      className="px-5 py-2 text-sm font-medium text-gray-300 border border-dark-600 rounded-lg hover:bg-dark-700/50 transition-all"
+                    >
+                      Cancel
+                    </button>
+                    <button type="submit" disabled={loading} className="btn-primary flex items-center gap-2">
+                      {loading ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <Save size={16} />}
+                      Save Changes
+                    </button>
+                  </>
+                )}
               </div>
             </form>
           )}

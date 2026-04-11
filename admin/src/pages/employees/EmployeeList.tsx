@@ -146,9 +146,22 @@ const EmployeeList = () => {
                 {employees.map((emp) => (
                   <tr key={emp._id}>
                     <td>
-                      <div>
-                        <p className="font-medium text-white">{emp.name}</p>
-                        <p className="text-xs text-dark-400">{emp.employeeId} • {emp.email}</p>
+                      <div className="flex items-center gap-3">
+                        {(emp as any).profilePicture?.url ? (
+                          <img
+                            src={(emp as any).profilePicture.url}
+                            alt={emp.name}
+                            className="w-9 h-9 rounded-full object-cover flex-shrink-0"
+                          />
+                        ) : (
+                          <div className="w-9 h-9 rounded-full bg-brand-600/20 flex items-center justify-center text-sm font-semibold text-brand-400 flex-shrink-0">
+                            {emp.name?.charAt(0).toUpperCase()}
+                          </div>
+                        )}
+                        <div>
+                          <p className="font-medium text-white">{emp.name}</p>
+                          <p className="text-xs text-dark-400">{emp.employeeId} • {emp.email}</p>
+                        </div>
                       </div>
                     </td>
                     <td className="hidden md:table-cell">{typeof emp.department === 'object' && emp.department ? (emp.department as any).name : (emp.department || 'N/A')}</td>

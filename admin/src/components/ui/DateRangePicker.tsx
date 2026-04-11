@@ -71,8 +71,8 @@ const DateRangePicker: React.FC<DateRangePickerProps> = ({
 
     return (
       <div
-        className="absolute top-full left-0 mt-2 z-50 rounded-2xl overflow-hidden border border-dark-600/50 shadow-2xl"
-        style={{ background: 'linear-gradient(160deg, #0f172a 0%, #1a2540 100%)', width: '292px' }}
+        className="absolute top-full left-0 mt-2 rounded-2xl overflow-hidden border border-dark-600/50 shadow-2xl"
+        style={{ background: 'linear-gradient(160deg, #0f172a 0%, #1a2540 100%)', width: '292px', zIndex: 999999 }}
       >
         {/* Header */}
         <div

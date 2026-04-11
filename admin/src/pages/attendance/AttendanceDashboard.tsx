@@ -145,6 +145,7 @@ const AttendanceDashboard = () => {
                   <th className="hidden md:table-cell">Department</th>
                   <th>Check In</th>
                   <th className="hidden sm:table-cell">Check Out</th>
+                  <th className="hidden md:table-cell">Work Mode</th>
                   <th className="hidden lg:table-cell">Work Hours</th>
                   <th>Status</th>
                 </tr>
@@ -169,6 +170,17 @@ const AttendanceDashboard = () => {
                         ? new Date(record.checkOut).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
                         : '-'}
                     </td>
+                    <td className="hidden md:table-cell">
+                      <span
+                        className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium"
+                        style={{
+                          backgroundColor: (record.checkInMode ?? record.workMode) === 'remote' ? 'rgba(59, 130, 246, 0.1)' : 'rgba(16, 185, 129, 0.1)',
+                          color: (record.checkInMode ?? record.workMode) === 'remote' ? '#2563eb' : '#059669'
+                        }}
+                      >
+                        {(record.checkInMode ?? record.workMode) === 'remote' ? '🏠 Remote' : '🏢 Office'}
+                      </span>
+                    </td>
                     <td className="hidden lg:table-cell">{record.workHours ? fmtHours(record.workHours) : '-'}</td>
                     <td>
                       <span className={getStatusBadge(record.status)}>{record.status}</span>
@@ -177,7 +189,7 @@ const AttendanceDashboard = () => {
                 ))}
                 {attendance.length === 0 && (
                   <tr>
-                    <td colSpan={6} className="text-center py-8 text-dark-500">
+                    <td colSpan={7} className="text-center py-8 text-dark-500">
                       No attendance records for this date
                     </td>
                   </tr>

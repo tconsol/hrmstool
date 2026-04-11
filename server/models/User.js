@@ -36,6 +36,11 @@ const userSchema = new mongoose.Schema({
     enum: ['hr', 'manager', 'ceo', 'employee'],
     default: 'employee',
   },
+  reportingManager: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    default: null,
+  },
   department: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Department',

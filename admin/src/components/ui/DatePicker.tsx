@@ -1,8 +1,6 @@
-import ReactDatePicker from 'react-datepicker';
-import { forwardRef, useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { CalendarDays, ChevronLeft, ChevronRight, ChevronDown } from 'lucide-react';
-import { parse, format, isValid } from 'date-fns';
-import 'react-datepicker/dist/react-datepicker.css';
 
 interface DatePickerProps {
   value: string; // YYYY-MM-DD
@@ -15,24 +13,9 @@ interface DatePickerProps {
   disabled?: boolean;
 }
 
-// Custom input rendered by react-datepicker
-const CustomInput = forwardRef<HTMLButtonElement, { value?: string; onClick?: () => void; placeholder?: string; disabled?: boolean }>(
-  ({ value, onClick, placeholder, disabled }, ref) => (
-    <button
-      type="button"
-      onClick={onClick}
-      ref={ref}
-      disabled={disabled}
-      className="input-dark flex items-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-    >
-      <span className={`flex-1 truncate text-left ${value ? 'text-gray-100' : 'text-dark-400'}`}>
-        {value || placeholder || 'Select date'}
-      </span>
-      <CalendarDays size={16} className="text-gray-300 shrink-0" />
-    </button>
-  )
-);
-CustomInput.displayName = 'CustomInput';
+const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+const MONTH_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const DAYS = ['Su','Mo','Tu','We','Th','Fr','Sa'];
 
 const DatePicker = ({
   value,
@@ -41,103 +24,198 @@ const DatePicker = ({
   required,
   min,
   max,
-  placeholder,
+  placeholder = 'Select date',
   disabled,
 }: DatePickerProps) => {
-  const [monthOpen, setMonthOpen] = useState(false);
-  const [yearOpen, setYearOpen] = useState(false);
-  const [tempDate, setTempDate] = useState<Date | null>(null);
+  const [open, setOpen] = useState(false);
+  const [dropPos, setDropPos] = useState<{ top: number; left: number; width: number }>({ top: 0, left: 0, width: 260 });
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const dropRef = useRef<HTMLDivElement>(null);
 
-  const toDate = (str: string): Date | null => {
-    if (!str) return null;
-    const d = parse(str, 'yyyy-MM-dd', new Date());
-    return isValid(d) ? d : null;
+  const today = new Date();
+  const toDate = (str?: string) => str ? new Date(str + 'T00:00:00') : null;
+  const selected = toDate(value);
+  const minDate = toDate(min ?? '');
+  const maxDate = toDate(max ?? '');
+
+  const [viewYear, setViewYear] = useState(selected?.getFullYear() ?? today.getFullYear());
+  const [viewMonth, setViewMonth] = useState(selected?.getMonth() ?? today.getMonth());
+  const [showMonths, setShowMonths] = useState(false);
+  const [showYears, setShowYears] = useState(false);
+
+  const currentYear = today.getFullYear();
+  const years = Array.from({ length: 101 }, (_, i) => currentYear - 50 + i);
+
+  // Position the portal dropdown under the trigger
+  const openCalendar = () => {
+    if (disabled) return;
+    const rect = triggerRef.current?.getBoundingClientRect();
+    if (rect) {
+      const dropWidth = 260;
+      let left = rect.left + window.scrollX;
+      // keep within viewport
+      if (left + dropWidth > window.innerWidth - 8) {
+        left = window.innerWidth - dropWidth - 8;
+      }
+      setDropPos({ top: rect.bottom + window.scrollY + 4, left, width: dropWidth });
+    }
+    setOpen(true);
   };
 
-  const selected = toDate(value);
-  const minDate = min ? toDate(min) ?? undefined : undefined;
-  const maxDate = max ? toDate(max) ?? undefined : undefined;
+  // Close on outside click
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e: MouseEvent) => {
+      if (
+        dropRef.current && !dropRef.current.contains(e.target as Node) &&
+        triggerRef.current && !triggerRef.current.contains(e.target as Node)
+      ) {
+        setOpen(false);
+        setShowMonths(false);
+        setShowYears(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [open]);
 
-  const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-  const currentYear = new Date().getFullYear();
-  const years = Array.from({ length: 100 }, (_, i) => currentYear - 50 + i);
+  // Build calendar grid
+  const firstDay = new Date(viewYear, viewMonth, 1).getDay();
+  const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
+  const prevMonthDays = new Date(viewYear, viewMonth, 0).getDate();
+
+  const cells: { day: number; cur: boolean }[] = [];
+  for (let i = 0; i < firstDay; i++) cells.push({ day: prevMonthDays - firstDay + 1 + i, cur: false });
+  for (let i = 1; i <= daysInMonth; i++) cells.push({ day: i, cur: true });
+  while (cells.length < 42) cells.push({ day: cells.length - firstDay - daysInMonth + 1, cur: false });
+
+  const isSelected = (day: number) =>
+    selected && selected.getFullYear() === viewYear && selected.getMonth() === viewMonth && selected.getDate() === day;
+
+  const isToday = (day: number) =>
+    today.getFullYear() === viewYear && today.getMonth() === viewMonth && today.getDate() === day;
+
+  const isDisabled = (day: number) => {
+    const d = new Date(viewYear, viewMonth, day);
+    if (minDate && d < minDate) return true;
+    if (maxDate && d > maxDate) return true;
+    return false;
+  };
+
+  const selectDay = (day: number) => {
+    if (isDisabled(day)) return;
+    const d = new Date(viewYear, viewMonth, day);
+    onChange(d.toISOString().split('T')[0]);
+    setOpen(false);
+    setShowMonths(false);
+    setShowYears(false);
+  };
+
+  const prevMonth = () => {
+    if (viewMonth === 0) { setViewMonth(11); setViewYear(y => y - 1); }
+    else setViewMonth(m => m - 1);
+  };
+  const nextMonth = () => {
+    if (viewMonth === 11) { setViewMonth(0); setViewYear(y => y + 1); }
+    else setViewMonth(m => m + 1);
+  };
+
+  const displayValue = selected
+    ? `${String(selected.getDate()).padStart(2,'0')} ${MONTH_SHORT[selected.getMonth()]} ${selected.getFullYear()}`
+    : '';
 
   return (
-    <div className={`datepicker-wrapper ${className}`}>
-      <ReactDatePicker
-        selected={selected}
-        onChange={(date: Date | null) => {
-          onChange(date ? format(date, 'yyyy-MM-dd') : '');
-          setMonthOpen(false);
-          setYearOpen(false);
-        }}
-        dateFormat="dd MMM yyyy"
-        minDate={minDate}
-        maxDate={maxDate}
+    <div className={className}>
+      {/* Trigger */}
+      <button
+        ref={triggerRef}
+        type="button"
         disabled={disabled}
-        required={required}
-        placeholderText={placeholder ?? 'Select date'}
-        customInput={<CustomInput placeholder={placeholder} disabled={disabled} />}
-        renderCustomHeader={({ date, decreaseMonth, increaseMonth, prevMonthButtonDisabled, nextMonthButtonDisabled, changeYear, changeMonth }) => (
-          <div className="px-3 pb-3 pt-2">
-            {/* Month/Year Selectors */}
-            <div className="flex items-center justify-center gap-2 mb-3">
+        onClick={openCalendar}
+        className={`input-dark flex items-center gap-2 cursor-pointer w-full disabled:opacity-50 disabled:cursor-not-allowed ${open ? 'ring-1 ring-brand-500/50 border-brand-500' : ''}`}
+      >
+        <span className={`flex-1 truncate text-left text-sm ${displayValue ? 'text-gray-100' : 'text-dark-400'}`}>
+          {displayValue || placeholder}
+        </span>
+        <CalendarDays size={15} className="text-dark-400 shrink-0" />
+      </button>
+
+      {/* Portal Dropdown — renders directly on document.body, escapes ALL overflow/z-index parents */}
+      {open && createPortal(
+        <div
+          ref={dropRef}
+          style={{
+            position: 'absolute',
+            top: dropPos.top,
+            left: dropPos.left,
+            width: dropPos.width,
+            zIndex: 2147483647, // max possible z-index
+          }}
+          className="bg-dark-800 border border-dark-600 rounded-xl shadow-2xl p-3 select-none"
+        >
+          {/* Header: month/year selectors + nav arrows */}
+          <div className="flex items-center justify-between mb-2 gap-1">
+            <button
+              type="button"
+              onClick={prevMonth}
+              className="p-1.5 rounded-lg hover:bg-dark-700 text-dark-300 hover:text-white transition-colors"
+            >
+              <ChevronLeft size={15} />
+            </button>
+
+            <div className="flex items-center gap-1 flex-1 justify-center">
+              {/* Month selector */}
               <div className="relative">
                 <button
                   type="button"
-                  onClick={() => {
-                    setMonthOpen(!monthOpen);
-                    setYearOpen(false);
-                  }}
-                  className="flex items-center gap-1 px-3 py-1.5 bg-dark-700/50 hover:bg-dark-600/70 border border-dark-600 rounded-lg text-sm font-medium text-white transition-all"
+                  onClick={() => { setShowMonths(s => !s); setShowYears(false); }}
+                  className="flex items-center gap-1 px-2 py-1 rounded-lg hover:bg-dark-700 text-sm font-semibold text-white transition-colors"
                 >
-                  {months[date.getMonth()]}
-                  <ChevronDown size={14} className={monthOpen ? 'rotate-180' : ''} />
+                  {MONTHS[viewMonth]}
+                  <ChevronDown size={13} className={`transition-transform ${showMonths ? 'rotate-180' : ''}`} />
                 </button>
-                {monthOpen && (
-                  <div className="absolute top-full left-0 mt-1 bg-dark-800 border border-dark-600 rounded-lg shadow-xl z-50 w-40 max-h-48 overflow-y-auto">
-                    {months.map((month, idx) => (
+                {showMonths && (
+                  <div
+                    className="absolute top-full left-0 mt-1 bg-dark-800 border border-dark-600 rounded-lg shadow-xl w-36 max-h-48 overflow-y-auto"
+                    style={{ zIndex: 2147483647 }}
+                  >
+                    {MONTHS.map((m, idx) => (
                       <button
-                        key={month}
+                        key={m}
                         type="button"
-                        onClick={() => {
-                          changeMonth(idx);
-                          setMonthOpen(false);
-                        }}
-                        className={`w-full px-3 py-2 text-left text-sm transition-colors ${idx === date.getMonth() ? 'bg-brand-600 text-white font-semibold' : 'text-dark-300 hover:bg-dark-700 hover:text-white'}`}
+                        onClick={() => { setViewMonth(idx); setShowMonths(false); }}
+                        className={`w-full px-3 py-1.5 text-left text-sm transition-colors ${idx === viewMonth ? 'bg-brand-600 text-white font-semibold' : 'text-dark-200 hover:bg-dark-700 hover:text-white'}`}
                       >
-                        {month}
+                        {m}
                       </button>
                     ))}
                   </div>
                 )}
               </div>
 
+              {/* Year selector */}
               <div className="relative">
                 <button
                   type="button"
-                  onClick={() => {
-                    setYearOpen(!yearOpen);
-                    setMonthOpen(false);
-                  }}
-                  className="flex items-center gap-1 px-3 py-1.5 bg-dark-700/50 hover:bg-dark-600/70 border border-dark-600 rounded-lg text-sm font-medium text-white transition-all"
+                  onClick={() => { setShowYears(s => !s); setShowMonths(false); }}
+                  className="flex items-center gap-1 px-2 py-1 rounded-lg hover:bg-dark-700 text-sm font-semibold text-white transition-colors"
                 >
-                  {date.getFullYear()}
-                  <ChevronDown size={14} className={yearOpen ? 'rotate-180' : ''} />
+                  {viewYear}
+                  <ChevronDown size={13} className={`transition-transform ${showYears ? 'rotate-180' : ''}`} />
                 </button>
-                {yearOpen && (
-                  <div className="absolute top-full left-0 mt-1 bg-dark-800 border border-dark-600 rounded-lg shadow-xl z-50 w-28 max-h-48 overflow-y-auto">
-                    {years.map((year) => (
+                {showYears && (
+                  <div
+                    className="absolute top-full left-0 mt-1 bg-dark-800 border border-dark-600 rounded-lg shadow-xl w-24 max-h-48 overflow-y-auto"
+                    style={{ zIndex: 2147483647 }}
+                  >
+                    {years.map((yr) => (
                       <button
-                        key={year}
+                        key={yr}
                         type="button"
-                        onClick={() => {
-                          changeYear(year);
-                          setYearOpen(false);
-                        }}
-                        className={`w-full px-3 py-2 text-left text-sm transition-colors ${year === date.getFullYear() ? 'bg-brand-600 text-white font-semibold' : 'text-dark-300 hover:bg-dark-700 hover:text-white'}`}
+                        onClick={() => { setViewYear(yr); setShowYears(false); }}
+                        className={`w-full px-3 py-1.5 text-left text-sm transition-colors ${yr === viewYear ? 'bg-brand-600 text-white font-semibold' : 'text-dark-200 hover:bg-dark-700 hover:text-white'}`}
                       >
-                        {year}
+                        {yr}
                       </button>
                     ))}
                   </div>
@@ -145,34 +223,62 @@ const DatePicker = ({
               </div>
             </div>
 
-            {/* Navigation Arrows */}
-            <div className="flex items-center justify-between">
-              <button
-                type="button"
-                onClick={decreaseMonth}
-                disabled={prevMonthButtonDisabled}
-                className="p-1.5 rounded-lg hover:bg-white/10 text-gray-400 hover:text-white transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-              >
-                <ChevronLeft size={15} />
-              </button>
-              <span className="text-xs font-semibold text-dark-300 tracking-wide">
-                Prev / Next
-              </span>
-              <button
-                type="button"
-                onClick={increaseMonth}
-                disabled={nextMonthButtonDisabled}
-                className="p-1.5 rounded-lg hover:bg-white/10 text-gray-400 hover:text-white transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-              >
-                <ChevronRight size={15} />
-              </button>
-            </div>
+            <button
+              type="button"
+              onClick={nextMonth}
+              className="p-1.5 rounded-lg hover:bg-dark-700 text-dark-300 hover:text-white transition-colors"
+            >
+              <ChevronRight size={15} />
+            </button>
           </div>
-        )}
-        dayClassName={(date) => date.getDay() === 0 ? 'rdp-sun' : 'rdp-weekday'}
-        popperPlacement="bottom-start"
-        popperClassName="z-[9999]"
-      />
+
+          {/* Day headers */}
+          <div className="grid grid-cols-7 mb-1">
+            {DAYS.map(d => (
+              <div key={d} className="text-center text-xs font-medium text-dark-400 py-1">{d}</div>
+            ))}
+          </div>
+
+          {/* Day cells */}
+          <div className="grid grid-cols-7 gap-px">
+            {cells.map((cell, idx) => (
+              <button
+                key={idx}
+                type="button"
+                disabled={!cell.cur || isDisabled(cell.day)}
+                onClick={() => cell.cur && selectDay(cell.day)}
+                className={`
+                  aspect-square flex items-center justify-center rounded-lg text-xs font-medium transition-all
+                  ${!cell.cur ? 'text-dark-700 cursor-default' : ''}
+                  ${cell.cur && isDisabled(cell.day) ? 'text-dark-600 cursor-not-allowed' : ''}
+                  ${cell.cur && !isDisabled(cell.day) && isSelected(cell.day) ? 'bg-brand-500 text-white shadow-sm' : ''}
+                  ${cell.cur && !isDisabled(cell.day) && !isSelected(cell.day) && isToday(cell.day) ? 'border border-brand-500 text-brand-400 hover:bg-dark-700' : ''}
+                  ${cell.cur && !isDisabled(cell.day) && !isSelected(cell.day) && !isToday(cell.day) ? 'text-dark-200 hover:bg-dark-700 hover:text-white cursor-pointer' : ''}
+                `}
+              >
+                {cell.day}
+              </button>
+            ))}
+          </div>
+
+          {/* Today shortcut */}
+          <div className="mt-2 pt-2 border-t border-dark-700 text-center">
+            <button
+              type="button"
+              onClick={() => {
+                setViewYear(today.getFullYear());
+                setViewMonth(today.getMonth());
+                onChange(today.toISOString().split('T')[0]);
+                setOpen(false);
+              }}
+              className="text-xs text-brand-400 hover:text-brand-300 transition-colors font-medium"
+            >
+              Today
+            </button>
+          </div>
+        </div>,
+        document.body
+      )}
     </div>
   );
 };

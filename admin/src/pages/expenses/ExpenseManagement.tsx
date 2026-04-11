@@ -71,7 +71,6 @@ export default function ExpenseManagement() {
               { value: 'rejected', label: 'Rejected' },
               { value: 'reimbursed', label: 'Reimbursed' },
             ]}
-            placeholder="All Status"
           />
         </div>
       </div>

@@ -50,8 +50,24 @@ exports.getEmployees = async (req, res) => {
       .skip((page - 1) * limit)
       .limit(parseInt(limit));
 
+    // Generate signed URLs for profile pictures
+    const employeesWithUrls = await Promise.all(
+      employees.map(async (emp) => {
+        const empObj = emp.toObject();
+        if (empObj.profilePicture?.gcsPath) {
+          try {
+            empObj.profilePicture.url = await getSignedUrl(empObj.profilePicture.gcsPath);
+          } catch (err) {
+            console.error('Failed to generate signed URL for profile picture:', err);
+            empObj.profilePicture.url = null;
+          }
+        }
+        return empObj;
+      })
+    );
+
     res.json({
-      employees,
+      employees: employeesWithUrls,
       total,
       page: parseInt(page),
       pages: Math.ceil(total / limit),
@@ -70,7 +86,19 @@ exports.getEmployee = async (req, res) => {
     if (!employee) {
       return res.status(404).json({ error: 'Employee not found' });
     }
-    res.json(employee);
+
+    // Generate signed URL for profile picture if it has a gcsPath
+    const empObj = employee.toObject();
+    if (empObj.profilePicture?.gcsPath) {
+      try {
+        empObj.profilePicture.url = await getSignedUrl(empObj.profilePicture.gcsPath);
+      } catch (err) {
+        console.error('Failed to generate signed URL for profile picture:', err);
+        empObj.profilePicture.url = null;
+      }
+    }
+
+    res.json(empObj);
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch employee' });
   }
@@ -117,7 +145,18 @@ exports.updateEmployee = async (req, res) => {
       return res.status(404).json({ error: 'Employee not found' });
     }
 
-    res.json(employee);
+    // Generate signed URL for profile picture if it has a gcsPath
+    const empObj = employee.toObject();
+    if (empObj.profilePicture?.gcsPath) {
+      try {
+        empObj.profilePicture.url = await getSignedUrl(empObj.profilePicture.gcsPath);
+      } catch (err) {
+        console.error('Failed to generate signed URL for profile picture:', err);
+        empObj.profilePicture.url = null;
+      }
+    }
+
+    res.json(empObj);
   } catch (error) {
     res.status(500).json({ error: 'Failed to update employee' });
   }

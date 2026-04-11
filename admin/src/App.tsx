@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider } from './context/AuthContext';
 import { NotificationProvider } from './context/NotificationContext';
+import { ThemeProvider } from './context/ThemeContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import FeatureGate from './components/FeatureGate';
 import Layout from './components/Layout/Layout';
@@ -55,6 +56,7 @@ import SystemSettings from './pages/superadmin/SystemSettings';
 
 function App() {
   return (
+    <ThemeProvider>
     <AuthProvider>
       <NotificationProvider>
         <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
@@ -237,7 +239,7 @@ function App() {
             <Route
               path="/organization"
               element={
-                <ProtectedRoute roles={['hr', 'ceo']}>
+                <ProtectedRoute roles={['ceo']}>
                   <FeatureGate feature="organization"><OrganizationSettings /></FeatureGate>
                 </ProtectedRoute>
               }
@@ -282,6 +284,7 @@ function App() {
       />
     </NotificationProvider>
     </AuthProvider>
+    </ThemeProvider>
   );
 }
 

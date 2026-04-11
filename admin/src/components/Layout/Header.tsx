@@ -1,6 +1,8 @@
 import { useState, useRef, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useNotifications, Notification } from '../../context/NotificationContext';
+import { useTheme } from '../../context/ThemeContext';
+import api from '../../services/api';
 import {
   Menu,
   LogOut,
@@ -11,6 +13,8 @@ import {
   Trash2,
   BellRing,
   ExternalLink,
+  Sun,
+  Moon,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { formatDistanceToNow } from 'date-fns';
@@ -30,6 +34,8 @@ const Header = ({ onMenuToggle }: HeaderProps) => {
   const { user, logout } = useAuth();
   const { notifications, unreadCount, markAsRead, markAllAsRead, deleteNotification } =
     useNotifications();
+  const { theme, toggleTheme } = useTheme();
+  const isLight = theme === 'light';
   const navigate = useNavigate();
 
   const [notifOpen, setNotifOpen] = useState(false);
@@ -52,6 +58,22 @@ const Header = ({ onMenuToggle }: HeaderProps) => {
     return () => document.removeEventListener('mousedown', handler);
   }, []);
 
+  // Refresh profile picture signed URL every 50 minutes (expires in 60)
+  useEffect(() => {
+    if (!user?.profilePicture?.gcsPath) return;
+    
+    const refreshInterval = setInterval(async () => {
+      try {
+        await api.get('/auth/me');
+        console.log('✅ Profile picture URL refreshed');
+      } catch (error) {
+        console.error('Failed to refresh profile picture:', error);
+      }
+    }, 50 * 60 * 1000);
+
+    return () => clearInterval(refreshInterval);
+  }, [user?.profilePicture?.gcsPath]);
+
   const handleLogout = () => {
     logout();
     navigate('/login');
@@ -67,7 +89,10 @@ const Header = ({ onMenuToggle }: HeaderProps) => {
   const previewNotifs = notifications.slice(0, 5);
 
   return (
-    <header className="h-16 bg-dark-800/80 backdrop-blur-xl border-b border-dark-700/50 flex items-center justify-between px-4 lg:px-6 sticky top-0 z-30">
+    <header
+      className="h-16 backdrop-blur-xl border-b flex items-center justify-between px-4 lg:px-6 sticky top-0 z-30"
+      style={{ backgroundColor: 'var(--theme-header-bg)', borderBottomColor: 'var(--theme-header-border)' }}
+    >
       {/* Left */}
       <div className="flex items-center gap-4">
         <button
@@ -84,6 +109,17 @@ const Header = ({ onMenuToggle }: HeaderProps) => {
 
       {/* Right */}
       <div className="flex items-center gap-1.5">
+
+        {/* ── Theme Toggle ── */}
+        <button
+          onClick={toggleTheme}
+          className="p-2.5 rounded-xl transition-all hover:bg-dark-700/60"
+          style={{ color: 'var(--theme-text-muted)' }}
+          aria-label="Toggle theme"
+          title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+        >
+          {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
+        </button>
 
         {/* ── Notification Bell ── */}
         <div className="relative" ref={notifRef}>
@@ -210,7 +246,11 @@ const Header = ({ onMenuToggle }: HeaderProps) => {
         <div className="relative" ref={userRef}>
           <button
             onClick={() => { setUserOpen((o) => !o); setNotifOpen(false); }}
-            className="flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-dark-700/60 transition-all text-dark-300 hover:text-white"
+            className={`flex items-center gap-2 px-3 py-2 rounded-xl transition-all ${
+              isLight
+                ? 'hover:bg-gray-100 text-gray-700'
+                : 'hover:bg-dark-700/60 text-dark-300 hover:text-white'
+            }`}
           >
             <div className="w-8 h-8 bg-gradient-to-br from-brand-500 to-brand-700 rounded-xl flex items-center justify-center text-white text-sm font-bold flex-shrink-0 overflow-hidden">
               {user?.profilePicture?.url ? (
@@ -220,10 +260,10 @@ const Header = ({ onMenuToggle }: HeaderProps) => {
               )}
             </div>
             <div className="hidden sm:block text-left">
-              <p className="text-xs font-semibold text-white leading-tight truncate max-w-[120px]">
+              <p className={`text-xs font-semibold leading-tight truncate max-w-[120px] ${isLight ? 'text-gray-900' : 'text-white'}`}>
                 {user?.name}
               </p>
-              <p className="text-[10px] text-dark-400 capitalize">
+              <p className={`text-[10px] capitalize ${isLight ? 'text-gray-500' : 'text-dark-400'}`}>
                 {typeof user?.organization === 'object' && user?.organization
                   ? (user.organization as any).name
                   : user?.role}
@@ -237,12 +277,16 @@ const Header = ({ onMenuToggle }: HeaderProps) => {
 
           {/* User dropdown menu */}
           {userOpen && (
-            <div className="absolute right-0 top-full mt-2 w-56 bg-dark-800 border border-dark-700/60 rounded-2xl shadow-2xl shadow-black/40 overflow-hidden z-50">
+            <div className={`absolute right-0 top-full mt-2 w-56 rounded-2xl shadow-2xl overflow-hidden z-50 ${
+              isLight
+                ? 'bg-white border border-gray-200 shadow-gray-200/60'
+                : 'bg-dark-800 border border-dark-700/60 shadow-black/40'
+            }`}>
               {/* Profile summary */}
-              <div className="px-4 py-3.5 border-b border-dark-700/50">
+              <div className={`px-4 py-3.5 border-b ${isLight ? 'border-gray-100' : 'border-dark-700/50'}`}>
                 <div>
-                  <p className="text-sm font-semibold text-white truncate">{user?.name}</p>
-                  <p className="text-xs text-dark-400 truncate">{user?.email}</p>
+                  <p className={`text-sm font-semibold truncate ${isLight ? 'text-gray-900' : 'text-white'}`}>{user?.name}</p>
+                  <p className={`text-xs truncate ${isLight ? 'text-gray-500' : 'text-dark-400'}`}>{user?.email}</p>
                 </div>
               </div>
 
@@ -250,16 +294,20 @@ const Header = ({ onMenuToggle }: HeaderProps) => {
               <div className="p-1.5">
                 <button
                   onClick={() => { navigate('/profile'); setUserOpen(false); }}
-                  className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm text-dark-300 hover:text-white hover:bg-dark-700/60 transition-all"
+                  className={`flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm transition-all ${
+                    isLight ? 'text-gray-700 hover:text-blue-700 hover:bg-blue-50' : 'text-dark-300 hover:text-white hover:bg-dark-700/60'
+                  }`}
                 >
-                  <UserCircle size={16} className="text-dark-400" />
+                  <UserCircle size={16} className={isLight ? 'text-gray-400' : 'text-dark-400'} />
                   My Profile
                 </button>
                 <button
                   onClick={() => { navigate('/notifications'); setUserOpen(false); }}
-                  className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm text-dark-300 hover:text-white hover:bg-dark-700/60 transition-all"
+                  className={`flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm transition-all ${
+                    isLight ? 'text-gray-700 hover:text-blue-700 hover:bg-blue-50' : 'text-dark-300 hover:text-white hover:bg-dark-700/60'
+                  }`}
                 >
-                  <Bell size={16} className="text-dark-400" />
+                  <Bell size={16} className={isLight ? 'text-gray-400' : 'text-dark-400'} />
                   Notifications
                   {unreadCount > 0 && (
                     <span className="ml-auto px-1.5 py-0.5 bg-red-500/20 text-red-400 text-[10px] font-bold rounded-full">
@@ -270,10 +318,10 @@ const Header = ({ onMenuToggle }: HeaderProps) => {
               </div>
 
               {/* Logout */}
-              <div className="p-1.5 border-t border-dark-700/50">
+              <div className={`p-1.5 border-t ${isLight ? 'border-gray-100' : 'border-dark-700/50'}`}>
                 <button
                   onClick={handleLogout}
-                  className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm text-red-400 hover:text-red-300 hover:bg-red-500/10 transition-all"
+                  className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm text-red-500 hover:text-red-600 hover:bg-red-50 transition-all"
                 >
                   <LogOut size={16} />
                   Sign Out

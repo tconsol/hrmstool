@@ -80,6 +80,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     localStorage.setItem('hrms_user', JSON.stringify(authUser));
     setToken(authToken);
     setUser(authUser);
+
+    // Immediately fetch fresh user data with signed URLs for profile picture
+    try {
+      const { data: freshUser } = await api.get('/auth/me');
+      localStorage.setItem('hrms_user', JSON.stringify(freshUser));
+      setUser(freshUser);
+      console.log('✅ Profile data fetched immediately after login');
+    } catch (error) {
+      console.error('Failed to fetch fresh user data after login:', error);
+      // User state already set, continue with initial login data
+    }
   };
 
   const superAdminLogin = async (email: string, password: string) => {
@@ -90,6 +101,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     localStorage.setItem('hrms_user', JSON.stringify(authUser));
     setToken(authToken);
     setUser(authUser);
+
+    // For super admin, fetch fresh data might not apply, but keeping consistent
+    try {
+      const { data: freshUser } = await api.get('/auth/me');
+      localStorage.setItem('hrms_user', JSON.stringify(freshUser));
+      setUser(freshUser);
+      console.log('✅ Profile data fetched for super admin');
+    } catch (error) {
+      // Super admin endpoint might not have /auth/me, continue with initial data
+      console.log('Note: Could not refresh super admin profile data');
+    }
   };
 
   const register = async (data: { orgName: string; name: string; email: string; password: string; phone?: string; industry?: string }) => {

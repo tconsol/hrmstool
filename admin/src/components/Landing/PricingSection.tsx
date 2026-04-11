@@ -5,18 +5,20 @@ const subscriptionTiers = [
   {
     id: 'starter',
     name: 'Starter',
-    price: '$99',
+    price: '₹4,999',
     period: '/month',
     description: 'Perfect for small businesses getting started.',
     popular: false,
     features: [
-      'Up to 50 employees',
-      'Basic employee management',
-      'Attendance tracking',
-      'Leave management',
-      'Basic reports',
-      'Email support',
-      '5GB storage',
+      'Basic Employee Management',
+      'Attendance Tracking',
+      'Leave Management',
+      'Holiday Calendar',
+      'Department Management',
+      'Shift Management',
+      'Basic Dashboard',
+      'Notifications',
+      'Email Support',
     ],
     cta: 'Start Free Trial',
     color: 'blue',
@@ -24,22 +26,21 @@ const subscriptionTiers = [
   {
     id: 'professional',
     name: 'Professional',
-    price: '$299',
+    price: '₹14,999',
     period: '/month',
     description: 'For growing teams that need more power.',
     popular: true,
     features: [
-      'Up to 500 employees',
-      'Advanced employee management',
-      'Real-time attendance',
-      'Payroll processing',
-      'Performance tracking',
-      'Advanced analytics',
-      'Priority support',
-      '100GB storage',
-      'Custom workflows',
-      'Multi-department support',
-      'Training management',
+      'All Starter features',
+      'Advanced Payroll Processing',
+      'Training Management',
+      'Designation Management',
+      'Asset Management',
+      'Document Management',
+      'Expense Tracking',
+      'Calendar Events',
+      'Advanced Analytics',
+      'Priority Support',
     ],
     cta: 'Start Free Trial',
     color: 'cyan',
@@ -52,17 +53,16 @@ const subscriptionTiers = [
     description: 'Unlimited scale for large organizations.',
     popular: false,
     features: [
-      'Unlimited employees',
-      'Full feature access',
-      'Custom integrations & API',
-      'Advanced security & SSO',
-      'Dedicated account manager',
-      '24/7 priority support',
-      'Unlimited storage',
-      'SLA guarantee',
-      'On-premise deployment',
-      'Custom onboarding',
-      'White-label options',
+      'All 18 platform features',
+      'Announcements & Communications',
+      'Organization Management',
+      'Super Admin Panel',
+      'Advanced Security & SSO',
+      'Dedicated Account Manager',
+      '24/7 Priority Support',
+      'Custom Integrations & API',
+      'SLA Guarantee',
+      'Advanced Onboarding & Training',
     ],
     cta: 'Request Demo',
     color: 'purple',
@@ -86,17 +86,17 @@ export default function PricingSection() {
       </div>
 
       <div className="relative z-10 max-w-6xl mx-auto">
-        <div className="text-center mb-16">
-          <p className="text-blue-400 text-sm font-semibold tracking-widest uppercase mb-3">Pricing</p>
-          <h2 className="text-4xl md:text-5xl font-black text-white tracking-tight mb-4">
+        <div className="text-center mb-12 sm:mb-16 px-2">
+          <p className="text-blue-400 text-xs sm:text-sm font-semibold tracking-widest uppercase mb-2 sm:mb-3">Pricing</p>
+          <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-white tracking-tight mb-3 sm:mb-4">
             Simple, transparent pricing
           </h2>
-          <p className="text-gray-400 max-w-lg mx-auto">
+          <p className="text-sm sm:text-base text-gray-400 max-w-lg mx-auto">
             All plans include a 14-day free trial. No credit card required.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 items-stretch">
           {subscriptionTiers.map((tier) => {
             const s = colorStyles[tier.color];
             return (

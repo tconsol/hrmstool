@@ -88,33 +88,33 @@ const colorMap: Record<string, { bg: string; text: string; glow: string }> = {
 
 export default function FeaturesSection() {
   return (
-    <section id="features" className="py-28 px-6 relative">
+    <section id="features" className="py-20 sm:py-28 px-4 sm:px-6 relative">
       <div className="max-w-7xl mx-auto">
         {/* Section header */}
-        <div className="text-center mb-16">
-          <p className="text-blue-400 text-sm font-semibold tracking-widest uppercase mb-3">Capabilities</p>
-          <h2 className="text-4xl md:text-5xl font-black text-white tracking-tight mb-4">
-            Everything HR needs,<br />
+        <div className="text-center mb-12 sm:mb-16">
+          <p className="text-blue-400 text-xs sm:text-sm font-semibold tracking-widest uppercase mb-2 sm:mb-3">Capabilities</p>
+          <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-white tracking-tight mb-3 sm:mb-4">
+            Everything HR needs,<br className="hidden sm:block" />
             <span className="bg-gradient-to-r from-blue-400 to-cyan-300 bg-clip-text text-transparent">nothing it doesn't</span>
           </h2>
-          <p className="text-gray-400 max-w-xl mx-auto">
+          <p className="text-sm sm:text-base text-gray-400 max-w-xl mx-auto">
             A complete suite of tools built for how modern teams actually work.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           {features.map((feature, i) => {
             const Icon = feature.icon;
             const c = colorMap[feature.color] ?? colorMap.blue;
             return (
               <div
                 key={i}
-                className={`group relative p-5 rounded-2xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.05] hover:border-white/10 transition-all duration-300 hover:shadow-xl ${c.glow}`}
+                className={`group relative p-4 sm:p-5 rounded-2xl border border-white/5 bg-white/[0.02] hover:bg-white/[0.05] hover:border-white/10 transition-all duration-300 hover:shadow-xl ${c.glow} h-full`}
               >
-                <div className={`inline-flex p-2.5 rounded-xl ${c.bg} mb-4`}>
-                  <Icon className={`w-5 h-5 ${c.text}`} />
+                <div className={`inline-flex p-2.5 rounded-xl ${c.bg} mb-3 sm:mb-4`}>
+                  <Icon className={`w-4 sm:w-5 h-4 sm:h-5 ${c.text}`} />
                 </div>
-                <h3 className="text-sm font-semibold text-white mb-1.5">{feature.title}</h3>
+                <h3 className="text-xs sm:text-sm font-semibold text-white mb-1 sm:mb-1.5">{feature.title}</h3>
                 <p className="text-xs text-gray-500 leading-relaxed">{feature.description}</p>
               </div>
             );

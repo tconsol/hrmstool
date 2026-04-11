@@ -35,6 +35,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { ChevronDown } from 'lucide-react';
+import { useTheme } from '../../context/ThemeContext';
 
 export interface SelectOption {
   value: string;
@@ -51,6 +52,7 @@ interface SelectProps {
 }
 
 const Select = ({ value, onChange, options, placeholder, className = '', disabled = false }: SelectProps) => {
+  const { theme } = useTheme();
   const [open, setOpen] = useState(false);
   const [dropPos, setDropPos] = useState<{ top?: number; bottom?: number; left: number; width: number; maxHeight: number } | null>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
@@ -128,11 +130,13 @@ const Select = ({ value, onChange, options, placeholder, className = '', disable
     setOpen(false);
   };
 
+  const isLight = theme === 'light';
+
   const dropdown = dropPos ? (
     <div
       ref={dropRef}
       style={{ position: 'fixed', top: dropPos.top, bottom: dropPos.bottom, left: dropPos.left, width: dropPos.width, zIndex: 999999 }}
-      className="bg-dark-800 border border-dark-600 rounded-lg shadow-2xl overflow-hidden"
+      className={`rounded-xl overflow-hidden ${isLight ? 'bg-white border border-gray-200 shadow-xl shadow-gray-200/60' : 'bg-dark-800 border border-dark-600 shadow-2xl'}`}
       onMouseDown={e => e.stopPropagation()}
     >
       <div style={{ maxHeight: dropPos.maxHeight }} className="overflow-y-auto">
@@ -140,7 +144,11 @@ const Select = ({ value, onChange, options, placeholder, className = '', disable
           <button
             type="button"
             onMouseDown={e => handleOption(e, '')}
-            className={`w-full px-4 py-2.5 text-left text-sm flex items-center gap-2 transition-colors hover:bg-dark-700 ${value === '' ? 'text-brand-400 bg-brand-500/10' : 'text-dark-400'}`}
+            className={`w-full px-4 py-2.5 text-left text-sm flex items-center gap-2 transition-colors ${
+              value === ''
+                ? 'text-brand-500 bg-brand-500/10 font-medium'
+                : isLight ? 'text-gray-500 hover:bg-blue-50 hover:text-blue-700' : 'text-dark-400 hover:bg-dark-700'
+            }`}
           >
             {placeholder}
           </button>
@@ -150,7 +158,11 @@ const Select = ({ value, onChange, options, placeholder, className = '', disable
             key={option.value}
             type="button"
             onMouseDown={e => handleOption(e, option.value)}
-            className={`w-full px-4 py-2.5 text-left text-sm flex items-center gap-2 transition-colors hover:bg-dark-700/80 ${option.value === value ? 'text-brand-400 bg-brand-500/10' : 'text-gray-200'}`}
+            className={`w-full px-4 py-2.5 text-left text-sm flex items-center gap-2 transition-colors ${
+              option.value === value
+                ? 'text-brand-500 bg-brand-500/10 font-medium'
+                : isLight ? 'text-gray-700 hover:bg-blue-50 hover:text-blue-700' : 'text-gray-200 hover:bg-dark-700/80'
+            }`}
           >
             <span className="truncate">{option.label}</span>
           </button>
@@ -166,14 +178,18 @@ const Select = ({ value, onChange, options, placeholder, className = '', disable
         type="button"
         disabled={disabled}
         onMouseDown={handleToggle}
-        className="w-full px-4 py-2.5 bg-dark-800 border border-dark-600 rounded-lg text-left flex items-center justify-between gap-2 focus:outline-none focus:ring-2 focus:ring-brand-500/50 focus:border-brand-500 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed hover:border-dark-500"
+        className={`w-full px-4 py-2.5 rounded-lg text-left flex items-center justify-between gap-2 focus:outline-none focus:ring-2 focus:ring-brand-500/50 focus:border-brand-500 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed ${
+          isLight
+            ? 'bg-white border border-gray-200 hover:border-gray-400'
+            : 'bg-dark-800 border border-dark-600 hover:border-dark-500'
+        }`}
       >
-        <span className={`text-sm truncate ${selected ? 'text-gray-100' : 'text-dark-400'}`}>
+        <span className={`text-sm truncate ${selected ? (isLight ? 'text-gray-900' : 'text-gray-100') : (isLight ? 'text-gray-400' : 'text-dark-400')}`}>
           {selected ? selected.label : (placeholder ?? 'Select...')}
         </span>
         <ChevronDown
           size={16}
-          className={`text-dark-400 flex-shrink-0 transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
+          className={`flex-shrink-0 transition-transform duration-200 ${open ? 'rotate-180' : ''} ${isLight ? 'text-gray-400' : 'text-dark-400'}`}
         />
       </button>
       {open && dropdown && createPortal(dropdown, document.body)}

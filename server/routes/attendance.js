@@ -10,6 +10,8 @@ const {
   getAllAttendance,
   markAttendance,
   getAttendanceSummary,
+  cleanupDuplicateAttendance,
+  getDuplicateAttendanceInfo,
 } = require('../controllers/attendanceController');
 
 router.use(auth);
@@ -26,5 +28,9 @@ router.get('/today', getTodayStatus);
 router.get('/all', authorize('hr', 'manager', 'ceo'), getAllAttendance);
 router.post('/mark', authorize('hr', 'manager', 'ceo'), markAttendance);
 router.get('/summary', authorize('hr', 'manager', 'ceo'), getAttendanceSummary);
+
+// Duplicate cleanup routes (HR/Manager/CEO only)
+router.get('/admin/duplicates', authorize('hr', 'manager', 'ceo'), getDuplicateAttendanceInfo);
+router.post('/admin/cleanup-duplicates', authorize('hr', 'manager', 'ceo'), cleanupDuplicateAttendance);
 
 module.exports = router;
