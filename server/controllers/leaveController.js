@@ -97,6 +97,14 @@ exports.applyLeave = async (req, res) => {
       );
       
       console.log('✓ All notifications sent');
+
+      // Also emit org-wide leave_update so leave management pages refresh live
+      try {
+        const populatedLeave = await Leave.findById(leave._id)
+          .populate({ path: 'user', select: 'name employeeId department designation', populate: [{ path: 'department', select: 'name' }, { path: 'designation', select: 'name' }] })
+          .populate('approvedBy', 'name');
+        getIO().to(`org_${req.orgId}`).emit('leave_update', { action: 'new', leave: populatedLeave });
+      } catch { /* silent */ }
     } catch (notifErr) {
       console.error('✗ Error sending notifications:', notifErr.message);
       // Don't fail the response, but log the error
@@ -217,6 +225,11 @@ exports.updateLeaveStatus = async (req, res) => {
     } catch (notifErr) {
       console.error('✗ Error notifying employee:', notifErr.message);
     }
+
+    // Emit org-wide leave_update so leave management pages refresh live
+    try {
+      getIO().to(`org_${req.orgId}`).emit('leave_update', { action: 'status_change', leaveId: leave._id.toString(), status });
+    } catch { /* silent */ }
 
     res.json(leave);
   } catch (error) {

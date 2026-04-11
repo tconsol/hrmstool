@@ -6,6 +6,7 @@ const {
   updateOrganization,
   getOrganizationSettings,
   updateOrganizationSettings,
+  syncLeavePolicyToUsers,
   getOfficeLocations,
   addOfficeLocation,
   updateOfficeLocation,
@@ -17,9 +18,10 @@ router.use(auth);
 router.use(orgScope);
 
 router.get('/', getOrganization);
-router.put('/', authorize('hr', 'ceo'), updateOrganization);
+router.put('/', authorize('ceo'), updateOrganization);
 router.get('/settings', getOrganizationSettings);
-router.put('/settings', authorize('hr', 'ceo'), updateOrganizationSettings);
+router.put('/settings', authorize('ceo'), updateOrganizationSettings);
+router.post('/sync-leave-policy', authorize('ceo'), syncLeavePolicyToUsers);
 
 // Office locations — all staff can read; only hr/manager/ceo can manage
 router.get('/locations', getOfficeLocations);

@@ -2,6 +2,7 @@ const Attendance = require('../models/Attendance');
 const User = require('../models/User');
 const Organization = require('../models/Organization');
 const { isWithinOfficeRange } = require('./organizationController');
+const { getIO } = require('../utils/socket');
 
 // Get today's date normalized to midnight
 const getToday = () => {
@@ -74,6 +75,21 @@ exports.checkIn = async (req, res) => {
     attendance.checkInLocation = latitude && longitude ? { latitude, longitude } : undefined;
     await attendance.save();
 
+    // Emit real-time update to all org members (HR/Manager/CEO attendance dashboard)
+    try {
+      const populated = await Attendance.findById(attendance._id).populate({
+        path: 'user',
+        select: 'name employeeId department designation status',
+        populate: [
+          { path: 'department', select: 'name' },
+          { path: 'designation', select: 'name' },
+        ],
+      });
+      const orgRoom = `org_${req.orgId.toString()}`;
+      getIO().to(orgRoom).emit('attendance_update', { action: 'checkin', record: populated });
+      console.log(`📡 attendance_update emitted to ${orgRoom} for user ${req.user._id}`);
+    } catch (err) { console.error('Socket emit error (checkin):', err.message); }
+
     res.json(attendance);
   } catch (error) {
     if (error.code === 11000) {
@@ -104,6 +120,21 @@ exports.checkOut = async (req, res) => {
     const diffMs = attendance.checkOut.getTime() - new Date(attendance.checkIn).getTime();
     attendance.workHours = Math.max(0, parseFloat((diffMs / (1000 * 60 * 60)).toFixed(2)));
     await attendance.save();
+
+    // Emit real-time update to org room
+    try {
+      const populated = await Attendance.findById(attendance._id).populate({
+        path: 'user',
+        select: 'name employeeId department designation status',
+        populate: [
+          { path: 'department', select: 'name' },
+          { path: 'designation', select: 'name' },
+        ],
+      });
+      const orgRoom = `org_${req.orgId.toString()}`;
+      getIO().to(orgRoom).emit('attendance_update', { action: 'checkout', record: populated });
+      console.log(`📡 attendance_update emitted to ${orgRoom} for user ${req.user._id}`);
+    } catch (err) { console.error('Socket emit error (checkout):', err.message); }
 
     res.json(attendance);
   } catch (error) {

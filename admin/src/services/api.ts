@@ -30,11 +30,15 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      localStorage.removeItem('hrms_token');
-      localStorage.removeItem('hrms_user');
-      // Redirect superadmin to their login page
-      const isSuperAdminRoute = window.location.pathname.startsWith('/superadmin');
-      window.location.href = isSuperAdminRoute ? '/superadmin/login' : '/login';
+      // Don't redirect if we're already on a login page or if it's an auth request
+      const isAuthRequest = error.config?.url?.includes('/auth/login') || error.config?.url?.includes('/superadmin/login');
+      const isLoginPage = window.location.pathname === '/login' || window.location.pathname === '/superadmin/login';
+      if (!isAuthRequest && !isLoginPage) {
+        localStorage.removeItem('hrms_token');
+        localStorage.removeItem('hrms_user');
+        const isSuperAdminRoute = window.location.pathname.startsWith('/superadmin');
+        window.location.href = isSuperAdminRoute ? '/superadmin/login' : '/login';
+      }
     }
     return Promise.reject(error);
   }

@@ -9,6 +9,7 @@ import {
 import { io, Socket } from 'socket.io-client';
 import { useAuth } from './AuthContext';
 import api from '../services/api';
+import toast from 'react-hot-toast';
 
 export interface Notification {
   _id: string;
@@ -32,20 +33,30 @@ interface NotificationContextType {
   deleteNotification: (id: string) => Promise<void>;
   totalPages: number;
   currentPage: number;
+  socket: Socket | null;
 }
 
 const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
 
-// Get socket URL from environment or construct from current origin
+// Get socket URL from environment or derive from API base URL
 const getSocketURL = (): string => {
   const envURL = import.meta.env.VITE_SOCKET_URL;
   if (envURL) return envURL;
-  
-  // Fallback: use current origin but keep localhost for dev
+
+  // Derive from API base URL — strip /api suffix to get the server origin
+  const apiBase = import.meta.env.VITE_API_BASE_URL;
+  if (apiBase) {
+    try {
+      const url = new URL(apiBase);
+      return url.origin;
+    } catch { /* invalid URL, fall through */ }
+  }
+
+  // Fallback: use current origin for production, localhost for dev
   if (typeof window !== 'undefined' && window.location.hostname !== 'localhost') {
     return window.location.origin;
   }
-  
+
   return 'http://localhost:5000';
 };
 
@@ -102,23 +113,43 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
     newSocket.on('notification', (notif: Notification) => {
       setNotifications((prev) => [notif, ...prev]);
       setUnreadCount((c) => c + 1);
-      // Play notification sound via Web Audio API
+      // Toast popup
+      toast(notif.title + '\n' + notif.message.substring(0, 80), {
+        icon: notif.type === 'leave_approved' ? '✅' : notif.type === 'leave_rejected' ? '❌' : '🔔',
+        duration: 5000,
+        style: { background: '#1e293b', color: '#f1f5f9', border: '1px solid #334155', fontSize: '13px', maxWidth: '340px' },
+      });
+      // Play notification sound
       try {
         const ctx = new AudioContext();
-        const oscillator = ctx.createOscillator();
         const gainNode = ctx.createGain();
-        oscillator.connect(gainNode);
         gainNode.connect(ctx.destination);
-        oscillator.type = 'sine';
-        oscillator.frequency.setValueAtTime(880, ctx.currentTime);
-        oscillator.frequency.exponentialRampToValueAtTime(440, ctx.currentTime + 0.15);
-        gainNode.gain.setValueAtTime(0.3, ctx.currentTime);
-        gainNode.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
-        oscillator.start(ctx.currentTime);
-        oscillator.stop(ctx.currentTime + 0.4);
+        gainNode.gain.setValueAtTime(0, ctx.currentTime);
+        gainNode.gain.linearRampToValueAtTime(0.25, ctx.currentTime + 0.01);
+        gainNode.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.6);
+        // Two-tone chime: high then low
+        [880, 660].forEach((freq, i) => {
+          const osc = ctx.createOscillator();
+          osc.connect(gainNode);
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(freq, ctx.currentTime + i * 0.15);
+          osc.start(ctx.currentTime + i * 0.15);
+          osc.stop(ctx.currentTime + i * 0.15 + 0.2);
+        });
       } catch {
-        // Audio not supported or blocked, silently skip
+        // Audio context blocked — silently skip
       }
+      // Dispatch browser custom event so components (attendance, leaves) can react
+      window.dispatchEvent(new CustomEvent('hrms:notification', { detail: notif }));
+    });
+
+    // Forward live data events as browser custom events so components subscribe independently
+    newSocket.on('attendance_update', (payload: unknown) => {
+      window.dispatchEvent(new CustomEvent('hrms:attendance_update', { detail: payload }));
+    });
+
+    newSocket.on('leave_update', (payload: unknown) => {
+      window.dispatchEvent(new CustomEvent('hrms:leave_update', { detail: payload }));
     });
 
     setSocket(newSocket);
@@ -160,6 +191,62 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
       setUnreadCount(0);
     }
   }, [user?._id, token, fetchNotifications]);
+
+  // Polling fallback: fetch new notifications every 15s
+  // This ensures real-time feel even if WebSocket isn't connected (e.g. Cloud Run multi-instance)
+  useEffect(() => {
+    if (!user || !token) return;
+
+    const pollInterval = setInterval(async () => {
+      try {
+        const res = await api.get('/notifications?page=1&limit=20');
+        const serverUnread = res.data.unreadCount;
+        // Only update if there are new unread notifications we don't have
+        if (serverUnread !== unreadCount) {
+          const serverNotifs: Notification[] = res.data.notifications;
+          setNotifications((prev) => {
+            const existingIds = new Set(prev.map((n) => n._id));
+            const newOnes = serverNotifs.filter((n) => !existingIds.has(n._id));
+            if (newOnes.length > 0) {
+              // Play sound + toast for genuinely new notifications
+              newOnes.forEach((notif) => {
+                if (!notif.read) {
+                  toast(notif.title + '\n' + notif.message.substring(0, 80), {
+                    icon: notif.type === 'leave_approved' ? '✅' : notif.type === 'leave_rejected' ? '❌' : '🔔',
+                    duration: 5000,
+                    style: { background: '#1e293b', color: '#f1f5f9', border: '1px solid #334155', fontSize: '13px', maxWidth: '340px' },
+                  });
+                }
+              });
+              // Play chime once for the batch
+              try {
+                const ctx = new AudioContext();
+                const gainNode = ctx.createGain();
+                gainNode.connect(ctx.destination);
+                gainNode.gain.setValueAtTime(0, ctx.currentTime);
+                gainNode.gain.linearRampToValueAtTime(0.25, ctx.currentTime + 0.01);
+                gainNode.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.6);
+                [880, 660].forEach((freq, i) => {
+                  const osc = ctx.createOscillator();
+                  osc.connect(gainNode);
+                  osc.type = 'sine';
+                  osc.frequency.setValueAtTime(freq, ctx.currentTime + i * 0.15);
+                  osc.start(ctx.currentTime + i * 0.15);
+                  osc.stop(ctx.currentTime + i * 0.15 + 0.2);
+                });
+              } catch { /* audio blocked */ }
+
+              return [...newOnes, ...prev];
+            }
+            return prev;
+          });
+          setUnreadCount(serverUnread);
+        }
+      } catch { /* silent */ }
+    }, 15000);
+
+    return () => clearInterval(pollInterval);
+  }, [user?._id, token, unreadCount]);
 
   const markAsRead = useCallback(async (id: string) => {
     try {
@@ -206,6 +293,7 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
         deleteNotification,
         totalPages,
         currentPage,
+        socket,
       }}
     >
       {children}

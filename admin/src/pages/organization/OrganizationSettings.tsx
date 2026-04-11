@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Building, Save, Loader2, Upload, X, MapPin, Plus, Trash2, Pencil, Navigation, CheckCircle2 } from 'lucide-react';
+import { Building, Save, Loader2, Upload, X, MapPin, Plus, Trash2, Pencil, Navigation, CheckCircle2, RefreshCw } from 'lucide-react';
 import api from '../../services/api';
 import Select from '../../components/ui/Select';
 import GoogleMap from '../../components/ui/GoogleMap';
@@ -23,6 +23,7 @@ const emptyLocation = (): OfficeLocation => ({
 
 export default function OrganizationSettings() {
   const { user } = useAuth();
+  const canManageSettings = user?.role === 'ceo';
   const canManageLocations = ['hr', 'manager', 'ceo'].includes(user?.role || '');
 
   const [loading, setLoading] = useState(true);
@@ -37,6 +38,11 @@ export default function OrganizationSettings() {
     lateThresholdMinutes: 15,
     currency: 'INR',
     dateFormat: 'DD/MM/YYYY',
+    leavePolicy: {
+      casual: 12,
+      sick: 12,
+      paid: 15,
+    },
   });
 
   // Office locations state
@@ -91,6 +97,17 @@ export default function OrganizationSettings() {
       await api.put('/organization/settings', { settings });
       toast.success('Settings updated');
     } catch (err: any) { toast.error(err.response?.data?.error || 'Failed'); }
+    finally { setSaving(false); }
+  };
+
+  const handleResetLeaveBalances = async () => {
+    if (!window.confirm('This will reset leave balances for ALL active employees to the current policy values.\n\nCasual: ' + settings.leavePolicy.casual + ' | Sick: ' + settings.leavePolicy.sick + ' | Paid: ' + settings.leavePolicy.paid + '\n\nContinue?')) return;
+    setSaving(true);
+    try {
+      await api.put('/organization/settings', { settings });
+      const res = await api.post('/organization/sync-leave-policy');
+      toast.success(res.data.message || 'Leave balances reset for all active employees');
+    } catch (err: any) { toast.error(err.response?.data?.error || 'Failed to reset leave balances'); }
     finally { setSaving(false); }
   };
 
@@ -408,11 +425,49 @@ export default function OrganizationSettings() {
             </div>
           </div>
         </div>
-        <div className="flex justify-end mt-5">
-          <button onClick={handleSaveSettings} disabled={saving} className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50">
-            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} Save Settings
-          </button>
-        </div>
+
+        {/* Leave Policy — CEO only */}
+        {canManageSettings && (
+          <>
+            <div>
+              <label className="block text-sm font-medium text-slate-300 mb-3">Leave Policy (days per year)</label>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                {(['casual', 'sick', 'paid'] as const).map((type) => (
+                  <div key={type}>
+                    <label className="block text-xs text-slate-400 mb-1 capitalize">{type} Leave</label>
+                    <input
+                      type="number"
+                      min={0}
+                      max={366}
+                      value={(settings.leavePolicy as any)[type]}
+                      onChange={e => setSettings({ ...settings, leavePolicy: { ...settings.leavePolicy, [type]: Number(e.target.value) } })}
+                      className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                ))}
+              </div>
+              <p className="text-xs text-slate-500 mt-2">These values set the annual leave balance for all new employees. Use "Reset Balances" to apply to existing employees at year start.</p>
+            </div>
+
+            <div className="flex justify-end gap-3 mt-5">
+              <button onClick={handleResetLeaveBalances} disabled={saving} className="flex items-center gap-2 px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors disabled:opacity-50">
+                {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />} Reset Balances
+              </button>
+              <button onClick={handleSaveSettings} disabled={saving} className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50">
+                {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} Save Settings
+              </button>
+            </div>
+          </>
+        )}
+
+        {/* Non-CEO users: Save-only button */}
+        {!canManageSettings && (
+          <div className="flex justify-end mt-5">
+            <button onClick={handleSaveSettings} disabled={saving} className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50">
+              {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} Save Settings
+            </button>
+          </div>
+        )}
       </div>
 
       {/* ── Office Locations (HR / Manager / CEO only) ───────────────────── */}

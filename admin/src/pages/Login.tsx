@@ -5,7 +5,7 @@ import { Eye, EyeOff, Lock, Mail } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const Login = () => {
-  const [email, setEmail] = useState('');
+  const [emailOrEmployeeId, setEmailOrEmployeeId] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -21,17 +21,24 @@ const Login = () => {
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    if (!email || !password) {
+    if (!emailOrEmployeeId || !password) {
       toast.error('Please fill in all fields');
       return;
     }
     setLoading(true);
     try {
-      await login(email, password);
+      await login(emailOrEmployeeId, password);
       toast.success('Login successful!');
       navigate('/dashboard');
     } catch (error: any) {
-      toast.error(error.response?.data?.error || 'Login failed');
+      const errorCode = error.response?.data?.code;
+      let errorMessage = 'Invalid credentials';
+
+      if (errorCode === 'PASSWORD_INCORRECT') {
+        errorMessage = 'Invalid password';
+      }
+
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -59,17 +66,17 @@ const Login = () => {
         <form onSubmit={handleSubmit} className="glass-card p-8 space-y-5">
           <div>
             <label className="block text-sm font-medium text-dark-300 mb-1.5">
-              Email Address
+              Email or Employee ID
             </label>
             <div className="relative">
               <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-dark-400" size={18} />
               <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                type="text"
+                value={emailOrEmployeeId}
+                onChange={(e) => setEmailOrEmployeeId(e.target.value)}
                 className="input-dark pl-10"
-                placeholder="you@company.com"
-                autoComplete="email"
+                placeholder="you@company.com or EMP001"
+                autoComplete="username"
               />
             </div>
           </div>

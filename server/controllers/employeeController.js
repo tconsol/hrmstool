@@ -115,10 +115,14 @@ exports.addEmployee = async (req, res) => {
 
     const employeeId = await generateEmployeeId(req.orgId);
 
+    const org = await Organization.findById(req.orgId).select('settings');
+    const policy = org?.settings?.leavePolicy || { casual: 12, sick: 12, paid: 15 };
+
     const employee = new User({
       ...req.body,
       employeeId,
       organization: req.orgId,
+      leaveBalance: { casual: policy.casual, sick: policy.sick, paid: policy.paid },
     });
 
     await employee.save();

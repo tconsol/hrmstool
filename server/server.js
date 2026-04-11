@@ -55,14 +55,27 @@ const io = new Server(server, {
 
 setIO(io);
 
-io.on('connection', (socket) => {
+const User = require('./models/User');
+
+io.on('connection', async (socket) => {
   const userId = socket.handshake.auth.userId;
   const clientIP = socket.handshake.address;
-  const userAgent = socket.handshake.headers['user-agent'];
-  
+
   if (userId) {
     socket.join(`user_${userId}`);
-    console.log(`✅ WebSocket Connected - User: ${userId} | IP: ${clientIP}`);
+    // Also join org room for org-wide broadcasts (attendance, leave updates, etc.)
+    try {
+      const user = await User.findById(userId).select('organization');
+      if (user?.organization) {
+        const orgRoom = `org_${user.organization.toString()}`;
+        socket.join(orgRoom);
+        console.log(`✅ WebSocket Connected - User: ${userId} | Room: ${orgRoom} | IP: ${clientIP}`);
+      } else {
+        console.log(`✅ WebSocket Connected - User: ${userId} | IP: ${clientIP}`);
+      }
+    } catch {
+      console.log(`✅ WebSocket Connected - User: ${userId} | IP: ${clientIP}`);
+    }
   } else {
     console.log(`⚪ WebSocket Connected - Anonymous | IP: ${clientIP}`);
   }

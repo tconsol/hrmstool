@@ -136,9 +136,9 @@ const Header = ({ onMenuToggle }: HeaderProps) => {
             )}
           </button>
 
-          {/* Notification dropdown */}
+          {/* Notification dropdown — fixed on mobile so it can't overflow the viewport */}
           {notifOpen && (
-            <div className="absolute right-0 top-full mt-2 w-96 max-w-[calc(100vw-2rem)] bg-dark-800 border border-dark-700/60 rounded-2xl shadow-2xl shadow-black/40 overflow-hidden z-50">
+            <div className="fixed sm:absolute left-2 right-2 sm:left-auto sm:right-0 top-[4.25rem] sm:top-full sm:mt-2 w-auto sm:w-96 bg-dark-800 border border-dark-700/60 rounded-2xl shadow-2xl shadow-black/40 overflow-hidden z-50 mx-0 sm:mx-0">
               {/* Header bar */}
               <div className="flex items-center justify-between px-4 py-3 border-b border-dark-700/50">
                 <div className="flex items-center gap-2">

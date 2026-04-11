@@ -1,4 +1,7 @@
 const Announcement = require('../models/Announcement');
+const User = require('../models/User');
+const Notification = require('../models/Notification');
+const { getIO } = require('../utils/socket');
 
 exports.getAnnouncements = async (req, res) => {
   try {
@@ -48,6 +51,33 @@ exports.createAnnouncement = async (req, res) => {
 
     await announcement.save();
     const populated = await announcement.populate('createdBy', 'name');
+
+    // Push real-time notification to all targeted users
+    try {
+      const roleFilter = targetRoles && targetRoles.length > 0 ? { role: { $in: targetRoles } } : {};
+      const usersToNotify = await User.find({
+        organization: req.orgId,
+        status: 'active',
+        _id: { $ne: req.user._id },
+        ...roleFilter,
+      }).select('_id');
+
+      await Promise.all(usersToNotify.map(async (u) => {
+        const notif = await Notification.create({
+          recipient: u._id,
+          sender: req.user._id,
+          type: 'general',
+          title: `📢 ${title}`,
+          message: content.length > 120 ? content.substring(0, 120) + '…' : content,
+          organization: req.orgId,
+        });
+        const pop = await notif.populate('sender', 'name employeeId');
+        getIO().to(`user_${u._id}`).emit('notification', pop);
+      }));
+    } catch (e) {
+      console.error('Announcement notification error:', e.message);
+    }
+
     res.status(201).json(populated);
   } catch (error) {
     res.status(500).json({ error: 'Failed to create announcement' });

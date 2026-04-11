@@ -38,7 +38,49 @@ const AttendanceDashboard = () => {
     fetchAttendance();
   }, [date, statusFilter]);
 
+  // Live real-time updates: when someone checks in/out, update table without refresh
+  useEffect(() => {
+    const todayStr = new Date().toISOString().split('T')[0];
 
+    const handleAttendanceUpdate = (e: Event) => {
+      const payload = (e as CustomEvent).detail;
+      const record = payload?.record;
+      if (!record) return;
+      if (date !== todayStr) return;
+      if (statusFilter && record.status !== statusFilter) return;
+
+      setAttendance((prev) => {
+        const idx = prev.findIndex((r) => r._id === record._id);
+        if (idx >= 0) {
+          const updated = [...prev];
+          updated[idx] = record;
+          return updated;
+        }
+        return [record, ...prev];
+      });
+    };
+
+    window.addEventListener('hrms:attendance_update', handleAttendanceUpdate);
+    return () => window.removeEventListener('hrms:attendance_update', handleAttendanceUpdate);
+  }, [date, statusFilter]);
+
+  // Polling fallback: auto-refresh attendance every 15s when viewing today's date
+  useEffect(() => {
+    const todayStr = new Date().toISOString().split('T')[0];
+    if (date !== todayStr) return; // only poll for today
+
+    const poll = setInterval(() => {
+      const params = new URLSearchParams();
+      if (date) params.set('date', date);
+      if (statusFilter) params.set('status', statusFilter);
+      params.set('limit', '50');
+      api.get(`/attendance/all?${params.toString()}`)
+        .then(({ data }) => setAttendance(data.attendance))
+        .catch(() => {});
+    }, 15000);
+
+    return () => clearInterval(poll);
+  }, [date, statusFilter]);
 
   const fetchAttendance = async () => {
     setLoading(true);

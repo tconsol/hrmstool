@@ -51,7 +51,7 @@ const generateEmployeeId = async (orgMongoId) => {
 exports.generateEmployeeId = generateEmployeeId;
 
 exports.loginValidation = [
-  body('email').isEmail().withMessage('Valid email is required'),
+  body('email').trim().notEmpty().withMessage('Email or Employee ID is required'),
   body('password').notEmpty().withMessage('Password is required'),
 ];
 
@@ -182,12 +182,33 @@ exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    const user = await User.findOne({ email })
+    // Normalize input: email to lowercase, employee ID to uppercase
+    const isEmail = email.includes('@');
+    const normalizedInput = isEmail ? email.toLowerCase() : email.toUpperCase();
+
+    // Support login by email or employee ID
+    const user = await User.findOne({
+      $or: [{ email: normalizedInput }, { employeeId: normalizedInput }]
+    })
       .populate('organization', 'name slug logo isActive isVerified verificationStatus enabledFeatures')
       .populate('department', 'name code')
       .populate('designation', 'name code level');
-    if (!user) {
-      return res.status(401).json({ error: 'Invalid email or password' });
+
+    let userFound = false;
+    let passwordMatch = false;
+
+    if (user) {
+      userFound = true;
+      passwordMatch = await user.comparePassword(password);
+    }
+
+    // Return specific errors based on what failed
+    if (!userFound) {
+      return res.status(401).json({ error: 'Invalid credentials', code: 'INVALID_CREDENTIALS' });
+    }
+
+    if (!passwordMatch) {
+      return res.status(401).json({ error: 'Invalid password', code: 'PASSWORD_INCORRECT' });
     }
 
     if (user.status !== 'active') {
@@ -208,11 +229,6 @@ exports.login = async (req, res) => {
       if (!user.organization.isActive) {
         return res.status(403).json({ error: 'Your organization profile is currently under review. Our team will verify and activate your account shortly.' });
       }
-    }
-
-    const isMatch = await user.comparePassword(password);
-    if (!isMatch) {
-      return res.status(401).json({ error: 'Invalid email or password' });
     }
 
     const token = generateToken(user._id);

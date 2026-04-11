@@ -78,6 +78,22 @@ exports.updateOrganizationSettings = async (req, res) => {
   }
 };
 
+exports.syncLeavePolicyToUsers = async (req, res) => {
+  try {
+    const User = require('../models/User');
+    const org = await Organization.findById(req.orgId).select('settings');
+    if (!org) return res.status(404).json({ error: 'Organization not found' });
+    const policy = org?.settings?.leavePolicy || { casual: 12, sick: 12, paid: 15 };
+    const result = await User.updateMany(
+      { organization: req.orgId, status: 'active' },
+      { $set: { 'leaveBalance.casual': policy.casual, 'leaveBalance.sick': policy.sick, 'leaveBalance.paid': policy.paid } }
+    );
+    res.json({ message: `Leave balances reset for ${result.modifiedCount} active employees`, policy });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to sync leave policy' });
+  }
+};
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Haversine helper (used here and by attendanceController)
 // ─────────────────────────────────────────────────────────────────────────────

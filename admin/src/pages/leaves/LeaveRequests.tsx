@@ -21,7 +21,51 @@ const LeaveRequests = () => {
     fetchLeaves();
   }, [statusFilter, page]);
 
+  // Live real-time updates: new leave or status change pushes to this page
+  useEffect(() => {
+    const handleLeaveUpdate = (e: Event) => {
+      const payload = (e as CustomEvent).detail;
+      if (!payload) return;
 
+      if (payload.action === 'new') {
+        // Prepend to list if we're showing pending (or all) leaves
+        if (!statusFilter || statusFilter === 'pending') {
+          setLeaves((prev) => {
+            // avoid duplicate
+            if (prev.some((l) => l._id === payload.leave._id)) return prev;
+            return [payload.leave, ...prev];
+          });
+        }
+      } else if (payload.action === 'status_change') {
+        setLeaves((prev) =>
+          prev.map((l) =>
+            l._id === payload.leaveId ? { ...l, status: payload.status } : l
+          ).filter((l) => !statusFilter || l.status === statusFilter)
+        );
+      }
+    };
+
+    window.addEventListener('hrms:leave_update', handleLeaveUpdate);
+    return () => window.removeEventListener('hrms:leave_update', handleLeaveUpdate);
+  }, [statusFilter]);
+
+  // Polling fallback: auto-refresh leave list every 20s
+  useEffect(() => {
+    const poll = setInterval(() => {
+      const params = new URLSearchParams();
+      params.set('page', String(page));
+      params.set('limit', '15');
+      if (statusFilter) params.set('status', statusFilter);
+      api.get(`/leaves/all?${params.toString()}`)
+        .then(({ data }) => {
+          setLeaves(data.leaves);
+          setTotalPages(data.pages);
+        })
+        .catch(() => {});
+    }, 20000);
+
+    return () => clearInterval(poll);
+  }, [statusFilter, page]);
 
   const fetchLeaves = async () => {
     setLoading(true);
