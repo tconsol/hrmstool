@@ -47,6 +47,19 @@ const EmployeeForm = () => {
     salary: '',
     joiningDate: new Date().toISOString().split('T')[0],
     address: '',
+    dateOfBirth: '',
+    bloodGroup: '',
+    fatherName: '',
+    fatherDateOfBirth: '',
+    motherName: '',
+    motherDateOfBirth: '',
+    parentAddress: '',
+    bankAccountNumber: '',
+    accountType: 'savings',
+    branchAddress: '',
+    ifscCode: '',
+    bankName: '',
+    healthIssues: '',
   });
 
   useEffect(() => {
@@ -91,6 +104,19 @@ const EmployeeForm = () => {
         salary: data.salary?.toString() || '',
         joiningDate: data.joiningDate?.split('T')[0] || '',
         address: data.address || '',
+        dateOfBirth: data.dateOfBirth?.split('T')[0] || '',
+        bloodGroup: data.bloodGroup || '',
+        fatherName: data.fatherName || '',
+        fatherDateOfBirth: data.fatherDateOfBirth?.split('T')[0] || '',
+        motherName: data.motherName || '',
+        motherDateOfBirth: data.motherDateOfBirth?.split('T')[0] || '',
+        parentAddress: data.parentAddress || '',
+        bankAccountNumber: data.bankAccountNumber || '',
+        accountType: data.accountType || 'savings',
+        branchAddress: data.branchAddress || '',
+        ifscCode: data.ifscCode || '',
+        bankName: data.bankName || '',
+        healthIssues: data.healthIssues || '',
       });
       if (data.ctc && data.ctc.annualCTC > 0) {
         setCtcMode(true);
@@ -467,6 +493,176 @@ const EmployeeForm = () => {
             placeholder="Full address"
             rows={3}
           />
+        </div>
+
+        {/* Personal Information Section */}
+        <div className="border-t border-dark-700/50 pt-6 mt-6">
+          <h3 className="text-lg font-semibold text-white mb-4">Personal Information</h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-dark-300 mb-1.5">Date of Birth</label>
+              <input
+                type="date"
+                name="dateOfBirth"
+                value={form.dateOfBirth}
+                onChange={handleChange}
+                className="input-dark"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-dark-300 mb-1.5">Blood Group</label>
+              <select
+                name="bloodGroup"
+                value={form.bloodGroup}
+                onChange={handleChange}
+                className="input-dark"
+              >
+                <option value="">Select Blood Group</option>
+                <option>A+</option>
+                <option>A-</option>
+                <option>B+</option>
+                <option>B-</option>
+                <option>O+</option>
+                <option>O-</option>
+                <option>AB+</option>
+                <option>AB-</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-dark-300 mb-1.5">Health Issues</label>
+              <input
+                type="text"
+                name="healthIssues"
+                value={form.healthIssues}
+                onChange={handleChange}
+                className="input-dark"
+                placeholder="e.g., Diabetes, Asthma (if any)"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Father & Mother Information Section */}
+        <div className="border-t border-dark-700/50 pt-6 mt-6">
+          <h3 className="text-lg font-semibold text-white mb-4">Father & Mother Information</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-dark-300 mb-1.5">Father's Name</label>
+              <input
+                type="text"
+                name="fatherName"
+                value={form.fatherName}
+                onChange={handleChange}
+                className="input-dark"
+                placeholder="Father's full name"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-dark-300 mb-1.5">Father's Date of Birth</label>
+              <input
+                type="date"
+                name="fatherDateOfBirth"
+                value={form.fatherDateOfBirth}
+                onChange={handleChange}
+                className="input-dark"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-dark-300 mb-1.5">Mother's Name</label>
+              <input
+                type="text"
+                name="motherName"
+                value={form.motherName}
+                onChange={handleChange}
+                className="input-dark"
+                placeholder="Mother's full name"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-dark-300 mb-1.5">Mother's Date of Birth</label>
+              <input
+                type="date"
+                name="motherDateOfBirth"
+                value={form.motherDateOfBirth}
+                onChange={handleChange}
+                className="input-dark"
+              />
+            </div>
+          </div>
+          <div className="mt-4">
+            <label className="block text-sm font-medium text-dark-300 mb-1.5">Address</label>
+            <textarea
+              name="parentAddress"
+              value={form.parentAddress}
+              onChange={(e) => setForm({ ...form, parentAddress: e.target.value })}
+              className="input-dark min-h-[70px] resize-y"
+              placeholder="Father and Mother's address"
+              rows={2}
+            />
+          </div>
+        </div>
+
+        {/* Bank Information Section */}
+        <div className="border-t border-dark-700/50 pt-6 mt-6">
+          <h3 className="text-lg font-semibold text-white mb-4">Bank Information</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-dark-300 mb-1.5">Bank Name</label>
+              <input
+                type="text"
+                name="bankName"
+                value={form.bankName}
+                onChange={handleChange}
+                className="input-dark"
+                placeholder="e.g., HDFC Bank"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-dark-300 mb-1.5">Account Type</label>
+              <Select
+                value={form.accountType}
+                onChange={(v) => setForm({ ...form, accountType: v })}
+                options={[
+                  { value: 'salary', label: 'Salary' },
+                  { value: 'savings', label: 'Savings' },
+                  { value: 'current', label: 'Current' },
+                ]}
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-dark-300 mb-1.5">Account Number</label>
+              <input
+                type="text"
+                name="bankAccountNumber"
+                value={form.bankAccountNumber}
+                onChange={handleChange}
+                className="input-dark"
+                placeholder="Bank account number"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-dark-300 mb-1.5">IFSC Code</label>
+              <input
+                type="text"
+                name="ifscCode"
+                value={form.ifscCode}
+                onChange={handleChange}
+                className="input-dark"
+                placeholder="e.g., HDFC0001234"
+              />
+            </div>
+          </div>
+          <div className="mt-4">
+            <label className="block text-sm font-medium text-dark-300 mb-1.5">Branch Address</label>
+            <textarea
+              name="branchAddress"
+              value={form.branchAddress}
+              onChange={(e) => setForm({ ...form, branchAddress: e.target.value })}
+              className="input-dark min-h-[70px] resize-y"
+              placeholder="Bank branch address"
+              rows={2}
+            />
+          </div>
         </div>
 
         <div className="flex justify-between items-center gap-3 pt-4 border-t border-dark-700/50">

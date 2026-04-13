@@ -1,14 +1,17 @@
 import { useState, useEffect, useRef, FormEvent } from 'react';
 import { useAuth } from '../../context/AuthContext';
+import { useTheme } from '../../context/ThemeContext';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
 import { UserCircle, Save, Lock, Camera, Eye, FileText, User, CreditCard, ShieldCheck, Phone } from 'lucide-react';
 import DatePicker from '../../components/ui/DatePicker';
+import Select from '../../components/ui/Select';
 
 type Tab = 'personal' | 'bank' | 'documents' | 'security';
 
 const MyProfile = () => {
   const { user, updateUser } = useAuth();
+  const { theme } = useTheme();
   const [activeTab, setActiveTab] = useState<Tab>('personal');
   const [loading, setLoading] = useState(false);
   const [uploadingPic, setUploadingPic] = useState(false);
@@ -22,8 +25,13 @@ const MyProfile = () => {
     address: '',
     email: '',
     fatherName: '',
+    fatherDateOfBirth: '',
+    motherName: '',
+    motherDateOfBirth: '',
+    parentAddress: '',
     dateOfBirth: '',
     bloodGroup: '',
+    healthIssues: '',
     nomineeName: '',
     nomineeRelationship: '',
     contactName: '',
@@ -33,6 +41,8 @@ const MyProfile = () => {
     panNumber: '',
     bankName: '',
     bankAccountNumber: '',
+    accountType: 'savings',
+    branchAddress: '',
     ifscCode: '',
     uan: '',
   });
@@ -52,8 +62,13 @@ const MyProfile = () => {
         address: user.address || '',
         email: user.email || '',
         fatherName: user.fatherName || '',
+        fatherDateOfBirth: user.fatherDateOfBirth ? user.fatherDateOfBirth.split('T')[0] : '',
+        motherName: user.motherName || '',
+        motherDateOfBirth: user.motherDateOfBirth ? user.motherDateOfBirth.split('T')[0] : '',
+        parentAddress: user.parentAddress || '',
         dateOfBirth: user.dateOfBirth ? user.dateOfBirth.split('T')[0] : '',
         bloodGroup: user.bloodGroup || '',
+        healthIssues: user.healthIssues || '',
         nomineeName: user.nomineeName || '',
         nomineeRelationship: user.nomineeRelationship || '',
         contactName: user.emergencyContact?.name || '',
@@ -63,6 +78,8 @@ const MyProfile = () => {
         panNumber: user.panNumber || '',
         bankName: user.bankName || '',
         bankAccountNumber: user.bankAccountNumber || '',
+        accountType: user.accountType || 'savings',
+        branchAddress: user.branchAddress || '',
         ifscCode: user.ifscCode || '',
         uan: user.uan || '',
       });
@@ -91,8 +108,13 @@ const MyProfile = () => {
         address: form.address,
         email: form.email,
         fatherName: form.fatherName,
+        fatherDateOfBirth: form.fatherDateOfBirth,
+        motherName: form.motherName,
+        motherDateOfBirth: form.motherDateOfBirth,
+        parentAddress: form.parentAddress,
         dateOfBirth: form.dateOfBirth,
         bloodGroup: form.bloodGroup,
+        healthIssues: form.healthIssues,
         nomineeName: form.nomineeName,
         nomineeRelationship: form.nomineeRelationship,
         contactName: form.contactName,
@@ -102,6 +124,8 @@ const MyProfile = () => {
         panNumber: form.panNumber,
         bankName: form.bankName,
         bankAccountNumber: form.bankAccountNumber,
+        accountType: form.accountType,
+        branchAddress: form.branchAddress,
         ifscCode: form.ifscCode,
         uan: form.uan,
       });
@@ -299,17 +323,59 @@ const MyProfile = () => {
                 </h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
+                    <label className="block text-sm font-medium text-dark-300 mb-1.5">Date of Birth</label>
+                    <input disabled={!isEditMode} type="date" value={form.dateOfBirth} onChange={(e) => setForm({ ...form, dateOfBirth: e.target.value })} className="input-dark disabled:opacity-50 disabled:cursor-not-allowed" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-dark-300 mb-1.5">Blood Group</label>
+                    <select disabled={!isEditMode} value={form.bloodGroup} onChange={(e) => setForm({ ...form, bloodGroup: e.target.value })} className="input-dark disabled:opacity-50 disabled:cursor-not-allowed">
+                      <option value="">Select Blood Group</option>
+                      <option>A+</option>
+                      <option>A-</option>
+                      <option>B+</option>
+                      <option>B-</option>
+                      <option>O+</option>
+                      <option>O-</option>
+                      <option>AB+</option>
+                      <option>AB-</option>
+                    </select>
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-dark-300 mb-1.5">Known Health Issues</label>
+                    <input disabled={!isEditMode} value={form.healthIssues} onChange={(e) => setForm({ ...form, healthIssues: e.target.value })} className="input-dark disabled:opacity-50 disabled:cursor-not-allowed" placeholder="e.g., Diabetes, Asthma (if any)" />
+                  </div>
+                </div>
+              </div>
+
+              <div className="border-t border-dark-700/50 pt-6">
+                <h3 className="text-base font-semibold text-white mb-4">Father & Mother Information</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
                     <label className="block text-sm font-medium text-dark-300 mb-1.5">Father's Name</label>
                     <input disabled={!isEditMode} value={form.fatherName} onChange={(e) => setForm({ ...form, fatherName: e.target.value })} className="input-dark disabled:opacity-50 disabled:cursor-not-allowed" placeholder="Father's name" />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-dark-300 mb-1.5">Date of Birth</label>
-                    <DatePicker disabled={!isEditMode} value={form.dateOfBirth} onChange={(v) => setForm({ ...form, dateOfBirth: v })} />
+                    <label className="block text-sm font-medium text-dark-300 mb-1.5">Father's Date of Birth</label>
+                    <input disabled={!isEditMode} type="date" value={form.fatherDateOfBirth} onChange={(e) => setForm({ ...form, fatherDateOfBirth: e.target.value })} className="input-dark disabled:opacity-50 disabled:cursor-not-allowed" />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-dark-300 mb-1.5">Blood Group</label>
-                    <input disabled={!isEditMode} value={form.bloodGroup} onChange={(e) => setForm({ ...form, bloodGroup: e.target.value })} className="input-dark disabled:opacity-50 disabled:cursor-not-allowed" placeholder="e.g., O+" />
+                    <label className="block text-sm font-medium text-dark-300 mb-1.5">Mother's Name</label>
+                    <input disabled={!isEditMode} value={form.motherName} onChange={(e) => setForm({ ...form, motherName: e.target.value })} className="input-dark disabled:opacity-50 disabled:cursor-not-allowed" placeholder="Mother's name" />
                   </div>
+                  <div>
+                    <label className="block text-sm font-medium text-dark-300 mb-1.5">Mother's Date of Birth</label>
+                    <input disabled={!isEditMode} type="date" value={form.motherDateOfBirth} onChange={(e) => setForm({ ...form, motherDateOfBirth: e.target.value })} className="input-dark disabled:opacity-50 disabled:cursor-not-allowed" />
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-dark-300 mb-1.5">Parent's Address</label>
+                    <textarea disabled={!isEditMode} value={form.parentAddress} onChange={(e) => setForm({ ...form, parentAddress: e.target.value })} className="input-dark disabled:opacity-50 disabled:cursor-not-allowed min-h-[80px]" placeholder="Father and Mother's address" />
+                  </div>
+                </div>
+              </div>
+
+              <div className="border-t border-dark-700/50 pt-6">
+                <h3 className="text-base font-semibold text-white mb-4">Government IDs</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-dark-300 mb-1.5">Aadhaar Number</label>
                     <input disabled={!isEditMode} value={form.aadhaarNumber} onChange={(e) => setForm({ ...form, aadhaarNumber: e.target.value })} className="input-dark disabled:opacity-50 disabled:cursor-not-allowed" placeholder="XXXX XXXX XXXX" maxLength={14} />
@@ -394,6 +460,19 @@ const MyProfile = () => {
                     <input disabled={!isEditMode} value={form.bankName} onChange={(e) => setForm({ ...form, bankName: e.target.value })} className="input-dark disabled:opacity-50 disabled:cursor-not-allowed" placeholder="e.g., HDFC Bank" />
                   </div>
                   <div>
+                    <label className="block text-sm font-medium text-dark-300 mb-1.5">Account Type</label>
+                    <Select
+                      disabled={!isEditMode}
+                      value={form.accountType}
+                      onChange={(v) => setForm({ ...form, accountType: v })}
+                      options={[
+                        { value: 'salary', label: 'Salary' },
+                        { value: 'savings', label: 'Savings' },
+                        { value: 'current', label: 'Current' },
+                      ]}
+                    />
+                  </div>
+                  <div>
                     <label className="block text-sm font-medium text-dark-300 mb-1.5">Account Number</label>
                     <input disabled={!isEditMode} value={form.bankAccountNumber} onChange={(e) => setForm({ ...form, bankAccountNumber: e.target.value })} className="input-dark disabled:opacity-50 disabled:cursor-not-allowed" placeholder="Account number" />
                   </div>
@@ -404,6 +483,11 @@ const MyProfile = () => {
                   <div>
                     <label className="block text-sm font-medium text-dark-300 mb-1.5">UAN Number</label>
                     <input disabled={!isEditMode} value={form.uan} onChange={(e) => setForm({ ...form, uan: e.target.value })} className="input-dark disabled:opacity-50 disabled:cursor-not-allowed" placeholder="UAN number" />
+                  </div>
+                  <div></div>
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-dark-300 mb-1.5">Branch Address</label>
+                    <textarea disabled={!isEditMode} value={form.branchAddress} onChange={(e) => setForm({ ...form, branchAddress: e.target.value })} className="input-dark disabled:opacity-50 disabled:cursor-not-allowed min-h-[80px]" placeholder="Bank branch address" />
                   </div>
                 </div>
               </div>
@@ -438,7 +522,9 @@ const MyProfile = () => {
           {/* ── Documents Tab ── */}
           {activeTab === 'documents' && (
             <div>
-              <h3 className="text-base font-semibold text-white mb-4 flex items-center gap-2">
+              <h3 className={`text-base font-semibold mb-4 flex items-center gap-2 ${
+                theme === 'light' ? 'text-gray-900' : 'text-white'
+              }`}>
                 <FileText size={16} className="text-brand-400" /> My Documents
               </h3>
               {loadingDocs ? (
@@ -446,7 +532,7 @@ const MyProfile = () => {
                   <div className="w-7 h-7 border-2 border-brand-500 border-t-transparent rounded-full animate-spin" />
                 </div>
               ) : Object.values(documents).some((d: any) => d?.gcsPath) ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {Object.entries(documents).map(([key, value]: any) =>
                     value?.gcsPath ? (
                       <a
@@ -454,16 +540,56 @@ const MyProfile = () => {
                         href={value.url || '#'}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="p-4 bg-dark-700/30 hover:bg-dark-700/50 rounded-lg border border-dark-700/50 hover:border-brand-500/50 transition-all group"
+                        className={`group relative overflow-hidden rounded-xl transition-all duration-300 ${
+                          theme === 'light'
+                            ? 'bg-gradient-to-br from-blue-50 to-blue-50/80 hover:from-blue-100 hover:to-blue-100/80 border border-blue-200 hover:border-blue-400'
+                            : 'bg-dark-800/60 hover:bg-dark-800/80 border border-brand-500/20 hover:border-brand-500/50'
+                        }`}
                       >
-                        <div className="flex items-center justify-between gap-2">
-                          <div className="min-w-0">
-                            <p className="text-sm font-medium text-white group-hover:text-brand-400 transition-colors capitalize truncate">
-                              {key.replace(/([A-Z])/g, ' $1').trim()}
-                            </p>
-                            <p className="text-xs text-dark-500 mt-0.5">Click to view</p>
+                        <div className={`absolute inset-0 transition-opacity duration-300 ${
+                          theme === 'light'
+                            ? 'bg-gradient-to-br from-blue-400/5 via-blue-300/2 to-transparent opacity-0 group-hover:opacity-100'
+                            : 'bg-gradient-to-br from-brand-500/10 via-brand-600/5 to-transparent opacity-0 group-hover:opacity-100'
+                        }`} />
+                        <div className={`relative p-5 backdrop-blur-sm rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 ${
+                          theme === 'light'
+                            ? 'hover:shadow-blue-200/50'
+                            : 'hover:shadow-brand-500/10'
+                        }`}>
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="flex items-start gap-3 min-w-0 flex-1">
+                              <div className={`p-2.5 rounded-lg transition-colors flex-shrink-0 ${
+                                theme === 'light'
+                                  ? 'bg-gradient-to-br from-blue-200/60 to-blue-100/40 group-hover:from-blue-300/70 group-hover:to-blue-200/50'
+                                  : 'bg-gradient-to-br from-brand-500/20 to-brand-600/10 group-hover:from-brand-500/30 group-hover:to-brand-600/20'
+                              }`}>
+                                <FileText size={18} className={`transition-colors ${
+                                  theme === 'light'
+                                    ? 'text-blue-600 group-hover:text-blue-700'
+                                    : 'text-brand-400 group-hover:text-brand-300'
+                                }`} />
+                              </div>
+                              <div className="min-w-0">
+                                <p className={`text-sm font-semibold transition-colors capitalize truncate ${
+                                  theme === 'light'
+                                    ? 'text-gray-800 group-hover:text-blue-700'
+                                    : 'text-white group-hover:text-brand-300'
+                                }`}>
+                                  {key.replace(/([A-Z])/g, ' $1').trim()}
+                                </p>
+                                <p className={`text-xs mt-1 ${
+                                  theme === 'light'
+                                    ? 'text-gray-500'
+                                    : 'text-dark-400'
+                                }`}>Click to download</p>
+                              </div>
+                            </div>
+                            <Eye size={16} className={`transition-all duration-300 group-hover:scale-110 flex-shrink-0 mt-0.5 ${
+                              theme === 'light'
+                                ? 'text-gray-400 group-hover:text-blue-600'
+                                : 'text-dark-400 group-hover:text-brand-400'
+                            }`} />
                           </div>
-                          <Eye size={15} className="text-dark-400 group-hover:text-brand-400 transition-colors flex-shrink-0" />
                         </div>
                       </a>
                     ) : null
@@ -471,9 +597,15 @@ const MyProfile = () => {
                 </div>
               ) : (
                 <div className="text-center py-12">
-                  <FileText size={40} className="text-dark-600 mx-auto mb-3" />
-                  <p className="text-dark-400 text-sm">No documents uploaded yet</p>
-                  <p className="text-dark-600 text-xs mt-1">Documents uploaded by HR will appear here</p>
+                  <FileText size={40} className={`mx-auto mb-3 ${
+                    theme === 'light' ? 'text-gray-300' : 'text-dark-600'
+                  }`} />
+                  <p className={`text-sm ${
+                    theme === 'light' ? 'text-gray-500' : 'text-dark-400'
+                  }`}>No documents uploaded yet</p>
+                  <p className={`text-xs mt-1 ${
+                    theme === 'light' ? 'text-gray-400' : 'text-dark-600'
+                  }`}>Documents uploaded by HR will appear here</p>
                 </div>
               )}
             </div>

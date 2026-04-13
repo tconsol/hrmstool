@@ -19,14 +19,21 @@ interface EmployeeDetail {
   joiningDate: string;
   address: string;
   fatherName: string;
+  fatherDateOfBirth: string;
+  motherName: string;
+  motherDateOfBirth: string;
+  parentAddress: string;
   dateOfBirth: string;
   bloodGroup: string;
+  healthIssues: string;
   nomineeName: string;
   nomineeRelationship: string;
   nomineephone?: string;
   aadhaarNumber: string;
   panNumber: string;
   bankAccountNumber: string;
+  accountType: string;
+  branchAddress: string;
   ifscCode: string;
   bankName: string;
   uan: string;
@@ -247,6 +254,56 @@ export default function EmployeeDetail() {
         </div>
       </div>
 
+      {/* Family & Health Information */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Family Information */}
+        <div className="glass-card p-6 rounded-2xl border border-white/5 hover:border-white/10 transition-all">
+          <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+            <User size={20} className="text-cyan-400" />
+            Family Information
+          </h2>
+          <div className="space-y-4">
+            <div>
+              <p className="text-xs text-dark-400 uppercase tracking-wide">Father's Name</p>
+              <p className="text-white font-medium">{employee.fatherName || 'N/A'}</p>
+            </div>
+            <div>
+              <p className="text-xs text-dark-400 uppercase tracking-wide">Father's DOB</p>
+              <p className="text-white font-medium">{employee.fatherDateOfBirth ? new Date(employee.fatherDateOfBirth).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : 'N/A'}</p>
+            </div>
+            <div>
+              <p className="text-xs text-dark-400 uppercase tracking-wide">Mother's Name</p>
+              <p className="text-white font-medium">{employee.motherName || 'N/A'}</p>
+            </div>
+            <div>
+              <p className="text-xs text-dark-400 uppercase tracking-wide">Mother's DOB</p>
+              <p className="text-white font-medium">{employee.motherDateOfBirth ? new Date(employee.motherDateOfBirth).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : 'N/A'}</p>
+            </div>
+            <div>
+              <p className="text-xs text-dark-400 uppercase tracking-wide">Parent's Address</p>
+              <p className="text-white font-medium text-sm">{employee.parentAddress || 'N/A'}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Health Information */}
+        <div className="glass-card p-6 rounded-2xl border border-white/5 hover:border-white/10 transition-all">
+          <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+            <Heart size={20} className="text-pink-400" />
+            Health Information
+          </h2>
+          <div className="space-y-4">
+            <div>
+              <p className="text-xs text-dark-400 uppercase tracking-wide">Known Health Issues</p>
+              <p className="text-white font-medium">{employee.healthIssues || 'None reported'}</p>
+            </div>
+            <div className="pt-2">
+              <p className="text-xs text-dark-300 italic">Please inform HR immediately of any changes to health status.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Sensitive Information - Only for HR/Managers */}
       {canViewSensitiveData ? (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -282,6 +339,10 @@ export default function EmployeeDetail() {
               <div>
                 <p className="text-xs text-dark-400 uppercase tracking-wide">Bank Name</p>
                 <p className="text-white font-medium">{employee.bankName || 'N/A'}</p>
+              </div>
+              <div>
+                <p className="text-xs text-dark-400 uppercase tracking-wide">Account Type</p>
+                <p className="text-white font-medium capitalize">{employee.accountType || 'N/A'}</p>
               </div>
               <div className="flex items-center justify-between">
                 <div className="flex-1">
@@ -320,6 +381,10 @@ export default function EmployeeDetail() {
                     {copiedField === 'IFSC Code' ? <Check size={16} /> : <Copy size={16} />}
                   </button>
                 )}
+              </div>
+              <div>
+                <p className="text-xs text-dark-400 uppercase tracking-wide">Branch Address</p>
+                <p className="text-white font-medium text-sm">{employee.branchAddress || 'N/A'}</p>
               </div>
             </div>
           </div>

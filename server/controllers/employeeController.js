@@ -13,6 +13,7 @@ exports.addEmployeeValidation = [
   body('designation').optional().trim(),
   body('salary').optional().isNumeric().withMessage('Salary must be a number'),
   body('role').optional().isIn(['hr', 'manager', 'ceo', 'employee']).withMessage('Invalid role'),
+  body('accountType').optional().isIn(['salary', 'savings', 'current']).withMessage('Invalid account type'),
 ];
 
 exports.updateEmployeeValidation = [
@@ -23,6 +24,7 @@ exports.updateEmployeeValidation = [
   body('designation').optional().trim(),
   body('salary').optional().isNumeric().withMessage('Salary must be a number'),
   body('role').optional().isIn(['hr', 'manager', 'ceo', 'employee']).withMessage('Invalid role'),
+  body('accountType').optional().isIn(['salary', 'savings', 'current']).withMessage('Invalid account type'),
 ];
 
 exports.getEmployees = async (req, res) => {

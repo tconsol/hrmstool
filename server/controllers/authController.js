@@ -307,11 +307,12 @@ exports.updateProfile = async (req, res) => {
   try {
     const {
       phone, address, email,
-      fatherName, dateOfBirth, bloodGroup,
+      fatherName, fatherDateOfBirth, motherName, motherDateOfBirth, parentAddress,
+      dateOfBirth, bloodGroup, healthIssues,
       nomineeName, nomineeRelationship,
       contactName, contactPhone, emergencyRelationship,
       aadhaarNumber, panNumber,
-      bankName, bankAccountNumber, ifscCode, uan
+      bankName, bankAccountNumber, accountType, branchAddress, ifscCode, uan
     } = req.body;
 
     const updateData = {};
@@ -319,14 +320,21 @@ exports.updateProfile = async (req, res) => {
     if (address !== undefined) updateData.address = address;
     if (email !== undefined) updateData.email = email;
     if (fatherName !== undefined) updateData.fatherName = fatherName;
+    if (fatherDateOfBirth !== undefined) updateData.fatherDateOfBirth = fatherDateOfBirth;
+    if (motherName !== undefined) updateData.motherName = motherName;
+    if (motherDateOfBirth !== undefined) updateData.motherDateOfBirth = motherDateOfBirth;
+    if (parentAddress !== undefined) updateData.parentAddress = parentAddress;
     if (dateOfBirth !== undefined) updateData.dateOfBirth = dateOfBirth;
     if (bloodGroup !== undefined) updateData.bloodGroup = bloodGroup;
+    if (healthIssues !== undefined) updateData.healthIssues = healthIssues;
     if (nomineeName !== undefined) updateData.nomineeName = nomineeName;
     if (nomineeRelationship !== undefined) updateData.nomineeRelationship = nomineeRelationship;
     if (aadhaarNumber !== undefined) updateData.aadhaarNumber = aadhaarNumber;
     if (panNumber !== undefined) updateData.panNumber = panNumber;
     if (bankName !== undefined) updateData.bankName = bankName;
     if (bankAccountNumber !== undefined) updateData.bankAccountNumber = bankAccountNumber;
+    if (accountType !== undefined) updateData.accountType = accountType;
+    if (branchAddress !== undefined) updateData.branchAddress = branchAddress;
     if (ifscCode !== undefined) updateData.ifscCode = ifscCode;
     if (uan !== undefined) updateData.uan = uan;
     
