@@ -3,6 +3,7 @@ import { Toaster } from 'react-hot-toast';
 import { AuthProvider } from './context/AuthContext';
 import { NotificationProvider } from './context/NotificationContext';
 import { ThemeProvider } from './context/ThemeContext';
+import { ConfirmProvider } from './context/ConfirmContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import FeatureGate from './components/FeatureGate';
 import Layout from './components/Layout/Layout';
@@ -57,6 +58,7 @@ import SystemSettings from './pages/superadmin/SystemSettings';
 function App() {
   return (
     <ThemeProvider>
+    <ConfirmProvider>
     <AuthProvider>
       <NotificationProvider>
         <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
@@ -284,6 +286,7 @@ function App() {
       />
     </NotificationProvider>
     </AuthProvider>
+    </ConfirmProvider>
     </ThemeProvider>
   );
 }

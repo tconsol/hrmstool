@@ -2,6 +2,7 @@ const Leave = require('../models/Leave');
 const User = require('../models/User');
 const Notification = require('../models/Notification');
 const { getIO } = require('../utils/socket');
+const { parseLocalDateRange } = require('../utils/dateParser');
 
 /**
  * Create a notification and emit it via Socket.IO to the recipient's room.
@@ -31,8 +32,7 @@ exports.applyLeave = async (req, res) => {
   try {
     const { leaveType, startDate, endDate, reason } = req.body;
 
-    const start = new Date(startDate);
-    const end = new Date(endDate);
+    const { startDate: start, endDate: end } = parseLocalDateRange(startDate, endDate);
     const totalDays = Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1;
 
     if (totalDays <= 0) {

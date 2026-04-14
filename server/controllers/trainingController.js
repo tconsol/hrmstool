@@ -1,4 +1,5 @@
 const Training = require('../models/Training');
+const { parseLocalDateRange } = require('../utils/dateParser');
 
 exports.getTrainings = async (req, res) => {
   try {
@@ -64,13 +65,15 @@ exports.createTraining = async (req, res) => {
       return res.status(400).json({ error: 'Title, start date and end date are required' });
     }
 
+    const { startDate: start, endDate: end } = parseLocalDateRange(startDate, endDate);
+
     const training = new Training({
       title,
       description,
       type: type || 'online',
       trainer,
-      startDate: new Date(startDate),
-      endDate: new Date(endDate),
+      startDate: start,
+      endDate: end,
       maxParticipants: maxParticipants || 0,
       createdBy: req.user._id,
       organization: req.orgId,
@@ -90,7 +93,11 @@ exports.updateTraining = async (req, res) => {
     const updates = {};
     allowedFields.forEach(field => {
       if (field in req.body) {
-        updates[field] = req.body[field];
+        if (field === 'startDate' || field === 'endDate') {
+          updates[field] = parseLocalDate(req.body[field]);
+        } else {
+          updates[field] = req.body[field];
+        }
       }
     });
 

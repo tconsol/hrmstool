@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { clearAuthCache } from '../utils/cacheManager';
 
 // API base URL: uses /api for Vite proxy (dev) or direct URL (production)
 const apiBaseURL = import.meta.env.VITE_API_BASE_URL || '/api';
@@ -28,14 +29,16 @@ api.interceptors.request.use((config) => {
 // Response interceptor for error handling
 api.interceptors.response.use(
   (response) => response,
-  (error) => {
+  async (error) => {
     if (error.response?.status === 401) {
+      // Clear cache and auth data on 401
+      await clearAuthCache();
+      
       // Don't redirect if we're already on a login page or if it's an auth request
       const isAuthRequest = error.config?.url?.includes('/auth/login') || error.config?.url?.includes('/superadmin/login');
       const isLoginPage = window.location.pathname === '/login' || window.location.pathname === '/superadmin/login';
       if (!isAuthRequest && !isLoginPage) {
-        localStorage.removeItem('hrms_token');
-        localStorage.removeItem('hrms_user');
+        console.log('🔐 Authentication failed - redirecting to login');
         const isSuperAdminRoute = window.location.pathname.startsWith('/superadmin');
         window.location.href = isSuperAdminRoute ? '/superadmin/login' : '/login';
       }

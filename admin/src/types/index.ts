@@ -80,8 +80,13 @@ export interface User {
   };
   // Personal details
   fatherName?: string;
+  fatherDateOfBirth?: string;
+  motherName?: string;
+  motherDateOfBirth?: string;
+  parentAddress?: string;
   dateOfBirth?: string;
   bloodGroup?: string;
+  healthIssues?: string;
   nomineeName?: string;
   nomineeRelationship?: string;
   emergencyContact?: {
@@ -92,6 +97,8 @@ export interface User {
   aadhaarNumber?: string;
   panNumber?: string;
   bankName?: string;
+  accountType?: 'salary' | 'savings' | 'current';
+  branchAddress?: string;
   bankAccountNumber?: string;
   ifscCode?: string;
   uan?: string;

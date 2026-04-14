@@ -1,4 +1,5 @@
 const Expense = require('../models/Expense');
+const { parseLocalDate } = require('../utils/dateParser');
 
 exports.getExpenses = async (req, res) => {
   try {
@@ -74,7 +75,7 @@ exports.submitExpense = async (req, res) => {
       amount,
       description,
       receipt,
-      date: new Date(date),
+      date: parseLocalDate(date),
       organization: req.orgId,
     });
 

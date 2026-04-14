@@ -7,6 +7,7 @@ const {
   createHoliday,
   updateHoliday,
   deleteHoliday,
+  syncIndiaHolidays,
 } = require('../controllers/holidayController');
 
 router.use(auth);
@@ -15,6 +16,7 @@ router.use(requireFeature('holidays'));
 
 router.get('/', getHolidays);
 router.post('/', authorize('hr', 'manager', 'ceo'), createHoliday);
+router.post('/sync/india', authorize('hr', 'manager', 'ceo'), syncIndiaHolidays);
 router.put('/:id', authorize('hr', 'manager', 'ceo'), updateHoliday);
 router.delete('/:id', authorize('hr', 'manager', 'ceo'), deleteHoliday);
 

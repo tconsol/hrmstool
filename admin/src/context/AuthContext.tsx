@@ -1,6 +1,7 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, ReactNode, useRef } from 'react';
 import api from '../services/api';
 import { User } from '../types';
+import { clearAuthCache, bustCache, shouldBustCache, createDebouncedActivityHandler } from '../utils/cacheManager';
 
 interface AuthContextType {
   user: User | null;
@@ -19,6 +20,47 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const inactivityTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  /**
+   * Set up inactivity timer (1 hour)
+   */
+  const setupInactivityTimer = () => {
+    // Clear existing timer
+    if (inactivityTimerRef.current) {
+      clearTimeout(inactivityTimerRef.current);
+    }
+
+    const INACTIVITY_TIME = 60 * 60 * 1000; // 1 hour in milliseconds
+
+    inactivityTimerRef.current = setTimeout(() => {
+      console.warn('⏱️ User inactive for 1 hour - logging out and clearing cache');
+      logoutWithCacheClear();
+      alert('Your session has expired due to inactivity. Please login again.');
+    }, INACTIVITY_TIME);
+  };
+
+  /**
+   * Reset inactivity timer on user activity
+   */
+  const resetInactivityTimer = () => {
+    if (token && user) {
+      setupInactivityTimer();
+    }
+  };
+
+  /**
+   * Logout with cache clearing
+   */
+  const logoutWithCacheClear = async () => {
+    localStorage.removeItem('hrms_token');
+    localStorage.removeItem('hrms_user');
+    setToken(null);
+    setUser(null);
+
+    // Clear caches
+    await clearAuthCache();
+  };
 
   useEffect(() => {
     const savedToken = localStorage.getItem('hrms_token');
@@ -46,6 +88,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setToken(savedToken);
       setUser(parsedUser);
       
+      // Setup inactivity timer for logged-in user
+      setupInactivityTimer();
+      
       // Validate that user still exists in database
       api.get('/auth/me')
         .then(({ data }) => {
@@ -70,6 +115,24 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         });
     }
     setLoading(false);
+
+    // Setup activity listeners for inactivity tracking (debounced)
+    const debouncedActivityHandler = createDebouncedActivityHandler(resetInactivityTimer, 1000);
+    const activityEvents = ['mousedown', 'keydown', 'scroll', 'touchstart', 'click'];
+
+    activityEvents.forEach((event) => {
+      window.addEventListener(event, debouncedActivityHandler, true);
+    });
+
+    // Cleanup
+    return () => {
+      activityEvents.forEach((event) => {
+        window.removeEventListener(event, debouncedActivityHandler, true);
+      });
+      if (inactivityTimerRef.current) {
+        clearTimeout(inactivityTimerRef.current);
+      }
+    };
   }, []);
 
   const login = async (email: string, password: string) => {
@@ -80,6 +143,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     localStorage.setItem('hrms_user', JSON.stringify(authUser));
     setToken(authToken);
     setUser(authUser);
+
+    // Setup inactivity timer for new session
+    setupInactivityTimer();
+
+    // Bust cache to ensure fresh feature data from latest deployment
+    await bustCache();
+    console.log('✓ Cache busted on login');
 
     // Immediately fetch fresh user data with signed URLs for profile picture
     try {
@@ -102,6 +172,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setToken(authToken);
     setUser(authUser);
 
+    // Setup inactivity timer for new session
+    setupInactivityTimer();
+
+    // Bust cache to ensure fresh feature data from latest deployment
+    await bustCache();
+    console.log('✓ Cache busted on super admin login');
+
     // For super admin, fetch fresh data might not apply, but keeping consistent
     try {
       const { data: freshUser } = await api.get('/auth/me');
@@ -119,11 +196,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return { organizationId: response.data.organizationId, email: response.data.email };
   };
 
-  const logout = () => {
-    localStorage.removeItem('hrms_token');
-    localStorage.removeItem('hrms_user');
-    setToken(null);
-    setUser(null);
+  const logout = async () => {
+    await logoutWithCacheClear();
   };
 
   const updateUser = (updatedUser: User) => {

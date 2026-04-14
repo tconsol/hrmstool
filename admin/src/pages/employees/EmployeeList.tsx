@@ -17,6 +17,7 @@ import {
 import type { User } from '../../types';
 import Select from '../../components/ui/Select';
 import { useAuth } from '../../context/AuthContext';
+import { useConfirm } from '../../context/ConfirmContext';
 
 const EmployeeList = () => {
   const [employees, setEmployees] = useState<User[]>([]);
@@ -29,6 +30,7 @@ const EmployeeList = () => {
   const [totalPages, setTotalPages] = useState(1);
   const navigate = useNavigate();
   const { user } = useAuth();
+  const confirm = useConfirm();
   const isHR = ['hr', 'ceo', 'manager'].includes(user?.role ?? '');
 
   useEffect(() => {
@@ -63,9 +65,19 @@ const EmployeeList = () => {
     }
   };
 
-  const handleToggleStatus = async (id: string) => {
+  const handleToggleStatus = async (emp: User) => {
+    const isActive = emp.status === 'active';
+    const ok = await confirm({
+      title: isActive ? 'Deactivate Employee' : 'Activate Employee',
+      message: isActive
+        ? `Are you sure you want to deactivate ${emp.name}? They will lose access to the system.`
+        : `Are you sure you want to activate ${emp.name}? They will regain access to the system.`,
+      confirmLabel: isActive ? 'Deactivate' : 'Activate',
+      variant: isActive ? 'danger' : 'info',
+    });
+    if (!ok) return;
     try {
-      await api.patch(`/employees/${id}/toggle-status`);
+      await api.patch(`/employees/${emp._id}/toggle-status`);
       toast.success('Status updated');
       fetchEmployees();
     } catch (error) {
@@ -198,7 +210,7 @@ const EmployeeList = () => {
                               <FileText size={16} />
                             </button>
                             <button
-                              onClick={() => handleToggleStatus(emp._id)}
+                              onClick={() => handleToggleStatus(emp)}
                               className={`p-1.5 hover:bg-dark-700/50 rounded-lg transition-colors ${
                                 emp.status === 'active'
                                   ? 'text-dark-400 hover:text-red-400'

@@ -12,7 +12,7 @@ import {
 } from 'lucide-react';
 import { formatDistanceToNow, format } from 'date-fns';
 
-type FilterType = 'all' | 'unread' | 'leave_applied' | 'leave_approved' | 'leave_rejected';
+type FilterType = 'all' | 'unread';
 
 const typeConfig: Record<
   Notification['type'],
@@ -51,9 +51,6 @@ const typeConfig: Record<
 const filterTabs: { key: FilterType; label: string }[] = [
   { key: 'all', label: 'All' },
   { key: 'unread', label: 'Unread' },
-  { key: 'leave_applied', label: 'Applied' },
-  { key: 'leave_approved', label: 'Approved' },
-  { key: 'leave_rejected', label: 'Rejected' },
 ];
 
 const NotificationsPage = () => {
@@ -73,8 +70,7 @@ const NotificationsPage = () => {
 
   const filtered = notifications.filter((n) => {
     if (filter === 'unread') return !n.read;
-    if (filter === 'all') return true;
-    return n.type === filter;
+    return true; // 'all'
   });
 
   const handleClick = (notif: Notification) => {
@@ -118,9 +114,7 @@ const NotificationsPage = () => {
           const count =
             tab.key === 'unread'
               ? unreadCount
-              : tab.key === 'all'
-              ? notifications.length
-              : notifications.filter((n) => n.type === tab.key).length;
+              : notifications.length;
 
           return (
             <button

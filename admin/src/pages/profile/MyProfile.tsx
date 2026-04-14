@@ -3,7 +3,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
-import { UserCircle, Save, Lock, Camera, Eye, FileText, User, CreditCard, ShieldCheck, Phone } from 'lucide-react';
+import { UserCircle, Save, Lock, Camera, Eye, FileText, User, CreditCard, ShieldCheck, Phone, Edit2, X } from 'lucide-react';
 import DatePicker from '../../components/ui/DatePicker';
 import Select from '../../components/ui/Select';
 
@@ -15,7 +15,7 @@ const MyProfile = () => {
   const [activeTab, setActiveTab] = useState<Tab>('personal');
   const [loading, setLoading] = useState(false);
   const [uploadingPic, setUploadingPic] = useState(false);
-  const [isEditMode, setIsEditMode] = useState(false);
+  const [editingSections, setEditingSections] = useState<Record<string, boolean>>({});
   const picInputRef = useRef<HTMLInputElement>(null);
   const [documents, setDocuments] = useState<Record<string, any>>({});
   const [loadingDocs, setLoadingDocs] = useState(false);
@@ -99,6 +99,15 @@ const MyProfile = () => {
     }
   };
 
+  const toggleSectionEdit = (sectionId: string) => {
+    setEditingSections((prev) => ({
+      ...prev,
+      [sectionId]: !prev[sectionId],
+    }));
+  };
+
+  const isSectionEditing = (sectionId: string) => editingSections[sectionId] || false;
+
   const handleUpdateProfile = async (e: FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -131,7 +140,7 @@ const MyProfile = () => {
       });
       updateUser(data);
       toast.success('Profile updated successfully');
-      setIsEditMode(false);
+      setEditingSections({});
     } catch (error: any) {
       toast.error(error.response?.data?.error || 'Failed to update profile');
     } finally {
@@ -297,38 +306,64 @@ const MyProfile = () => {
           {activeTab === 'personal' && (
             <form onSubmit={handleUpdateProfile} className="space-y-6">
               {/* Contact Info */}
-              <div>
-                <h3 className="text-base font-semibold text-white mb-4 flex items-center gap-2">
-                  <Phone size={16} className="text-brand-400" /> Contact Information
-                </h3>
+              <div className="border border-dark-700/50 rounded-lg p-5">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-base font-semibold text-white flex items-center gap-2">
+                    <Phone size={16} className="text-brand-400" /> Contact Information
+                  </h3>
+                  <button
+                    type="button"
+                    onClick={() => toggleSectionEdit('contact')}
+                    className={`p-2 rounded-lg transition-all ${
+                      isSectionEditing('contact')
+                        ? 'bg-red-500/20 text-red-400 hover:bg-red-500/30'
+                        : 'bg-brand-500/20 text-brand-400 hover:bg-brand-500/30'
+                    }`}
+                  >
+                    {isSectionEditing('contact') ? <X size={16} /> : <Edit2 size={16} />}
+                  </button>
+                </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-dark-300 mb-1.5">Email</label>
-                    <input disabled={!isEditMode} value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} className="input-dark disabled:opacity-50 disabled:cursor-not-allowed" type="email" />
+                    <input disabled={!isSectionEditing('contact')} value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} className="input-dark disabled:opacity-50 disabled:cursor-not-allowed" type="email" />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-dark-300 mb-1.5">Phone</label>
-                    <input disabled={!isEditMode} value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} className="input-dark disabled:opacity-50 disabled:cursor-not-allowed" placeholder="Phone number" />
+                    <input disabled={!isSectionEditing('contact')} value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} className="input-dark disabled:opacity-50 disabled:cursor-not-allowed" placeholder="Phone number" />
                   </div>
                   <div className="md:col-span-2">
                     <label className="block text-sm font-medium text-dark-300 mb-1.5">Address</label>
-                    <textarea disabled={!isEditMode} value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} className="input-dark disabled:opacity-50 disabled:cursor-not-allowed min-h-[80px]" placeholder="Your address" />
+                    <textarea disabled={!isSectionEditing('contact')} value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} className="input-dark disabled:opacity-50 disabled:cursor-not-allowed min-h-[80px]" placeholder="Your address" />
                   </div>
                 </div>
               </div>
 
-              <div className="border-t border-dark-700/50 pt-6">
-                <h3 className="text-base font-semibold text-white mb-4 flex items-center gap-2">
-                  <User size={16} className="text-brand-400" /> Personal Information
-                </h3>
+              <div className="border border-dark-700/50 rounded-lg p-5">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-base font-semibold text-white flex items-center gap-2">
+                    <User size={16} className="text-brand-400" /> Personal Information
+                  </h3>
+                  <button
+                    type="button"
+                    onClick={() => toggleSectionEdit('personal')}
+                    className={`p-2 rounded-lg transition-all ${
+                      isSectionEditing('personal')
+                        ? 'bg-red-500/20 text-red-400 hover:bg-red-500/30'
+                        : 'bg-brand-500/20 text-brand-400 hover:bg-brand-500/30'
+                    }`}
+                  >
+                    {isSectionEditing('personal') ? <X size={16} /> : <Edit2 size={16} />}
+                  </button>
+                </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-dark-300 mb-1.5">Date of Birth</label>
-                    <input disabled={!isEditMode} type="date" value={form.dateOfBirth} onChange={(e) => setForm({ ...form, dateOfBirth: e.target.value })} className="input-dark disabled:opacity-50 disabled:cursor-not-allowed" />
+                    <input disabled={!isSectionEditing('personal')} type="date" value={form.dateOfBirth} onChange={(e) => setForm({ ...form, dateOfBirth: e.target.value })} className="input-dark disabled:opacity-50 disabled:cursor-not-allowed" />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-dark-300 mb-1.5">Blood Group</label>
-                    <select disabled={!isEditMode} value={form.bloodGroup} onChange={(e) => setForm({ ...form, bloodGroup: e.target.value })} className="input-dark disabled:opacity-50 disabled:cursor-not-allowed">
+                    <select disabled={!isSectionEditing('personal')} value={form.bloodGroup} onChange={(e) => setForm({ ...form, bloodGroup: e.target.value })} className="input-dark disabled:opacity-50 disabled:cursor-not-allowed">
                       <option value="">Select Blood Group</option>
                       <option>A+</option>
                       <option>A-</option>
@@ -342,107 +377,141 @@ const MyProfile = () => {
                   </div>
                   <div className="md:col-span-2">
                     <label className="block text-sm font-medium text-dark-300 mb-1.5">Known Health Issues</label>
-                    <input disabled={!isEditMode} value={form.healthIssues} onChange={(e) => setForm({ ...form, healthIssues: e.target.value })} className="input-dark disabled:opacity-50 disabled:cursor-not-allowed" placeholder="e.g., Diabetes, Asthma (if any)" />
+                    <input disabled={!isSectionEditing('personal')} value={form.healthIssues} onChange={(e) => setForm({ ...form, healthIssues: e.target.value })} className="input-dark disabled:opacity-50 disabled:cursor-not-allowed" placeholder="e.g., Diabetes, Asthma (if any)" />
                   </div>
                 </div>
               </div>
 
-              <div className="border-t border-dark-700/50 pt-6">
-                <h3 className="text-base font-semibold text-white mb-4">Father & Mother Information</h3>
+              <div className="border border-dark-700/50 rounded-lg p-5">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-base font-semibold text-white">Father & Mother Information</h3>
+                  <button
+                    type="button"
+                    onClick={() => toggleSectionEdit('parents')}
+                    className={`p-2 rounded-lg transition-all ${
+                      isSectionEditing('parents')
+                        ? 'bg-red-500/20 text-red-400 hover:bg-red-500/30'
+                        : 'bg-brand-500/20 text-brand-400 hover:bg-brand-500/30'
+                    }`}
+                  >
+                    {isSectionEditing('parents') ? <X size={16} /> : <Edit2 size={16} />}
+                  </button>
+                </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-dark-300 mb-1.5">Father's Name</label>
-                    <input disabled={!isEditMode} value={form.fatherName} onChange={(e) => setForm({ ...form, fatherName: e.target.value })} className="input-dark disabled:opacity-50 disabled:cursor-not-allowed" placeholder="Father's name" />
+                    <input disabled={!isSectionEditing('parents')} value={form.fatherName} onChange={(e) => setForm({ ...form, fatherName: e.target.value })} className="input-dark disabled:opacity-50 disabled:cursor-not-allowed" placeholder="Father's name" />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-dark-300 mb-1.5">Father's Date of Birth</label>
-                    <input disabled={!isEditMode} type="date" value={form.fatherDateOfBirth} onChange={(e) => setForm({ ...form, fatherDateOfBirth: e.target.value })} className="input-dark disabled:opacity-50 disabled:cursor-not-allowed" />
+                    <input disabled={!isSectionEditing('parents')} type="date" value={form.fatherDateOfBirth} onChange={(e) => setForm({ ...form, fatherDateOfBirth: e.target.value })} className="input-dark disabled:opacity-50 disabled:cursor-not-allowed" />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-dark-300 mb-1.5">Mother's Name</label>
-                    <input disabled={!isEditMode} value={form.motherName} onChange={(e) => setForm({ ...form, motherName: e.target.value })} className="input-dark disabled:opacity-50 disabled:cursor-not-allowed" placeholder="Mother's name" />
+                    <input disabled={!isSectionEditing('parents')} value={form.motherName} onChange={(e) => setForm({ ...form, motherName: e.target.value })} className="input-dark disabled:opacity-50 disabled:cursor-not-allowed" placeholder="Mother's name" />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-dark-300 mb-1.5">Mother's Date of Birth</label>
-                    <input disabled={!isEditMode} type="date" value={form.motherDateOfBirth} onChange={(e) => setForm({ ...form, motherDateOfBirth: e.target.value })} className="input-dark disabled:opacity-50 disabled:cursor-not-allowed" />
+                    <input disabled={!isSectionEditing('parents')} type="date" value={form.motherDateOfBirth} onChange={(e) => setForm({ ...form, motherDateOfBirth: e.target.value })} className="input-dark disabled:opacity-50 disabled:cursor-not-allowed" />
                   </div>
                   <div className="md:col-span-2">
                     <label className="block text-sm font-medium text-dark-300 mb-1.5">Parent's Address</label>
-                    <textarea disabled={!isEditMode} value={form.parentAddress} onChange={(e) => setForm({ ...form, parentAddress: e.target.value })} className="input-dark disabled:opacity-50 disabled:cursor-not-allowed min-h-[80px]" placeholder="Father and Mother's address" />
+                    <textarea disabled={!isSectionEditing('parents')} value={form.parentAddress} onChange={(e) => setForm({ ...form, parentAddress: e.target.value })} className="input-dark disabled:opacity-50 disabled:cursor-not-allowed min-h-[80px]" placeholder="Father and Mother's address" />
                   </div>
                 </div>
               </div>
 
-              <div className="border-t border-dark-700/50 pt-6">
-                <h3 className="text-base font-semibold text-white mb-4">Government IDs</h3>
+              <div className="border border-dark-700/50 rounded-lg p-5">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-base font-semibold text-white">Government IDs</h3>
+                  <button
+                    type="button"
+                    onClick={() => toggleSectionEdit('gov-ids')}
+                    className={`p-2 rounded-lg transition-all ${
+                      isSectionEditing('gov-ids')
+                        ? 'bg-red-500/20 text-red-400 hover:bg-red-500/30'
+                        : 'bg-brand-500/20 text-brand-400 hover:bg-brand-500/30'
+                    }`}
+                  >
+                    {isSectionEditing('gov-ids') ? <X size={16} /> : <Edit2 size={16} />}
+                  </button>
+                </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-dark-300 mb-1.5">Aadhaar Number</label>
-                    <input disabled={!isEditMode} value={form.aadhaarNumber} onChange={(e) => setForm({ ...form, aadhaarNumber: e.target.value })} className="input-dark disabled:opacity-50 disabled:cursor-not-allowed" placeholder="XXXX XXXX XXXX" maxLength={14} />
+                    <input disabled={!isSectionEditing('gov-ids')} value={form.aadhaarNumber} onChange={(e) => setForm({ ...form, aadhaarNumber: e.target.value })} className="input-dark disabled:opacity-50 disabled:cursor-not-allowed" placeholder="XXXX XXXX XXXX" maxLength={14} />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-dark-300 mb-1.5">PAN Number</label>
-                    <input disabled={!isEditMode} value={form.panNumber} onChange={(e) => setForm({ ...form, panNumber: e.target.value.toUpperCase() })} className="input-dark disabled:opacity-50 disabled:cursor-not-allowed" placeholder="e.g., ABCDE1234F" maxLength={10} />
+                    <input disabled={!isSectionEditing('gov-ids')} value={form.panNumber} onChange={(e) => setForm({ ...form, panNumber: e.target.value.toUpperCase() })} className="input-dark disabled:opacity-50 disabled:cursor-not-allowed" placeholder="e.g., ABCDE1234F" maxLength={10} />
                   </div>
                 </div>
               </div>
 
-              <div className="border-t border-dark-700/50 pt-6">
-                <h3 className="text-base font-semibold text-white mb-4">Emergency Contact</h3>
+              <div className="border border-dark-700/50 rounded-lg p-5">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-base font-semibold text-white">Emergency Contact</h3>
+                  <button
+                    type="button"
+                    onClick={() => toggleSectionEdit('emergency')}
+                    className={`p-2 rounded-lg transition-all ${
+                      isSectionEditing('emergency')
+                        ? 'bg-red-500/20 text-red-400 hover:bg-red-500/30'
+                        : 'bg-brand-500/20 text-brand-400 hover:bg-brand-500/30'
+                    }`}
+                  >
+                    {isSectionEditing('emergency') ? <X size={16} /> : <Edit2 size={16} />}
+                  </button>
+                </div>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-dark-300 mb-1.5">Contact Name</label>
-                    <input disabled={!isEditMode} value={form.contactName} onChange={(e) => setForm({ ...form, contactName: e.target.value })} className="input-dark disabled:opacity-50 disabled:cursor-not-allowed" placeholder="Name" />
+                    <input disabled={!isSectionEditing('emergency')} value={form.contactName} onChange={(e) => setForm({ ...form, contactName: e.target.value })} className="input-dark disabled:opacity-50 disabled:cursor-not-allowed" placeholder="Name" />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-dark-300 mb-1.5">Contact Phone</label>
-                    <input disabled={!isEditMode} value={form.contactPhone} onChange={(e) => setForm({ ...form, contactPhone: e.target.value })} className="input-dark disabled:opacity-50 disabled:cursor-not-allowed" placeholder="Phone" />
+                    <input disabled={!isSectionEditing('emergency')} value={form.contactPhone} onChange={(e) => setForm({ ...form, contactPhone: e.target.value })} className="input-dark disabled:opacity-50 disabled:cursor-not-allowed" placeholder="Phone" />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-dark-300 mb-1.5">Relationship</label>
-                    <input disabled={!isEditMode} value={form.emergencyRelationship} onChange={(e) => setForm({ ...form, emergencyRelationship: e.target.value })} className="input-dark disabled:opacity-50 disabled:cursor-not-allowed" placeholder="e.g., Spouse, Parent" />
+                    <input disabled={!isSectionEditing('emergency')} value={form.emergencyRelationship} onChange={(e) => setForm({ ...form, emergencyRelationship: e.target.value })} className="input-dark disabled:opacity-50 disabled:cursor-not-allowed" placeholder="e.g., Spouse, Parent" />
                   </div>
                 </div>
               </div>
 
-              <div className="border-t border-dark-700/50 pt-6">
-                <h3 className="text-base font-semibold text-white mb-4">Nominee Information</h3>
+              <div className="border border-dark-700/50 rounded-lg p-5">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-base font-semibold text-white">Nominee Information</h3>
+                  <button
+                    type="button"
+                    onClick={() => toggleSectionEdit('nominee')}
+                    className={`p-2 rounded-lg transition-all ${
+                      isSectionEditing('nominee')
+                        ? 'bg-red-500/20 text-red-400 hover:bg-red-500/30'
+                        : 'bg-brand-500/20 text-brand-400 hover:bg-brand-500/30'
+                    }`}
+                  >
+                    {isSectionEditing('nominee') ? <X size={16} /> : <Edit2 size={16} />}
+                  </button>
+                </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-dark-300 mb-1.5">Nominee Name</label>
-                    <input disabled={!isEditMode} value={form.nomineeName} onChange={(e) => setForm({ ...form, nomineeName: e.target.value })} className="input-dark disabled:opacity-50 disabled:cursor-not-allowed" placeholder="Nominee name" />
+                    <input disabled={!isSectionEditing('nominee')} value={form.nomineeName} onChange={(e) => setForm({ ...form, nomineeName: e.target.value })} className="input-dark disabled:opacity-50 disabled:cursor-not-allowed" placeholder="Nominee name" />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-dark-300 mb-1.5">Nominee Relationship</label>
-                    <input disabled={!isEditMode} value={form.nomineeRelationship} onChange={(e) => setForm({ ...form, nomineeRelationship: e.target.value })} className="input-dark disabled:opacity-50 disabled:cursor-not-allowed" placeholder="e.g., Spouse, Child" />
+                    <input disabled={!isSectionEditing('nominee')} value={form.nomineeRelationship} onChange={(e) => setForm({ ...form, nomineeRelationship: e.target.value })} className="input-dark disabled:opacity-50 disabled:cursor-not-allowed" placeholder="e.g., Spouse, Child" />
                   </div>
                 </div>
               </div>
 
-              <div className="flex justify-end gap-3 pt-2">
-                {!isEditMode ? (
-                  <button
-                    type="button"
-                    onClick={() => setIsEditMode(true)}
-                    className="btn-primary flex items-center gap-2"
-                  >
-                    Edit Details
-                  </button>
-                ) : (
-                  <>
-                    <button
-                      type="button"
-                      onClick={() => setIsEditMode(false)}
-                      className="px-5 py-2 text-sm font-medium text-gray-300 border border-dark-600 rounded-lg hover:bg-dark-700/50 transition-all"
-                    >
-                      Cancel
-                    </button>
-                    <button type="submit" disabled={loading} className="btn-primary flex items-center gap-2">
-                      {loading ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <Save size={16} />}
-                      Save Changes
-                    </button>
-                  </>
-                )}
+              {/* Save Button */}
+              <div className="flex justify-end gap-3 pt-4 border-t border-dark-700/50">
+                <button type="submit" disabled={loading} className="btn-primary flex items-center gap-2">
+                  {loading ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <Save size={16} />}
+                  Save All Changes
+                </button>
               </div>
             </form>
           )}
@@ -450,19 +519,32 @@ const MyProfile = () => {
           {/* ── Bank Details Tab ── */}
           {activeTab === 'bank' && (
             <form onSubmit={handleUpdateProfile} className="space-y-6">
-              <div>
-                <h3 className="text-base font-semibold text-white mb-4 flex items-center gap-2">
-                  <CreditCard size={16} className="text-brand-400" /> Bank & Statutory Details
-                </h3>
+              <div className="border border-dark-700/50 rounded-lg p-5">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-base font-semibold text-white flex items-center gap-2">
+                    <CreditCard size={16} className="text-brand-400" /> Bank & Statutory Details
+                  </h3>
+                  <button
+                    type="button"
+                    onClick={() => toggleSectionEdit('bank')}
+                    className={`p-2 rounded-lg transition-all ${
+                      isSectionEditing('bank')
+                        ? 'bg-red-500/20 text-red-400 hover:bg-red-500/30'
+                        : 'bg-brand-500/20 text-brand-400 hover:bg-brand-500/30'
+                    }`}
+                  >
+                    {isSectionEditing('bank') ? <X size={16} /> : <Edit2 size={16} />}
+                  </button>
+                </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-dark-300 mb-1.5">Bank Name</label>
-                    <input disabled={!isEditMode} value={form.bankName} onChange={(e) => setForm({ ...form, bankName: e.target.value })} className="input-dark disabled:opacity-50 disabled:cursor-not-allowed" placeholder="e.g., HDFC Bank" />
+                    <input disabled={!isSectionEditing('bank')} value={form.bankName} onChange={(e) => setForm({ ...form, bankName: e.target.value })} className="input-dark disabled:opacity-50 disabled:cursor-not-allowed" placeholder="e.g., HDFC Bank" />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-dark-300 mb-1.5">Account Type</label>
                     <Select
-                      disabled={!isEditMode}
+                      disabled={!isSectionEditing('bank')}
                       value={form.accountType}
                       onChange={(v) => setForm({ ...form, accountType: v })}
                       options={[
@@ -474,47 +556,30 @@ const MyProfile = () => {
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-dark-300 mb-1.5">Account Number</label>
-                    <input disabled={!isEditMode} value={form.bankAccountNumber} onChange={(e) => setForm({ ...form, bankAccountNumber: e.target.value })} className="input-dark disabled:opacity-50 disabled:cursor-not-allowed" placeholder="Account number" />
+                    <input disabled={!isSectionEditing('bank')} value={form.bankAccountNumber} onChange={(e) => setForm({ ...form, bankAccountNumber: e.target.value })} className="input-dark disabled:opacity-50 disabled:cursor-not-allowed" placeholder="Account number" />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-dark-300 mb-1.5">IFSC Code</label>
-                    <input disabled={!isEditMode} value={form.ifscCode} onChange={(e) => setForm({ ...form, ifscCode: e.target.value.toUpperCase() })} className="input-dark disabled:opacity-50 disabled:cursor-not-allowed" placeholder="e.g., HDFC0001234" />
+                    <input disabled={!isSectionEditing('bank')} value={form.ifscCode} onChange={(e) => setForm({ ...form, ifscCode: e.target.value.toUpperCase() })} className="input-dark disabled:opacity-50 disabled:cursor-not-allowed" placeholder="e.g., HDFC0001234" />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-dark-300 mb-1.5">UAN Number</label>
-                    <input disabled={!isEditMode} value={form.uan} onChange={(e) => setForm({ ...form, uan: e.target.value })} className="input-dark disabled:opacity-50 disabled:cursor-not-allowed" placeholder="UAN number" />
+                    <input disabled={!isSectionEditing('bank')} value={form.uan} onChange={(e) => setForm({ ...form, uan: e.target.value })} className="input-dark disabled:opacity-50 disabled:cursor-not-allowed" placeholder="UAN number" />
                   </div>
                   <div></div>
                   <div className="md:col-span-2">
                     <label className="block text-sm font-medium text-dark-300 mb-1.5">Branch Address</label>
-                    <textarea disabled={!isEditMode} value={form.branchAddress} onChange={(e) => setForm({ ...form, branchAddress: e.target.value })} className="input-dark disabled:opacity-50 disabled:cursor-not-allowed min-h-[80px]" placeholder="Bank branch address" />
+                    <textarea disabled={!isSectionEditing('bank')} value={form.branchAddress} onChange={(e) => setForm({ ...form, branchAddress: e.target.value })} className="input-dark disabled:opacity-50 disabled:cursor-not-allowed min-h-[80px]" placeholder="Bank branch address" />
                   </div>
                 </div>
               </div>
-              <div className="flex justify-end gap-3 pt-2">
-                {!isEditMode ? (
-                  <button
-                    type="button"
-                    onClick={() => setIsEditMode(true)}
-                    className="btn-primary flex items-center gap-2"
-                  >
-                    Edit Details
-                  </button>
-                ) : (
-                  <>
-                    <button
-                      type="button"
-                      onClick={() => setIsEditMode(false)}
-                      className="px-5 py-2 text-sm font-medium text-gray-300 border border-dark-600 rounded-lg hover:bg-dark-700/50 transition-all"
-                    >
-                      Cancel
-                    </button>
-                    <button type="submit" disabled={loading} className="btn-primary flex items-center gap-2">
-                      {loading ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <Save size={16} />}
-                      Save Changes
-                    </button>
-                  </>
-                )}
+              
+              {/* Save Button */}
+              <div className="flex justify-end gap-3 pt-4 border-t border-dark-700/50">
+                <button type="submit" disabled={loading} className="btn-primary flex items-center gap-2">
+                  {loading ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <Save size={16} />}
+                  Save All Changes
+                </button>
               </div>
             </form>
           )}

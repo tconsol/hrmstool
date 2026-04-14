@@ -1,9 +1,12 @@
 /**
  * Service Worker for HRMS Tool PWA
  * Production-ready version with proper caching & error handling
+ * Includes version-based cache busting for deployments
  */
 
-const CACHE_NAME = 'hrms-v2';
+// Generate cache name with app version from build process
+const APP_VERSION = '__VITE_APP_VERSION__' || 'v1';
+const CACHE_NAME = `hrms-${APP_VERSION}`;
 const STATIC_CACHE = [
   '/',
   '/index.html',

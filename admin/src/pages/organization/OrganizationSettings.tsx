@@ -5,6 +5,7 @@ import Select from '../../components/ui/Select';
 import GoogleMap from '../../components/ui/GoogleMap';
 import toast from 'react-hot-toast';
 import { useAuth } from '../../context/AuthContext';
+import { useConfirm } from '../../context/ConfirmContext';
 import { reverseGeocode, formatAddress } from '../../services/reverseGeocode';
 
 interface OfficeLocation {
@@ -23,6 +24,7 @@ const emptyLocation = (): OfficeLocation => ({
 
 export default function OrganizationSettings() {
   const { user } = useAuth();
+  const confirm = useConfirm();
   const canManageSettings = user?.role === 'ceo';
   const canManageLocations = ['hr', 'manager', 'ceo'].includes(user?.role || '');
 
@@ -101,7 +103,13 @@ export default function OrganizationSettings() {
   };
 
   const handleResetLeaveBalances = async () => {
-    if (!window.confirm('This will reset leave balances for ALL active employees to the current policy values.\n\nCasual: ' + settings.leavePolicy.casual + ' | Sick: ' + settings.leavePolicy.sick + ' | Paid: ' + settings.leavePolicy.paid + '\n\nContinue?')) return;
+    const ok = await confirm({
+      title: 'Reset Leave Balances',
+      message: `This will reset leave balances for ALL active employees to the current policy values.\n\nCasual: ${settings.leavePolicy.casual} | Sick: ${settings.leavePolicy.sick} | Paid: ${settings.leavePolicy.paid}`,
+      confirmLabel: 'Yes, Reset',
+      variant: 'warning',
+    });
+    if (!ok) return;
     setSaving(true);
     try {
       await api.put('/organization/settings', { settings });
@@ -220,7 +228,13 @@ export default function OrganizationSettings() {
   };
 
   const handleDeleteLocation = async (id: string) => {
-    if (!window.confirm('Delete this office location?')) return;
+    const ok = await confirm({
+      title: 'Delete Office Location',
+      message: 'Are you sure you want to delete this office location? This action cannot be undone.',
+      confirmLabel: 'Delete',
+      variant: 'danger',
+    });
+    if (!ok) return;
     setDeletingId(id);
     try {
       const res = await api.delete(`/organization/locations/${id}`);

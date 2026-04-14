@@ -104,8 +104,10 @@ const DatePicker = ({
 
   const selectDay = (day: number) => {
     if (isDisabled(day)) return;
-    const d = new Date(viewYear, viewMonth, day);
-    onChange(d.toISOString().split('T')[0]);
+    // Format manually to avoid UTC timezone shift (e.g. IST -5:30 causing previous day bug)
+    const mm = String(viewMonth + 1).padStart(2, '0');
+    const dd = String(day).padStart(2, '0');
+    onChange(`${viewYear}-${mm}-${dd}`);
     setOpen(false);
     setShowMonths(false);
     setShowYears(false);
@@ -268,7 +270,9 @@ const DatePicker = ({
               onClick={() => {
                 setViewYear(today.getFullYear());
                 setViewMonth(today.getMonth());
-                onChange(today.toISOString().split('T')[0]);
+                const mm = String(today.getMonth() + 1).padStart(2, '0');
+                const dd = String(today.getDate()).padStart(2, '0');
+                onChange(`${today.getFullYear()}-${mm}-${dd}`);
                 setOpen(false);
               }}
               className="text-xs text-brand-400 hover:text-brand-300 transition-colors font-medium"

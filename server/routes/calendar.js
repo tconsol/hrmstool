@@ -9,6 +9,7 @@ const {
   createEvent,
   updateEvent,
   deleteEvent,
+  sendEventInvites,
 } = require('../controllers/calendarController');
 
 const featureCheck = requireFeature('calendar');
@@ -21,5 +22,8 @@ router.get('/year', auth, orgScope, featureCheck, getYearEvents);
 router.post('/', auth, orgScope, featureCheck, authorize('hr', 'manager', 'ceo'), createEvent);
 router.put('/:id', auth, orgScope, featureCheck, authorize('hr', 'manager', 'ceo'), updateEvent);
 router.delete('/:id', auth, orgScope, featureCheck, authorize('hr', 'manager', 'ceo'), deleteEvent);
+
+// Send event invitations to all employees
+router.post('/:id/send-invites', auth, orgScope, featureCheck, authorize('hr', 'manager', 'ceo'), sendEventInvites);
 
 module.exports = router;

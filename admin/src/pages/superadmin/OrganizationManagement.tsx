@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import Select from '../../components/ui/Select';
+import { useConfirm } from '../../context/ConfirmContext';
 
 interface OrgData {
   _id: string;
@@ -63,6 +64,7 @@ interface OrgDetails {
 }
 
 const OrganizationManagement = () => {
+  const confirm = useConfirm();
   const [activeTab, setActiveTab] = useState<'all' | 'pending'>('all');
   const [organizations, setOrganizations] = useState<OrgData[]>([]);
   const [pendingOrgs, setPendingOrgs] = useState<PendingOrg[]>([]);
@@ -141,6 +143,17 @@ const OrganizationManagement = () => {
   };
 
   const toggleStatus = async (id: string) => {
+    const org = organizations.find((o) => o._id === id);
+    const isActive = org?.isActive ?? true;
+    const ok = await confirm({
+      title: isActive ? 'Deactivate Organization' : 'Activate Organization',
+      message: isActive
+        ? `Are you sure you want to deactivate "${org?.name || 'this organization'}"? All users will lose access.`
+        : `Are you sure you want to activate "${org?.name || 'this organization'}"? Users will regain access.`,
+      confirmLabel: isActive ? 'Deactivate' : 'Activate',
+      variant: isActive ? 'danger' : 'info',
+    });
+    if (!ok) return;
     try {
       const { data } = await api.patch(`/superadmin/organizations/${id}/status`);
       toast.success(data.message);

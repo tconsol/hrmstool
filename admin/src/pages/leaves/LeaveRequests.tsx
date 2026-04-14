@@ -155,7 +155,7 @@ const LeaveRequests = () => {
                   <th>Days</th>
                   <th className="hidden md:table-cell">Reason</th>
                   <th>Status</th>
-                  <th>Actions</th>
+                  <th>Action By</th>
                 </tr>
               </thead>
               <tbody>
@@ -202,6 +202,12 @@ const LeaveRequests = () => {
                         </div>
                       ) : (
                         <span className="text-xs text-dark-500">
+                          {leave.status === 'approved' && (
+                            <span className="text-emerald-400">Approved by: </span>
+                          )}
+                          {leave.status === 'rejected' && (
+                            <span className="text-red-400">Rejected by: </span>
+                          )}
                           {leave.approvedBy?.name || '-'}
                         </span>
                       )}
