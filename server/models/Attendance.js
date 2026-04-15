@@ -50,6 +50,15 @@ const attendanceSchema = new mongoose.Schema({
     latitude: Number,
     longitude: Number,
   },
+  isManualCheckout: {
+    type: Boolean,
+    default: false,
+  },
+  manualCheckoutBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    default: null,
+  },
 }, {
   timestamps: true,
 });

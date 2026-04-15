@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import api from '../../services/api';
 import toast from 'react-hot-toast';
-import { CalendarCheck, Search, Filter, Clock } from 'lucide-react';
+import { CalendarCheck, Search, Filter, Clock, LogOut } from 'lucide-react';
 import Modal from '../../components/ui/Modal';
+import ProcessCheckoutModal from '../../components/ui/ProcessCheckoutModal';
 import Select from '../../components/ui/Select';
 import { useAuth } from '../../context/AuthContext';
 import DatePicker from '../../components/ui/DatePicker';
@@ -26,6 +27,7 @@ const AttendanceDashboard = () => {
 
   // Manual mark state
   const [showMarkModal, setShowMarkModal] = useState(false);
+  const [showProcessCheckoutModal, setShowProcessCheckoutModal] = useState(false);
   const [employees, setEmployees] = useState<any[]>([]);
   const [markForm, setMarkForm] = useState({
     userId: '',
@@ -136,17 +138,30 @@ const AttendanceDashboard = () => {
           <h1 className="text-2xl font-bold text-white">Attendance</h1>
           <p className="text-dark-400 text-sm mt-1">Monitor employee attendance</p>
         </div>
-        <button
-          onClick={() => {
-            fetchEmployees();
-            setShowMarkModal(true);
-          }}
-          className="btn-primary flex items-center gap-2"
-          style={{ display: isHR ? undefined : 'none' }}
-        >
-          <CalendarCheck size={18} />
-          Mark Attendance
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={() => {
+              fetchEmployees();
+              setShowProcessCheckoutModal(true);
+            }}
+            className="btn-primary flex items-center gap-2"
+            style={{ display: isHR ? undefined : 'none' }}
+          >
+            <LogOut size={18} />
+            Process Checkout
+          </button>
+          <button
+            onClick={() => {
+              fetchEmployees();
+              setShowMarkModal(true);
+            }}
+            className="btn-primary flex items-center gap-2"
+            style={{ display: isHR ? undefined : 'none' }}
+          >
+            <CalendarCheck size={18} />
+            Mark Attendance
+          </button>
+        </div>
       </div>
 
       {/* Filters */}
@@ -308,6 +323,14 @@ const AttendanceDashboard = () => {
           </div>
         </Modal>
       )}
+
+      {/* Process Checkout Modal */}
+      <ProcessCheckoutModal
+        isOpen={showProcessCheckoutModal}
+        onClose={() => setShowProcessCheckoutModal(false)}
+        onSuccess={fetchAttendance}
+        employees={employees}
+      />
     </div>
   );
 };

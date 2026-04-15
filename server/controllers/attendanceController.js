@@ -422,3 +422,90 @@ exports.getDuplicateAttendanceInfo = async (req, res) => {
     res.status(500).json({ error: 'Failed to fetch duplicate info' });
   }
 };
+
+// Manual checkout by HR/Manager for employees who forgot to check out
+exports.manualCheckout = async (req, res) => {
+  try {
+    // Only HR, Manager, and CEO can process manual checkout
+    const allowedRoles = ['hr', 'manager', 'ceo', 'super_admin'];
+    if (!allowedRoles.includes(req.user?.role)) {
+      return res.status(403).json({ error: 'Unauthorized. Only HR/Manager/CEO can process manual checkout.' });
+    }
+
+    const { employeeId, date, checkoutTime } = req.body;
+
+    if (!employeeId || !date || !checkoutTime) {
+      return res.status(400).json({ error: 'Employee ID, date, and checkout time are required.' });
+    }
+
+    // Parse date to local midnight
+    const [y, m, d] = date.split('-').map(Number);
+    const targetDate = new Date(y, m - 1, d);
+    targetDate.setHours(0, 0, 0, 0);
+
+    // Parse checkout time (HH:mm format)
+    const [hours, mins] = checkoutTime.split(':').map(Number);
+
+    // Find attendance record for the employee on that date
+    const attendance = await Attendance.findOne({
+      user: employeeId,
+      organization: req.orgId,
+      date: targetDate,
+    });
+
+    if (!attendance) {
+      return res.status(404).json({ error: 'No attendance record found for this employee on the selected date.' });
+    }
+
+    if (!attendance.checkIn) {
+      return res.status(400).json({ error: 'Employee has no check-in record for this date. Cannot process checkout.' });
+    }
+
+    if (attendance.checkOut) {
+      return res.status(400).json({ error: 'Employee has already checked out for this date.' });
+    }
+
+    // Set checkout time
+    const checkOutDateTime = new Date(targetDate);
+    checkOutDateTime.setHours(hours, mins, 0, 0);
+
+    attendance.checkOut = checkOutDateTime;
+    attendance.isManualCheckout = true;
+    attendance.manualCheckoutBy = req.user._id;
+
+    // Calculate work hours
+    const diffMs = checkOutDateTime.getTime() - new Date(attendance.checkIn).getTime();
+    attendance.workHours = Math.max(0, parseFloat((diffMs / (1000 * 60 * 60)).toFixed(2)));
+
+    await attendance.save();
+
+    // Populate user details for response
+    const populated = await Attendance.findById(attendance._id).populate({
+      path: 'user',
+      select: 'name employeeId department designation status',
+      populate: [
+        { path: 'department', select: 'name' },
+        { path: 'designation', select: 'name' },
+      ],
+    }).populate({
+      path: 'manualCheckoutBy',
+      select: 'name email role',
+    });
+
+    // Emit real-time update
+    try {
+      const orgRoom = `org_${req.orgId.toString()}`;
+      getIO().to(orgRoom).emit('attendance_update', { action: 'manual_checkout', record: populated });
+      console.log(`📡 attendance_update emitted to ${orgRoom} for manual checkout by ${req.user._id}`);
+    } catch (err) { console.error('Socket emit error (manual_checkout):', err.message); }
+
+    res.json({
+      success: true,
+      message: `Checkout processed for ${populated.user.name}`,
+      record: populated,
+    });
+  } catch (error) {
+    console.error('Error processing manual checkout:', error);
+    res.status(500).json({ error: 'Failed to process manual checkout' });
+  }
+};
