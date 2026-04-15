@@ -438,13 +438,10 @@ exports.manualCheckout = async (req, res) => {
       return res.status(400).json({ error: 'Employee ID, date, and checkout time are required.' });
     }
 
-    // Parse date to local midnight
+    // Parse date to local midnight (matches how attendance records are stored)
     const [y, m, d] = date.split('-').map(Number);
     const targetDate = new Date(y, m - 1, d);
     targetDate.setHours(0, 0, 0, 0);
-
-    // Parse checkout time (HH:mm format)
-    const [hours, mins] = checkoutTime.split(':').map(Number);
 
     // Find attendance record for the employee on that date
     const attendance = await Attendance.findOne({
@@ -461,13 +458,10 @@ exports.manualCheckout = async (req, res) => {
       return res.status(400).json({ error: 'Employee has no check-in record for this date. Cannot process checkout.' });
     }
 
-    if (attendance.checkOut) {
-      return res.status(400).json({ error: 'Employee has already checked out for this date.' });
-    }
+    // HR can override an existing checkout — no blocking here
 
-    // Set checkout time
-    const checkOutDateTime = new Date(targetDate);
-    checkOutDateTime.setHours(hours, mins, 0, 0);
+    // Set checkout time — parse as IST (UTC+5:30) so server time zone doesn't affect it
+    const checkOutDateTime = new Date(`${date}T${checkoutTime}:00+05:30`);
 
     attendance.checkOut = checkOutDateTime;
     attendance.isManualCheckout = true;
