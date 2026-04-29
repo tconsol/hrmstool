@@ -48,9 +48,7 @@ const EmployeeDashboard = () => {
     try {
       const { data: dashData } = await api.get('/dashboard/employee');
       setData(dashData);
-    } catch (error) {
-      console.error('Failed to fetch dashboard:', error);
-    } finally {
+    } catch (error) {    } finally {
       setLoading(false);
     }
   };

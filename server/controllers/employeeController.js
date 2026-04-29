@@ -59,9 +59,7 @@ exports.getEmployees = async (req, res) => {
         if (empObj.profilePicture?.gcsPath) {
           try {
             empObj.profilePicture.url = await getSignedUrl(empObj.profilePicture.gcsPath);
-          } catch (err) {
-            console.error('Failed to generate signed URL for profile picture:', err);
-            empObj.profilePicture.url = null;
+          } catch (err) {            empObj.profilePicture.url = null;
           }
         }
         return empObj;
@@ -94,9 +92,7 @@ exports.getEmployee = async (req, res) => {
     if (empObj.profilePicture?.gcsPath) {
       try {
         empObj.profilePicture.url = await getSignedUrl(empObj.profilePicture.gcsPath);
-      } catch (err) {
-        console.error('Failed to generate signed URL for profile picture:', err);
-        empObj.profilePicture.url = null;
+      } catch (err) {        empObj.profilePicture.url = null;
       }
     }
 
@@ -156,9 +152,7 @@ exports.updateEmployee = async (req, res) => {
     if (empObj.profilePicture?.gcsPath) {
       try {
         empObj.profilePicture.url = await getSignedUrl(empObj.profilePicture.gcsPath);
-      } catch (err) {
-        console.error('Failed to generate signed URL for profile picture:', err);
-        empObj.profilePicture.url = null;
+      } catch (err) {        empObj.profilePicture.url = null;
       }
     }
 
@@ -245,9 +239,7 @@ exports.getEmployeeDocuments = async (req, res) => {
     }
 
     res.json(employeeObj);
-  } catch (error) {
-    console.error('Failed to fetch employee documents:', error);
-    res.status(500).json({ error: 'Failed to fetch employee documents' });
+  } catch (error) {    res.status(500).json({ error: 'Failed to fetch employee documents' });
   }
 };
 
@@ -280,9 +272,7 @@ exports.uploadEmployeeDocument = async (req, res) => {
     // Delete old file from GCS if replacing
     const existingDoc = employee.onboardingDocuments?.[docKey];
     if (existingDoc?.gcsPath) {
-      await deleteFile(existingDoc.gcsPath).catch(err => {
-        console.error(`Failed to delete old file for ${docKey}:`, err);
-      });
+      await deleteFile(existingDoc.gcsPath).catch(err => {      });
     }
 
     // Build path and upload to GCS
@@ -322,9 +312,7 @@ exports.uploadEmployeeDocument = async (req, res) => {
       url: signedUrl,
       uploadedAt: new Date().toISOString(),
     });
-  } catch (error) {
-    console.error('Failed to upload document:', error);
-    res.status(500).json({ error: error.message || 'Failed to upload document' });
+  } catch (error) {    res.status(500).json({ error: error.message || 'Failed to upload document' });
   }
 };
 
@@ -358,9 +346,7 @@ exports.updateEmployeePersonalDetails = async (req, res) => {
     }
 
     res.json(employee);
-  } catch (error) {
-    console.error('Failed to update personal details:', error);
-    res.status(500).json({ error: 'Failed to update personal details' });
+  } catch (error) {    res.status(500).json({ error: 'Failed to update personal details' });
   }
 };
 
@@ -384,9 +370,7 @@ exports.removeEmployeeDocument = async (req, res) => {
     // Delete from GCS
     const existingDoc = employee.onboardingDocuments?.[docKey];
     if (existingDoc?.gcsPath) {
-      await deleteFile(existingDoc.gcsPath).catch(err => {
-        console.error(`Failed to delete file from GCS for ${docKey}:`, err);
-      });
+      await deleteFile(existingDoc.gcsPath).catch(err => {      });
     }
 
     // Remove from database
@@ -397,9 +381,7 @@ exports.removeEmployeeDocument = async (req, res) => {
     ).select('name employeeId onboardingDocuments');
 
     res.json(updated);
-  } catch (error) {
-    console.error('Failed to remove document:', error);
-    res.status(500).json({ error: 'Failed to remove document' });
+  } catch (error) {    res.status(500).json({ error: 'Failed to remove document' });
   }
 };
 
@@ -423,9 +405,7 @@ exports.uploadProfilePicture = async (req, res) => {
 
     // Delete old profile picture from GCS if exists
     if (employee.profilePicture?.gcsPath) {
-      await deleteFile(employee.profilePicture.gcsPath).catch(err => {
-        console.error('Failed to delete old profile picture:', err);
-      });
+      await deleteFile(employee.profilePicture.gcsPath).catch(err => {      });
     }
 
     // Build path: {orgSlug}/profile/{employeeId}_{employeeName}/profile.{ext}
@@ -452,11 +432,7 @@ exports.uploadProfilePicture = async (req, res) => {
     ).select('name employeeId profilePicture');
 
     // Return signed URL for the profile picture
-    const signedUrl = await getSignedUrl(gcsPath);
-
-    console.log('✅ Profile picture uploaded:', { userId: req.user._id, gcsPath, fileName: req.file.originalname });
-
-    res.json({
+    const signedUrl = await getSignedUrl(gcsPath);    res.json({
       profilePicture: {
         gcsPath,
         fileName: req.file.originalname,
@@ -466,8 +442,6 @@ exports.uploadProfilePicture = async (req, res) => {
         uploadedAt: new Date().toISOString(),
       },
     });
-  } catch (error) {
-    console.error('Failed to upload profile picture:', error);
-    res.status(500).json({ error: error.message || 'Failed to upload profile picture' });
+  } catch (error) {    res.status(500).json({ error: error.message || 'Failed to upload profile picture' });
   }
 };

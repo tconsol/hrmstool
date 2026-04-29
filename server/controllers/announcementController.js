@@ -74,9 +74,7 @@ exports.createAnnouncement = async (req, res) => {
         const pop = await notif.populate('sender', 'name employeeId');
         getIO().to(`user_${u._id}`).emit('notification', pop);
       }));
-    } catch (e) {
-      console.error('Announcement notification error:', e.message);
-    }
+    } catch (e) {    }
 
     res.status(201).json(populated);
   } catch (error) {

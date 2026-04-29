@@ -41,9 +41,7 @@ exports.login = async (req, res) => {
       token,
       user: { ...admin.toJSON(), role: 'superadmin' },
     });
-  } catch (error) {
-    console.error('SuperAdmin login error:', error);
-    res.status(500).json({ error: 'Server error during login' });
+  } catch (error) {    res.status(500).json({ error: 'Server error during login' });
   }
 };
 
@@ -176,9 +174,7 @@ exports.getDashboardStats = async (req, res) => {
       planDistribution,
       monthlyGrowth,
     });
-  } catch (error) {
-    console.error('Dashboard stats error:', error);
-    res.status(500).json({ error: 'Server error' });
+  } catch (error) {    res.status(500).json({ error: 'Server error' });
   }
 };
 
@@ -235,9 +231,7 @@ exports.getAllOrganizations = async (req, res) => {
         pages: Math.ceil(total / parseInt(limit)),
       },
     });
-  } catch (error) {
-    console.error('Get organizations error:', error);
-    res.status(500).json({ error: 'Server error' });
+  } catch (error) {    res.status(500).json({ error: 'Server error' });
   }
 };
 
@@ -273,9 +267,7 @@ exports.getOrganizationDetails = async (req, res) => {
       },
       recentUsers,
     });
-  } catch (error) {
-    console.error('Org details error:', error);
-    res.status(500).json({ error: 'Server error' });
+  } catch (error) {    res.status(500).json({ error: 'Server error' });
   }
 };
 
@@ -299,11 +291,7 @@ exports.toggleOrganizationStatus = async (req, res) => {
     // Send activation confirmation email when organization is activated
     if (!wasActive && org.isActive) {
       try {
-        await sendActivationEmail(org.email, org.name);
-        console.log(`Activation email sent to ${org.email}`);
-      } catch (emailError) {
-        console.error('Failed to send activation email:', emailError);
-      }
+        await sendActivationEmail(org.email, org.name);      } catch (emailError) {      }
     }
 
     res.json({
@@ -334,9 +322,7 @@ exports.updateSubscription = async (req, res) => {
       message: 'Subscription updated successfully',
       organization: org,
     });
-  } catch (error) {
-    console.error('Update subscription error:', error);
-    res.status(500).json({ error: 'Server error' });
+  } catch (error) {    res.status(500).json({ error: 'Server error' });
   }
 };
 
@@ -365,9 +351,7 @@ exports.deleteOrganization = async (req, res) => {
     ]);
 
     res.json({ message: 'Organization and all related data deleted successfully' });
-  } catch (error) {
-    console.error('Delete org error:', error);
-    res.status(500).json({ error: 'Server error' });
+  } catch (error) {    res.status(500).json({ error: 'Server error' });
   }
 };
 
@@ -423,9 +407,7 @@ exports.getRevenueReport = async (req, res) => {
       revenueByPlan,
       organizations: orgRevenue,
     });
-  } catch (error) {
-    console.error('Revenue report error:', error);
-    res.status(500).json({ error: 'Server error' });
+  } catch (error) {    res.status(500).json({ error: 'Server error' });
   }
 };
 
@@ -534,9 +516,7 @@ exports.updateOrganizationFeatures = async (req, res) => {
       message: 'Organization features updated successfully',
       enabledFeatures: org.enabledFeatures,
     });
-  } catch (error) {
-    console.error('Update org features error:', error);
-    res.status(500).json({ error: 'Server error' });
+  } catch (error) {    res.status(500).json({ error: 'Server error' });
   }
 };
 
@@ -563,9 +543,7 @@ exports.getPendingOrganizations = async (req, res) => {
     }));
 
     res.json({ organizations: orgsWithCreators });
-  } catch (error) {
-    console.error('Get pending orgs error:', error);
-    res.status(500).json({ error: 'Server error' });
+  } catch (error) {    res.status(500).json({ error: 'Server error' });
   }
 };
 
@@ -586,19 +564,13 @@ exports.approveOrganization = async (req, res) => {
 
     // Send activation email
     try {
-      await sendActivationEmail(org.email, org.name);
-      console.log(`Activation email sent to ${org.email}`);
-    } catch (emailError) {
-      console.error('Failed to send activation email:', emailError);
-    }
+      await sendActivationEmail(org.email, org.name);    } catch (emailError) {    }
 
     res.json({
       message: 'Organization approved and activated successfully',
       organization: org,
     });
-  } catch (error) {
-    console.error('Approve org error:', error);
-    res.status(500).json({ error: 'Server error' });
+  } catch (error) {    res.status(500).json({ error: 'Server error' });
   }
 };
 
@@ -617,9 +589,7 @@ exports.rejectOrganization = async (req, res) => {
       message: 'Organization rejected',
       organization: org,
     });
-  } catch (error) {
-    console.error('Reject org error:', error);
-    res.status(500).json({ error: 'Server error' });
+  } catch (error) {    res.status(500).json({ error: 'Server error' });
   }
 };
 
@@ -647,17 +617,13 @@ exports.forgotPassword = async (req, res) => {
 
     try {
       await sendPasswordResetEmail(email, resetToken, admin.name);
-    } catch (emailError) {
-      console.error('Failed to send reset email:', emailError);
-      admin.resetPasswordToken = undefined;
+    } catch (emailError) {      admin.resetPasswordToken = undefined;
       admin.resetPasswordExpires = undefined;
       await admin.save();
       return res.status(500).json({ error: 'Failed to send reset email.' });
     }
 
     res.json({ message: 'If an account with that email exists, a password reset link has been sent.' });
-  } catch (error) {
-    console.error('Super admin forgot password error:', error);
-    res.status(500).json({ error: 'Server error' });
+  } catch (error) {    res.status(500).json({ error: 'Server error' });
   }
 };

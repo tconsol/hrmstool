@@ -102,9 +102,7 @@ exports.syncIndiaHolidays = async (req, res) => {
       message: `Successfully synced ${result.length} India holidays for ${year}`,
       count: result.length,
     });
-  } catch (error) {
-    console.error('[syncIndiaHolidays] Error:', error.message);
-    res.status(500).json({ error: 'Failed to sync holidays: ' + error.message });
+  } catch (error) {    res.status(500).json({ error: 'Failed to sync holidays: ' + error.message });
   }
 };
 

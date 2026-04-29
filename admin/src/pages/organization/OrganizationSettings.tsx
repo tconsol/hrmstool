@@ -30,7 +30,7 @@ export default function OrganizationSettings() {
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [org, setOrg] = useState({ name: '', email: '', phone: '', address: '', website: '', industry: '', logo: '' });
+  const [org, setOrg] = useState({ name: '', email: '', phone: '', address: '', website: '', industry: '', logo: '', gstNumber: '' });
   const logoInputRef = useRef<HTMLInputElement>(null);
   const [settings, setSettings] = useState({
     fiscalYearStart: 4,
@@ -73,7 +73,7 @@ export default function OrganizationSettings() {
         setOrg({
           name: orgRes.data.name || '', email: orgRes.data.email || '', phone: orgRes.data.phone || '',
           address: orgRes.data.address || '', website: orgRes.data.website || '', industry: orgRes.data.industry || '',
-          logo: orgRes.data.logo || '',
+          logo: orgRes.data.logo || '', gstNumber: orgRes.data.gstNumber || ''
         });
         if (settingsRes.data?.settings) {
           setSettings(prev => ({ ...prev, ...settingsRes.data.settings }));
@@ -330,6 +330,17 @@ export default function OrganizationSettings() {
           <div>
             <label className="block text-sm text-slate-300 mb-1">Address</label>
             <input value={org.address} onChange={e => setOrg({ ...org, address: e.target.value })} className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500" />
+          </div>
+          <div>
+            <label className="block text-sm text-slate-300 mb-1">GST Number (GSTIN)</label>
+            <input
+              value={org.gstNumber}
+              onChange={e => setOrg({ ...org, gstNumber: e.target.value.toUpperCase() })}
+              placeholder="e.g. 36AAMCT4798F1ZP"
+              maxLength={15}
+              className="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono tracking-wider"
+            />
+            <p className="text-xs text-slate-500 mt-1">15-character GSTIN used on invoices</p>
           </div>
         </div>
         {/* Logo Upload */}

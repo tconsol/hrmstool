@@ -34,7 +34,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const INACTIVITY_TIME = 60 * 60 * 1000; // 1 hour in milliseconds
 
     inactivityTimerRef.current = setTimeout(() => {
-      console.warn('⏱️ User inactive for 1 hour - logging out and clearing cache');
       logoutWithCacheClear();
       alert('Your session has expired due to inactivity. Please login again.');
     }, INACTIVITY_TIME);
@@ -79,7 +78,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       try {
         parsedUser = JSON.parse(savedUser);
       } catch (error) {
-        console.error('Failed to parse stored user data:', error);
         localStorage.removeItem('hrms_token');
         localStorage.removeItem('hrms_user');
         setLoading(false);
@@ -92,7 +90,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setupInactivityTimer();
       
       // Validate that user still exists in database
-      api.get('/auth/me')
+      const endpoint = parsedUser.role === 'superadmin' ? '/superadmin/me' : '/auth/me';
+      api.get(endpoint)
         .then(({ data }) => {
           if (data && data._id) {
             localStorage.setItem('hrms_user', JSON.stringify(data));
@@ -107,7 +106,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         })
         .catch((error) => {
           // User validation failed (deleted from DB, token expired, etc)
-          console.log('User validation failed:', error);
           localStorage.removeItem('hrms_token');
           localStorage.removeItem('hrms_user');
           setToken(null);
@@ -149,16 +147,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     // Bust cache to ensure fresh feature data from latest deployment
     await bustCache();
-    console.log('✓ Cache busted on login');
-
     // Immediately fetch fresh user data with signed URLs for profile picture
     try {
       const { data: freshUser } = await api.get('/auth/me');
       localStorage.setItem('hrms_user', JSON.stringify(freshUser));
       setUser(freshUser);
-      console.log('✅ Profile data fetched immediately after login');
     } catch (error) {
-      console.error('Failed to fetch fresh user data after login:', error);
       // User state already set, continue with initial login data
     }
   };
@@ -177,17 +171,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     // Bust cache to ensure fresh feature data from latest deployment
     await bustCache();
-    console.log('✓ Cache busted on super admin login');
-
-    // For super admin, fetch fresh data might not apply, but keeping consistent
+    // Fetch fresh super admin data
     try {
-      const { data: freshUser } = await api.get('/auth/me');
+      const { data: freshUser } = await api.get('/superadmin/me');
       localStorage.setItem('hrms_user', JSON.stringify(freshUser));
       setUser(freshUser);
-      console.log('✅ Profile data fetched for super admin');
     } catch (error) {
-      // Super admin endpoint might not have /auth/me, continue with initial data
-      console.log('Note: Could not refresh super admin profile data');
+      // Super admin data already set, continue with initial data
     }
   };
 

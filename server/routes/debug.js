@@ -26,13 +26,8 @@ router.post('/test-notification', auth, async (req, res) => {
       type: 'general',
       title: 'Test Notification',
       message: 'This is a test notification',
-    });
-
-    console.log('✓ Test notification created:', notif._id);
-    res.json({ success: true, notif });
-  } catch (error) {
-    console.error('✗ Failed to create test notification:', error.message);
-    res.status(500).json({ error: error.message });
+    });    res.json({ success: true, notif });
+  } catch (error) {    res.status(500).json({ error: error.message });
   }
 });
 

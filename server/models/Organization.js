@@ -44,6 +44,12 @@ const organizationSchema = new mongoose.Schema({
     type: String, // base64 data URL
     default: '',
   },
+  gstNumber: {
+    type: String,
+    trim: true,
+    uppercase: true,
+    default: '',
+  },
   website: {
     type: String,
     trim: true,

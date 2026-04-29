@@ -38,9 +38,7 @@ const HRDashboard = () => {
       setRecentLeaves(data.recentLeaves);
       setRecentEmployees(data.recentEmployees);
       setAnnouncements(data.announcements || []);
-    } catch (error) {
-      console.error('Failed to fetch dashboard:', error);
-    } finally {
+    } catch (error) {    } finally {
       setLoading(false);
     }
   };

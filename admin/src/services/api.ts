@@ -37,9 +37,7 @@ api.interceptors.response.use(
       // Don't redirect if we're already on a login page or if it's an auth request
       const isAuthRequest = error.config?.url?.includes('/auth/login') || error.config?.url?.includes('/superadmin/login');
       const isLoginPage = window.location.pathname === '/login' || window.location.pathname === '/superadmin/login';
-      if (!isAuthRequest && !isLoginPage) {
-        console.log('🔐 Authentication failed - redirecting to login');
-        const isSuperAdminRoute = window.location.pathname.startsWith('/superadmin');
+      if (!isAuthRequest && !isLoginPage) {        const isSuperAdminRoute = window.location.pathname.startsWith('/superadmin');
         window.location.href = isSuperAdminRoute ? '/superadmin/login' : '/login';
       }
     }

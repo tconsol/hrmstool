@@ -33,9 +33,7 @@ const ManagerDashboard = () => {
       setLeaveByType(data.leaveByType || []);
       setTeamMembers(data.teamMembers || []);
       setRecentLeaves(data.recentLeaves || []);
-    } catch (error) {
-      console.error('Failed to fetch dashboard:', error);
-    } finally {
+    } catch (error) {    } finally {
       setLoading(false);
     }
   };

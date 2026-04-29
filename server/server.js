@@ -28,6 +28,7 @@ const shiftRoutes = require('./routes/shifts');
 const assetRoutes = require('./routes/assets');
 const trainingRoutes = require('./routes/training');
 const superAdminRoutes = require('./routes/superAdmin');
+const invoiceRoutes    = require('./routes/invoices');
 
 const app = express();
 const server = http.createServer(app);
@@ -69,29 +70,22 @@ io.on('connection', async (socket) => {
       if (user?.organization) {
         const orgRoom = `org_${user.organization.toString()}`;
         socket.join(orgRoom);
-        console.log(`✅ WebSocket Connected - User: ${userId} | Room: ${orgRoom} | IP: ${clientIP}`);
       } else {
-        console.log(`✅ WebSocket Connected - User: ${userId} | IP: ${clientIP}`);
       }
     } catch {
-      console.log(`✅ WebSocket Connected - User: ${userId} | IP: ${clientIP}`);
     }
   } else {
-    console.log(`⚪ WebSocket Connected - Anonymous | IP: ${clientIP}`);
   }
 
   // Detect error events that might cause disconnection
   socket.on('error', (error) => {
-    console.error(`⚠️  Socket Error - User: ${userId} | Error: ${error}`);
   });
 
   socket.on('connect_error', (error) => {
-    console.error(`⚠️  Connection Error - User: ${userId} | Error: ${error.message}`);
   });
 
   socket.on('disconnect', (reason) => {
     if (userId) {
-      console.log(`❌ WebSocket Disconnected - User: ${userId} | Reason: ${reason}`);
     }
   });
 });
@@ -153,6 +147,7 @@ app.use('/api/shifts', shiftRoutes);
 app.use('/api/assets', assetRoutes);
 app.use('/api/training', trainingRoutes);
 app.use('/api/superadmin', superAdminRoutes);
+app.use('/api/invoices',   invoiceRoutes);
 
 // Health check endpoints
 app.get('/', (req, res) => {
@@ -180,8 +175,6 @@ app.use((err, req, res, next) => {
   if (err.message && err.message.includes('Only PDF')) {
     return res.status(400).json({ error: err.message });
   }
-
-  console.error('Server Error:', err.stack);
   res.status(err.status || 500).json({
     error: process.env.NODE_ENV === 'production'
       ? 'Internal server error'
@@ -191,45 +184,5 @@ app.use((err, req, res, next) => {
 
 const PORT = process.env.PORT || 5000;
 
-// Enhanced server startup logging
-const startTime = Date.now();
-
 server.listen(PORT, () => {
-  const uptime = Date.now() - startTime;
-  
-  console.log('\n' + '='.repeat(60));
-  console.log('🚀 HRMS SERVER INITIALIZED SUCCESSFULLY');
-  console.log('='.repeat(60));
-  
-  console.log('\n📡 Server Configuration:');
-  console.log(`   🔌 Port: ${PORT}`);
-  console.log(`   🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
-  console.log(`   ⏱️  Startup Time: ${uptime}ms`);
-  
-  console.log('\n🔐 CORS & Security:');
-  console.log(`   ✅ CORS Enabled`);
-  console.log(`   📝 Allowed Origins: ${allowedOrigins.join(', ')}`);
-  console.log(`   🛡️  Helmet Security Headers: Active`);
-  
-  console.log('\n🌐 WebSocket (Socket.IO):');
-  console.log(`   ✅ WebSocket Server: Connected`);
-  console.log(`   👥 Real-time Features: Enabled`);
-  console.log(`   📊 Allowed Namespaces: user notifications, presence`);
-  
-  console.log('\n📡 API Endpoints:');
-  console.log(`   ✅ Authentication: /api/auth`);
-  console.log(`   ✅ Employees: /api/employees`);
-  console.log(`   ✅ Attendance: /api/attendance`);
-  console.log(`   ✅ Leaves: /api/leaves`);
-  console.log(`   ✅ Payroll: /api/payroll`);
-  console.log(`   ✅ Organization: /api/organization`);
-  console.log(`   ✅ 14+ additional endpoints configured`);
-  
-  console.log('\n💾 Data Persistence:');
-  console.log(`   ✅ MongoDB: Connected`);
-  console.log(`   ☁️  GCP Cloud Storage: Configured`);
-  
-  console.log('\n' + '='.repeat(60));
-  console.log(`✨ Server Ready at http://localhost:${PORT}`);
-  console.log('='.repeat(60) + '\n');
 });

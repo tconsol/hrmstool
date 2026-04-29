@@ -79,9 +79,7 @@ const EmployeeForm = () => {
       ]);
       setDepartments(Array.isArray(deptsRes.data) ? deptsRes.data : []);
       setDesignations(Array.isArray(desRes.data) ? desRes.data : []);
-    } catch (error) {
-      console.error('Failed to load:', error);
-      toast.error('Failed to load departments and designations');
+    } catch (error) {      toast.error('Failed to load departments and designations');
     } finally {
       setLoadingOptions(false);
     }

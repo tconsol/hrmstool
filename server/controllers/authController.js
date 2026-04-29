@@ -161,9 +161,7 @@ exports.register = async (req, res) => {
     // Send OTP email
     try {
       await sendOTPEmail(email, otp, orgName);
-    } catch (emailError) {
-      console.error('Failed to send OTP email:', emailError);
-    }
+    } catch (emailError) {    }
 
     res.status(201).json({
       message: 'OTP sent to your email. Please verify to complete registration.',
@@ -172,9 +170,7 @@ exports.register = async (req, res) => {
     });
   } catch (error) {
     await session.abortTransaction();
-    session.endSession();
-    console.error('Registration error:', error);
-    res.status(500).json({ error: 'Server error during registration' });
+    session.endSession();    res.status(500).json({ error: 'Server error during registration' });
   }
 };
 
@@ -242,9 +238,7 @@ exports.login = async (req, res) => {
           ...user.profilePicture.toObject ? user.profilePicture.toObject() : user.profilePicture,
           url: await getSignedUrl(user.profilePicture.gcsPath),
         };
-      } catch (err) {
-        console.error('Failed to generate signed URL for profile picture:', err);
-        if (userData.profilePicture) userData.profilePicture.url = null;
+      } catch (err) {        if (userData.profilePicture) userData.profilePicture.url = null;
       }
     }
 
@@ -271,15 +265,9 @@ exports.getMe = async (req, res) => {
       userData.profilePicture = {
         ...user.profilePicture.toObject ? user.profilePicture.toObject() : user.profilePicture,
         url: await getSignedUrl(user.profilePicture.gcsPath),
-      };
-      console.log('✅ Profile picture found on login:', { userId: req.user._id, gcsPath: user.profilePicture.gcsPath });
-    } else {
-      console.log('⚠️  No profile picture found on login:', { userId: req.user._id });
-    }
+      };    } else {    }
     res.json(userData);
-  } catch (error) {
-    console.error('❌ Error in getMe:', error);
-    res.status(500).json({ error: 'Server error' });
+  } catch (error) {    res.status(500).json({ error: 'Server error' });
   }
 };
 
@@ -366,14 +354,10 @@ exports.updateProfile = async (req, res) => {
       userData.profilePicture = {
         ...user.profilePicture.toObject ? user.profilePicture.toObject() : user.profilePicture,
         url: await getSignedUrl(user.profilePicture.gcsPath),
-      };
-      console.log('✅ Profile picture preserved after update:', { userId: req.user._id, gcsPath: user.profilePicture.gcsPath });
-    }
+      };    }
 
     res.json(userData);
-  } catch (error) {
-    console.error('Failed to update profile:', error);
-    res.status(500).json({ error: 'Failed to update profile' });
+  } catch (error) {    res.status(500).json({ error: 'Failed to update profile' });
   }
 };
 
@@ -417,9 +401,7 @@ exports.verifyOTP = async (req, res) => {
     res.json({
       message: 'Email verified successfully! Your organization is now under review. Our team will verify your details and activate your account shortly. You will receive a confirmation email once activated.',
     });
-  } catch (error) {
-    console.error('OTP verification error:', error);
-    res.status(500).json({ error: 'Server error during OTP verification' });
+  } catch (error) {    res.status(500).json({ error: 'Server error during OTP verification' });
   }
 };
 
@@ -450,15 +432,11 @@ exports.resendOTP = async (req, res) => {
     // Send OTP email
     try {
       await sendOTPEmail(org.email, otp, org.name);
-    } catch (emailError) {
-      console.error('Failed to send OTP email:', emailError);
-      return res.status(500).json({ error: 'Failed to send OTP email. Please try again.' });
+    } catch (emailError) {      return res.status(500).json({ error: 'Failed to send OTP email. Please try again.' });
     }
 
     res.json({ message: 'New OTP sent to your email.' });
-  } catch (error) {
-    console.error('Resend OTP error:', error);
-    res.status(500).json({ error: 'Server error' });
+  } catch (error) {    res.status(500).json({ error: 'Server error' });
   }
 };
 
@@ -499,18 +477,14 @@ exports.forgotPassword = async (req, res) => {
     // Send reset email
     try {
       await sendPasswordResetEmail(email, resetToken, name);
-    } catch (emailError) {
-      console.error('Failed to send reset email:', emailError);
-      account.resetPasswordToken = undefined;
+    } catch (emailError) {      account.resetPasswordToken = undefined;
       account.resetPasswordExpires = undefined;
       await account.save();
       return res.status(500).json({ error: 'Failed to send reset email. Please try again.' });
     }
 
     res.json({ message: 'If an account with that email exists, a password reset link has been sent.' });
-  } catch (error) {
-    console.error('Forgot password error:', error);
-    res.status(500).json({ error: 'Server error' });
+  } catch (error) {    res.status(500).json({ error: 'Server error' });
   }
 };
 
@@ -551,9 +525,7 @@ exports.resetPassword = async (req, res) => {
     await account.save();
 
     res.json({ message: 'Password has been reset successfully. You can now login with your new password.' });
-  } catch (error) {
-    console.error('Reset password error:', error);
-    res.status(500).json({ error: 'Server error' });
+  } catch (error) {    res.status(500).json({ error: 'Server error' });
   }
 };
 
@@ -590,13 +562,9 @@ exports.forgotUsername = async (req, res) => {
     // Send username reminder email
     try {
       await sendUsernameReminderEmail(account.email, account.name, account.email);
-    } catch (emailError) {
-      console.error('Failed to send username reminder:', emailError);
-    }
+    } catch (emailError) {    }
 
     res.json({ message: 'If a matching account is found, a reminder email has been sent to the registered email address.' });
-  } catch (error) {
-    console.error('Forgot username error:', error);
-    res.status(500).json({ error: 'Server error' });
+  } catch (error) {    res.status(500).json({ error: 'Server error' });
   }
 };

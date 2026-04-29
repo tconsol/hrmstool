@@ -10,21 +10,12 @@ const { parseLocalDateRange } = require('../utils/dateParser');
 const createAndEmitNotification = async ({ recipient, sender, type, title, message, data = {}, orgId }) => {
   try {
     const notification = await Notification.create({ recipient, sender, type, title, message, data, organization: orgId });
-    const populated = await notification.populate('sender', 'name employeeId');
-    
-    console.log('✓ Notification created:', notification._id);
-    
-    try {
-      getIO().to(`user_${recipient}`).emit('notification', populated);
-      console.log('✓ Notification emitted to user:', recipient);
-    } catch (sockErr) {
-      console.warn('⚠ Socket.IO emit error (may be starting):', sockErr.message);
+    const populated = await notification.populate('sender', 'name employeeId');    try {
+      getIO().to(`user_${recipient}`).emit('notification', populated);    } catch (sockErr) {:', sockErr.message);
     }
     
     return notification;
-  } catch (err) {
-    console.error('✗ Failed to create notification:', err.message);
-    throw err;
+  } catch (err) {    throw err;
   }
 };
 
@@ -78,11 +69,7 @@ exports.applyLeave = async (req, res) => {
       const applicant = await User.findById(req.user._id)
         .select('name employeeId department designation')
         .populate('department', 'name')
-        .populate('designation', 'name code');
-      
-      console.log(`📋 Leave applied by ${applicant.name}, notifying ${hrUsers.length} HR users`);
-      
-      await Promise.all(
+        .populate('designation', 'name code');      await Promise.all(
         hrUsers.map((hr) =>
           createAndEmitNotification({
             recipient: hr._id,
@@ -94,26 +81,18 @@ exports.applyLeave = async (req, res) => {
             orgId: req.orgId,
           })
         )
-      );
-      
-      console.log('✓ All notifications sent');
-
-      // Also emit org-wide leave_update so leave management pages refresh live
+      );      // Also emit org-wide leave_update so leave management pages refresh live
       try {
         const populatedLeave = await Leave.findById(leave._id)
           .populate({ path: 'user', select: 'name employeeId department designation', populate: [{ path: 'department', select: 'name' }, { path: 'designation', select: 'name' }] })
           .populate('approvedBy', 'name');
         getIO().to(`org_${req.orgId}`).emit('leave_update', { action: 'new', leave: populatedLeave });
       } catch { /* silent */ }
-    } catch (notifErr) {
-      console.error('✗ Error sending notifications:', notifErr.message);
-      // Don't fail the response, but log the error
+    } catch (notifErr) {      // Don't fail the response, but log the error
     }
 
     res.status(201).json(leave);
-  } catch (error) {
-    console.error('✗ Error in applyLeave:', error);
-    res.status(500).json({ error: 'Failed to apply leave' });
+  } catch (error) {    res.status(500).json({ error: 'Failed to apply leave' });
   }
 };
 
@@ -220,11 +199,7 @@ exports.updateLeaveStatus = async (req, res) => {
         message: `Your ${leave.leaveType} leave request (${new Date(leave.startDate).toDateString()} – ${new Date(leave.endDate).toDateString()}) has been ${status} by ${approver.name}.${remarks ? ` Remark: ${remarks}` : ''}`,
         data: { leaveId: leave._id, status },
         orgId: req.orgId,
-      });
-      console.log(`✓ Notification sent to employee ${leave.user} for leave ${status}`);
-    } catch (notifErr) {
-      console.error('✗ Error notifying employee:', notifErr.message);
-    }
+      });    } catch (notifErr) {    }
 
     // Emit org-wide leave_update so leave management pages refresh live
     try {
@@ -232,9 +207,7 @@ exports.updateLeaveStatus = async (req, res) => {
     } catch { /* silent */ }
 
     res.json(leave);
-  } catch (error) {
-    console.error('✗ Error in updateLeaveStatus:', error);
-    res.status(500).json({ error: 'Failed to update leave status' });
+  } catch (error) {    res.status(500).json({ error: 'Failed to update leave status' });
   }
 };
 

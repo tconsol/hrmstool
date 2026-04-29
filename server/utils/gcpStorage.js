@@ -68,18 +68,8 @@ try {
     },
   });
 
-  bucket = storage.bucket(process.env.GCP_BUCKET_NAME);
-
-  console.log('\n☁️  GCP Cloud Storage Initialized Successfully!');
-  console.log(`   📦 Bucket: ${process.env.GCP_BUCKET_NAME}`);
-  console.log(`   🔑 Project: ${process.env.GCP_PROJECT_ID}`);
-  console.log(`   📧 Service Account: ${process.env.GCP_CLIENT_EMAIL}\n`);
-} catch (err) {
-  gcpError = err.message;
-  console.warn('\n⚠️  GCP Cloud Storage Not Configured');
-  console.warn(`   📝 Error: ${err.message}`);
-  console.warn('   ⚠️  File uploads and downloads will not work\n');
-}
+  bucket = storage.bucket(process.env.GCP_BUCKET_NAME);} catch (err) {
+  gcpError = err.message;}
 
 /**
  * Sanitize a string for use in GCS object paths.

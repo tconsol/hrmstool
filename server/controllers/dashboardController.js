@@ -308,9 +308,7 @@ exports.getManagerDashboard = async (req, res) => {
       teamMembers: teamWithAttendance,
       recentLeaves,
     });
-  } catch (error) {
-    console.error('Manager dashboard error:', error);
-    res.status(500).json({ error: 'Failed to fetch manager dashboard data' });
+  } catch (error) {    res.status(500).json({ error: 'Failed to fetch manager dashboard data' });
   }
 };
 
@@ -388,8 +386,6 @@ exports.getCEODashboard = async (req, res) => {
       roleDistribution,
       recentLeaves,
     });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Failed to fetch CEO dashboard data' });
+  } catch (error) {    res.status(500).json({ error: 'Failed to fetch CEO dashboard data' });
   }
 };

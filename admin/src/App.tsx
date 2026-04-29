@@ -45,6 +45,7 @@ import MyAssets from './pages/assets/MyAssets';
 import TrainingList from './pages/training/TrainingList';
 import TrainingDetail from './pages/training/TrainingDetail';
 import OrganizationSettings from './pages/organization/OrganizationSettings';
+import InvoiceList from './pages/invoices/InvoiceList';
 
 // Super Admin Pages
 import SuperAdminLogin from './pages/superadmin/SuperAdminLogin';
@@ -64,7 +65,7 @@ function App() {
         <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
           <ScrollToTop />
           <Routes>
-            <Route path="/" element={<Landing />} />
+            <Route path="/" element={<Login />} />
             <Route path="/about" element={<About />} />
             <Route path="/pricing/:tierId" element={<PricingDetail />} />
             <Route path="/login" element={<Login />} />
@@ -243,6 +244,14 @@ function App() {
               element={
                 <ProtectedRoute roles={['ceo']}>
                   <FeatureGate feature="organization"><OrganizationSettings /></FeatureGate>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/invoices"
+              element={
+                <ProtectedRoute roles={['manager', 'ceo']}>
+                  <FeatureGate feature="invoices"><InvoiceList /></FeatureGate>
                 </ProtectedRoute>
               }
             />

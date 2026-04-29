@@ -43,9 +43,7 @@ const RevenueDashboard = () => {
       setSummary(data.summary);
       setRevenueByPlan(data.revenueByPlan);
       setOrganizations(data.organizations);
-    } catch (error: any) {
-      console.error('Failed to fetch revenue:', error);
-      toast.error('Failed to fetch revenue data');
+    } catch (error: any) {      toast.error('Failed to fetch revenue data');
     } finally {
       setLoading(false);
     }

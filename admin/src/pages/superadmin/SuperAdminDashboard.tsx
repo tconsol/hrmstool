@@ -45,9 +45,7 @@ const SuperAdminDashboard = () => {
     try {
       const { data } = await api.get('/superadmin/dashboard');
       setStats(data);
-    } catch (error) {
-      console.error('Failed to fetch stats:', error);
-    } finally {
+    } catch (error) {    } finally {
       setLoading(false);
     }
   };

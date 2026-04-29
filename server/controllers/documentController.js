@@ -63,9 +63,7 @@ exports.createDocument = async (req, res) => {
     ]);
 
     res.status(201).json(populated);
-  } catch (error) {
-    console.error('Create document error:', error);
-    res.status(500).json({ error: 'Failed to create document' });
+  } catch (error) {    res.status(500).json({ error: 'Failed to create document' });
   }
 };
 
@@ -159,9 +157,7 @@ exports.updateDocument = async (req, res) => {
     ]);
 
     res.json(populated);
-  } catch (error) {
-    console.error('Update document error:', error);
-    res.status(500).json({ error: 'Failed to update document' });
+  } catch (error) {    res.status(500).json({ error: 'Failed to update document' });
   }
 };
 
@@ -179,9 +175,7 @@ exports.deleteDocument = async (req, res) => {
     await Document.findByIdAndDelete(req.params.id);
 
     res.json({ message: 'Document deleted' });
-  } catch (error) {
-    console.error('Delete document error:', error);
-    res.status(500).json({ error: 'Failed to delete document' });
+  } catch (error) {    res.status(500).json({ error: 'Failed to delete document' });
   }
 };
 
@@ -223,9 +217,7 @@ exports.downloadDocument = async (req, res) => {
           };
         }
       } catch (uploadErr) {
-        // GCS not configured or upload failed — continue without caching
-        console.warn('GCS upload skipped:', uploadErr.message);
-      }
+        // GCS not configured or upload failed — continue without caching      }
     }
 
     // Track download
@@ -238,9 +230,7 @@ exports.downloadDocument = async (req, res) => {
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `attachment; filename=${safeType}_${safeName}.pdf`);
     res.send(pdfBuffer);
-  } catch (error) {
-    console.error('Download document error:', error);
-    res.status(500).json({ error: 'Failed to generate document PDF' });
+  } catch (error) {    res.status(500).json({ error: 'Failed to generate document PDF' });
   }
 };
 
@@ -282,9 +272,7 @@ exports.downloadDocx = async (req, res) => {
           };
         }
       } catch (uploadErr) {
-        // GCS not configured or upload failed — continue without caching
-        console.warn('GCS upload skipped:', uploadErr.message);
-      }
+        // GCS not configured or upload failed — continue without caching      }
     }
 
     // Track download
@@ -297,8 +285,6 @@ exports.downloadDocx = async (req, res) => {
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
     res.setHeader('Content-Disposition', `attachment; filename=${safeType}_${safeName}.docx`);
     res.send(docxBuffer);
-  } catch (error) {
-    console.error('Download DOCX error:', error);
-    res.status(500).json({ error: 'Failed to generate Word document' });
+  } catch (error) {    res.status(500).json({ error: 'Failed to generate Word document' });
   }
 };

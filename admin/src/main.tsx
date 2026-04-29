@@ -6,9 +6,7 @@ import { shouldBustCache, bustCache } from './utils/cacheManager';
 
 // Check for new deployment and bust cache if needed
 (async () => {
-  if (shouldBustCache()) {
-    console.log('📦 New deployment detected - busting cache');
-    await bustCache();
+  if (shouldBustCache()) {    await bustCache();
   }
 })();
 
@@ -23,11 +21,28 @@ if ('serviceWorker' in navigator && import.meta.env.PROD) {
   window.addEventListener('load', () => {
     navigator.serviceWorker
       .register('/sw.js', { scope: '/' })
-      .then((reg) => {
-        console.log('✓ Service Worker registered:', reg.scope);
+      .then((reg) => {        // When a new SW version is found and waiting, activate it immediately
+        // so users don't get stale assets causing MIME type errors.
+        reg.addEventListener('updatefound', () => {
+          const newWorker = reg.installing;
+          if (!newWorker) return;
+          newWorker.addEventListener('statechange', () => {
+            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+              // New SW is installed and waiting — tell it to take over now
+              newWorker.postMessage({ type: 'SKIP_WAITING' });
+            }
+          });
+        });
       })
-      .catch((err) => {
-        console.error('✗ Service Worker registration failed:', err);
-      });
+      .catch((err) => {      });
+
+    // When a new SW takes control, reload to load fresh assets
+    let refreshing = false;
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (!refreshing) {
+        refreshing = true;
+        window.location.reload();
+      }
+    });
   });
 }

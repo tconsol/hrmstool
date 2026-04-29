@@ -4,9 +4,12 @@
  * Includes version-based cache busting for deployments
  */
 
-// Generate cache name with app version from build process
-const APP_VERSION = '__VITE_APP_VERSION__' || 'v1';
-const CACHE_NAME = `hrms-${APP_VERSION}`;
+// NOTE: APP_VERSION is replaced at build time by the vite plugin-pwa / build script.
+// Fallback uses a timestamp so each deploy gets a unique cache if build tooling is unavailable.
+const APP_VERSION = '__VITE_APP_VERSION__';
+// If the placeholder was never replaced (e.g. served from public/ directly),
+// fall back to a timestamp so the cache is at least unique per SW registration.
+const CACHE_NAME = `hrms-${APP_VERSION.startsWith('__') ? Date.now() : APP_VERSION}`;
 const STATIC_CACHE = [
   '/',
   '/index.html',
@@ -17,10 +20,7 @@ const STATIC_CACHE = [
 const isDev = self.location.hostname === 'localhost' || self.location.hostname === '127.0.0.1';
 
 // ---------------- INSTALL ----------------
-self.addEventListener('install', (event) => {
-  console.log('[SW] Installing...');
-
-  event.waitUntil(
+self.addEventListener('install', (event) => {  event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       return cache.addAll(STATIC_CACHE);
     })
@@ -30,16 +30,11 @@ self.addEventListener('install', (event) => {
 });
 
 // ---------------- ACTIVATE ----------------
-self.addEventListener('activate', (event) => {
-  console.log('[SW] Activating...');
-
-  event.waitUntil(
+self.addEventListener('activate', (event) => {  event.waitUntil(
     caches.keys().then((keys) => {
       return Promise.all(
         keys.map((key) => {
-          if (key !== CACHE_NAME) {
-            console.log('[SW] Removing old cache:', key);
-            return caches.delete(key);
+          if (key !== CACHE_NAME) {            return caches.delete(key);
           }
         })
       );
@@ -62,6 +57,12 @@ self.addEventListener('fetch', (event) => {
 
   // Ignore external requests
   if (url.origin !== self.location.origin) return;
+
+  // -------- VITE ASSETS (Cache Busted by Hash - Skip SW entirely) --------
+  // Files under /assets/ already have content hashes in their names (e.g. index-CvT10Ddf.js).
+  // The browser's HTTP cache handles these correctly. If the SW intercepts and returns a
+  // stale cached entry with the wrong hash, it causes "MIME type text/html" errors.
+  if (url.pathname.startsWith('/assets/')) return;
 
   // -------- API CALLS (Network First) --------
   if (url.pathname.startsWith('/api/')) {
@@ -96,46 +97,41 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // -------- STATIC FILES (Cache First) --------
+  // -------- STATIC FILES (Network First for HTML, Cache First for others) --------
   event.respondWith(
-    caches.match(request).then((cached) => {
-      if (cached) return cached;
+    fetch(request)
+      .then((response) => {
+        // Only cache valid responses
+        if (!response || response.status !== 200) return response;
 
-      return fetch(request)
-        .then((response) => {
-          if (!response || response.status !== 200) return response;
+        const cloned = response.clone();
+        caches.open(CACHE_NAME).then((cache) => {
+          cache.put(request, cloned);
+        });
 
-          const cloned = response.clone();
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(request, cloned);
-          });
+        return response;
+      })
+      .catch(() => {
+        // Offline: try cache fallback
+        return caches.match(request).then((cached) => {
+          if (cached) return cached;
 
-          return response;
-        })
-        .catch(() => {
-          // Offline fallback
+          // Final fallback for navigation requests
           if (request.headers.get('accept')?.includes('text/html')) {
-            return new Response(
-              `
-              <html>
-                <head><title>Offline</title></head>
-                <body style="font-family:sans-serif;text-align:center;padding:50px;">
-                  <h1>📡 Offline</h1>
-                  <p>Please check your internet connection.</p>
-                </body>
-              </html>
-              `,
-              {
-                status: 503,
-                headers: { 'Content-Type': 'text/html' },
-              }
-            );
+            return caches.match('/index.html');
           }
 
           return new Response('Offline', { status: 503 });
         });
-    })
+      })
   );
+});
+
+// ---------------- SKIP WAITING (instant SW takeover) ----------------
+self.addEventListener('message', (event) => {
+  if (event.data?.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
 });
 
 // ---------------- PUSH NOTIFICATIONS ----------------
@@ -182,14 +178,8 @@ self.addEventListener('notificationclick', (event) => {
 
 // ---------------- BACKGROUND SYNC ----------------
 self.addEventListener('sync', (event) => {
-  if (event.tag === 'sync-attendance') {
-    console.log('[SW] Syncing attendance...');
-    event.waitUntil(
-      Promise.resolve().then(() => {
-        console.log('[SW] Attendance sync completed');
-      })
+  if (event.tag === 'sync-attendance') {    event.waitUntil(
+      Promise.resolve().then(() => {      })
     );
   }
 });
-
-console.log('[SW] Loaded successfully');

@@ -23,6 +23,7 @@ const FEATURES = {
   notifications:  { label: 'Notifications',     description: 'Notifications centre',                default: true  },
   organization:   { label: 'Organization',      description: 'Organization settings & locations',   default: true  },
   profile:        { label: 'Profile',           description: 'Employee profile management',         default: true  },
+  invoices:       { label: 'Invoices',          description: 'Invoice generation (sales & purchase)', default: false },
 };
 
 /** All feature keys */

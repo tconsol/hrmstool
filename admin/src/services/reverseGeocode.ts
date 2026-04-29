@@ -5,9 +5,7 @@
 
 const GOOGLE_MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
 
-if (!GOOGLE_MAPS_API_KEY) {
-  console.error('VITE_GOOGLE_MAPS_API_KEY not configured in .env');
-}
+if (!GOOGLE_MAPS_API_KEY) {}
 
 export interface AddressComponent {
   street?: string;
@@ -27,33 +25,21 @@ export const reverseGeocode = async (
   longitude: number
 ): Promise<AddressComponent | null> => {
   try {
-    if (!GOOGLE_MAPS_API_KEY) {
-      console.error('❌ VITE_GOOGLE_MAPS_API_KEY not configured');
-      return null;
-    }
-
-    console.log(`📍 Reverse geocoding: ${latitude}, ${longitude}`);
-
-    // Use Google Geocoding API
+    if (!GOOGLE_MAPS_API_KEY) {      return null;
+    }    // Use Google Geocoding API
     const response = await fetch(
       `https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=${GOOGLE_MAPS_API_KEY}`
     );
 
-    if (!response.ok) {
-      console.error('❌ Geocoding API error:', response.status, response.statusText);
-      return null;
+    if (!response.ok) {      return null;
     }
 
     const data = await response.json();
 
-    if (data.status !== 'OK') {
-      console.error('❌ Geocoding status:', data.status, data.error_message || '');
-      return null;
+    if (data.status !== 'OK') {      return null;
     }
 
-    if (data.results.length === 0) {
-      console.warn('⚠️ No geocoding results found');
-      return null;
+    if (data.results.length === 0) {      return null;
     }
 
     const result = data.results[0];
@@ -79,13 +65,8 @@ export const reverseGeocode = async (
       if (types.includes('country')) {
         addressObj.country = component.long_name;
       }
-    });
-
-    console.log('✓ Geocoding successful:', addressObj.formattedAddress);
-    return addressObj;
-  } catch (error) {
-    console.error('❌ Reverse geocoding error:', error);
-    return null;
+    });    return addressObj;
+  } catch (error) {    return null;
   }
 };
 

@@ -105,9 +105,7 @@ const AttendanceDashboard = () => {
     try {
       const { data } = await api.get('/employees?limit=100');
       setEmployees(data.employees);
-    } catch (error) {
-      console.error('Failed to fetch employees');
-    }
+    } catch (error) {    }
   };
 
   const handleMarkAttendance = async () => {

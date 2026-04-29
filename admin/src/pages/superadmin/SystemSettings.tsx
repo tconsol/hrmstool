@@ -42,9 +42,7 @@ const SystemSettings = () => {
     } catch (err: any) {
       const errorMessage = err.response?.data?.error || 'Failed to fetch settings';
       setError(errorMessage);
-      toast.error(errorMessage);
-      console.error('Failed to fetch settings:', err);
-    } finally {
+      toast.error(errorMessage);    } finally {
       setLoading(false);
     }
   };

@@ -30,9 +30,7 @@ export default function DepartmentList() {
     try {
       const { data } = await api.get('/employees?limit=100');
       setEmployees(data.employees || []);
-    } catch (error) {
-      console.error('Failed to fetch employees:', error);
-    }
+    } catch (error) {    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {

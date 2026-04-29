@@ -164,8 +164,6 @@ exports.sendEventInvites = async (req, res) => {
     });
 
     res.json({ message: `Event invitation sent to ${employees.length} employee(s)` });
-  } catch (error) {
-    console.error('Error sending event invites:', error);
-    res.status(500).json({ error: 'Failed to send event invitations' });
+  } catch (error) {    res.status(500).json({ error: 'Failed to send event invitations' });
   }
 };

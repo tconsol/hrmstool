@@ -23,24 +23,14 @@ export const clearAllCaches = async (): Promise<void> => {
     const keysToRemove = Object.keys(localStorage).filter(
       (key) => !keysToKeep.includes(key)
     );
-    keysToRemove.forEach((key) => localStorage.removeItem(key));
-    console.log('✓ Cleared localStorage');
-
-    // 2. Clear sessionStorage
-    sessionStorage.clear();
-    console.log('✓ Cleared sessionStorage');
-
-    // 3. Clear Service Worker caches
+    keysToRemove.forEach((key) => localStorage.removeItem(key));    // 2. Clear sessionStorage
+    sessionStorage.clear();    // 3. Clear Service Worker caches
     if ('caches' in window) {
       try {
         const cacheNames = await caches.keys();
         for (const cacheName of cacheNames) {
-          await caches.delete(cacheName);
-          console.log(`✓ Deleted cache: ${cacheName}`);
-        }
-      } catch (cacheError) {
-        console.warn('Warning: Could not delete SW caches:', cacheError);
-      }
+          await caches.delete(cacheName);        }
+      } catch (cacheError) {      }
     }
 
     // 4. Clear IndexedDB if available
@@ -48,18 +38,9 @@ export const clearAllCaches = async (): Promise<void> => {
       try {
         const dbs = await (window.indexedDB as any).databases?.() || [];
         for (const db of dbs) {
-          window.indexedDB.deleteDatabase(db.name);
-          console.log(`✓ Deleted IndexedDB: ${db.name}`);
-        }
-      } catch (dbError) {
-        console.warn('Warning: Could not delete IndexedDB:', dbError);
-      }
-    }
-
-    console.log('✓ All caches cleared successfully');
-  } catch (error) {
-    console.error('Error clearing caches:', error);
-  }
+          window.indexedDB.deleteDatabase(db.name);        }
+      } catch (dbError) {      }
+    }  } catch (error) {  }
 };
 
 /**
@@ -90,15 +71,8 @@ export const clearAuthCache = async (): Promise<void> => {
             }
           }
         }
-      } catch (cacheError) {
-        console.warn('Warning: Could not clear API caches:', cacheError);
-      }
-    }
-
-    console.log('✓ Auth cache cleared');
-  } catch (error) {
-    console.error('Error clearing auth cache:', error);
-  }
+      } catch (cacheError) {      }
+    }  } catch (error) {  }
 };
 
 /**
@@ -108,9 +82,7 @@ export const clearAuthCache = async (): Promise<void> => {
 export const shouldBustCache = (): boolean => {
   const storedVersion = localStorage.getItem(`${CACHE_PREFIX}_cache_version`);
   
-  if (storedVersion !== CACHE_VERSION) {
-    console.log(`🔄 Cache version mismatch: stored=${storedVersion}, current=${CACHE_VERSION}`);
-    localStorage.setItem(`${CACHE_PREFIX}_cache_version`, CACHE_VERSION);
+  if (storedVersion !== CACHE_VERSION) {    localStorage.setItem(`${CACHE_PREFIX}_cache_version`, CACHE_VERSION);
     return true;
   }
   
@@ -121,10 +93,7 @@ export const shouldBustCache = (): boolean => {
  * Force cache bust on new deployment
  * Clears API responses only, keeps static assets
  */
-export const bustCache = async (): Promise<void> => {
-  console.log('🔄 Busting cache due to new deployment...');
-  
-  try {
+export const bustCache = async (): Promise<void> => {  try {
     if ('caches' in window) {
       const cacheNames = await caches.keys();
       for (const cacheName of cacheNames) {
@@ -133,18 +102,12 @@ export const bustCache = async (): Promise<void> => {
         
         for (const request of requests) {
           if (request.url.includes('/api/')) {
-            await cache.delete(request);
-            console.log(`✓ Removed API cache: ${request.url}`);
-          }
+            await cache.delete(request);          }
         }
       }
     }
     
-    localStorage.setItem(`${CACHE_PREFIX}_cache_version`, CACHE_VERSION);
-    console.log('✓ Cache bust complete');
-  } catch (error) {
-    console.error('Error during cache bust:', error);
-  }
+    localStorage.setItem(`${CACHE_PREFIX}_cache_version`, CACHE_VERSION);  } catch (error) {  }
 };
 
 /**

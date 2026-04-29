@@ -94,21 +94,13 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
     });
 
     // Connection events
-    newSocket.on('connect', () => {
-      console.log(`✅ WebSocket Connected | Socket ID: ${newSocket.id}`);
-    });
+    newSocket.on('connect', () => {    });
 
-    newSocket.on('disconnect', (reason) => {
-      console.log(`❌ WebSocket Disconnected | Reason: ${reason}`);
-    });
+    newSocket.on('disconnect', (reason) => {    });
 
-    newSocket.on('connect_error', (error) => {
-      console.error(`⚠️ WebSocket Connection Error:`, error.message);
-    });
+    newSocket.on('connect_error', (error) => {    });
 
-    newSocket.on('error', (error) => {
-      console.error(`⚠️ WebSocket Socket Error:`, error);
-    });
+    newSocket.on('error', (error) => {    });
 
     newSocket.on('notification', (notif: Notification) => {
       setNotifications((prev) => [notif, ...prev]);

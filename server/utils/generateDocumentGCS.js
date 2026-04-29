@@ -32,9 +32,7 @@ async function generateAndUploadPDF(document, orgSlug, employeeId, employeeName)
       fileSize: pdfBuffer.length,
       signedUrl,
     };
-  } catch (error) {
-    console.error('Failed to generate and upload PDF:', error);
-    throw error;
+  } catch (error) {    throw error;
   }
 }
 
@@ -62,9 +60,7 @@ async function generateAndUploadDocx(document, orgSlug, employeeId, employeeName
       fileSize: docxBuffer.length,
       signedUrl,
     };
-  } catch (error) {
-    console.error('Failed to generate and upload DOCX:', error);
-    throw error;
+  } catch (error) {    throw error;
   }
 }
 
@@ -76,17 +72,13 @@ async function cleanupOldDocuments(document) {
 
   if (document.pdfFile?.gcsPath) {
     cleanupPromises.push(
-      deleteFile(document.pdfFile.gcsPath).catch(err => {
-        console.error('Failed to delete old PDF from GCS:', err);
-      })
+      deleteFile(document.pdfFile.gcsPath).catch(err => {      })
     );
   }
 
   if (document.docxFile?.gcsPath) {
     cleanupPromises.push(
-      deleteFile(document.docxFile.gcsPath).catch(err => {
-        console.error('Failed to delete old DOCX from GCS:', err);
-      })
+      deleteFile(document.docxFile.gcsPath).catch(err => {      })
     );
   }
 

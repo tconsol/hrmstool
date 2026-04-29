@@ -134,11 +134,7 @@ const Login = () => {
             </Link>
           </p>
 
-          <p className="text-center text-xs text-dark-500">
-            <Link to="/superadmin/login" className="text-dark-400 hover:text-red-400 transition-colors">
-              Super Admin Portal →
-            </Link>
-          </p>
+
         </form>
       </div>
     </div>

@@ -64,9 +64,7 @@ const MyAttendance = () => {
     try {
       const { data } = await api.get('/attendance/today');
       setTodayStatus(data);
-    } catch (error) {
-      console.error('Failed to fetch today status');
-    }
+    } catch (error) {    }
   };
 
   const handleCheckIn = async () => {

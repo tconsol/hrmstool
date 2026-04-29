@@ -29,9 +29,7 @@ const requireFeature = (...featureKeys) => {
       }
 
       next();
-    } catch (error) {
-      console.error('requireFeature middleware error:', error);
-      res.status(500).json({ error: 'Server error' });
+    } catch (error) {      res.status(500).json({ error: 'Server error' });
     }
   };
 };

@@ -64,11 +64,7 @@ const Header = ({ onMenuToggle }: HeaderProps) => {
     
     const refreshInterval = setInterval(async () => {
       try {
-        await api.get('/auth/me');
-        console.log('✅ Profile picture URL refreshed');
-      } catch (error) {
-        console.error('Failed to refresh profile picture:', error);
-      }
+        await api.get('/auth/me');      } catch (error) {      }
     }, 50 * 60 * 1000);
 
     return () => clearInterval(refreshInterval);

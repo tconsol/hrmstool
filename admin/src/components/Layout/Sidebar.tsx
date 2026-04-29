@@ -31,6 +31,7 @@ import {
   Settings,
   Search,
   Layers,
+  FileCheck2,
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -142,6 +143,7 @@ const Sidebar = ({ isOpen, onClose, isCollapsed = false, onToggleCollapse }: Sid
         { to: '/shifts', label: 'Shifts', icon: Clock },
         { to: '/assets', label: 'Assets', icon: Monitor },
         { to: '/training', label: 'Training', icon: GraduationCap },
+        { to: '/invoices', label: 'Invoices', icon: FileCheck2 },
       ],
     },
     {
@@ -179,6 +181,7 @@ const Sidebar = ({ isOpen, onClose, isCollapsed = false, onToggleCollapse }: Sid
         { to: '/shifts', label: 'Shifts', icon: Clock },
         { to: '/assets', label: 'Assets', icon: Monitor },
         { to: '/training', label: 'Training', icon: GraduationCap },
+        { to: '/invoices', label: 'Invoices', icon: FileCheck2 },
       ],
     },
     {

@@ -54,9 +54,7 @@ const PayrollDashboard = () => {
     try {
       const { data } = await api.get(`/payroll/summary?month=${month}&year=${year}`);
       setSummary(data);
-    } catch (error) {
-      console.error('Failed to fetch summary');
-    }
+    } catch (error) {    }
   };
 
   const handleGenerate = async () => {

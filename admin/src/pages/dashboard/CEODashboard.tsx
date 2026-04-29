@@ -35,9 +35,7 @@ const CEODashboard = () => {
       setDepartments(data.departments || []);
       setRoleDistribution(data.roleDistribution || []);
       setRecentLeaves(data.recentLeaves || []);
-    } catch (error) {
-      console.error('Failed to fetch dashboard:', error);
-    } finally {
+    } catch (error) {    } finally {
       setLoading(false);
     }
   };

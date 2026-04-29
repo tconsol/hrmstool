@@ -20,6 +20,7 @@ export const FEATURE_ROUTE_MAP: Record<string, string[]> = {
   notifications: ['/notifications'],
   organization: ['/organization'],
   profile: ['/profile'],
+  invoices: ['/invoices'],
 };
 
 // Sidebar link path → feature key (reverse mapping)
