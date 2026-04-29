@@ -86,7 +86,8 @@ exports.checkIn = async (req, res) => {
         ],
       });
       const orgRoom = `org_${req.orgId.toString()}`;
-      getIO().to(orgRoom).emit('attendance_update', { action: 'checkin', record: populated });    } catch (err) {:', err.message); }
+      getIO().to(orgRoom).emit('attendance_update', { action: 'checkin', record: populated });
+    } catch (err) { /* socket emit failed */ }
 
     res.json(attendance);
   } catch (error) {
@@ -130,7 +131,8 @@ exports.checkOut = async (req, res) => {
         ],
       });
       const orgRoom = `org_${req.orgId.toString()}`;
-      getIO().to(orgRoom).emit('attendance_update', { action: 'checkout', record: populated });    } catch (err) {:', err.message); }
+      getIO().to(orgRoom).emit('attendance_update', { action: 'checkout', record: populated });
+    } catch (err) { /* socket emit failed */ }
 
     res.json(attendance);
   } catch (error) {
@@ -242,7 +244,8 @@ exports.getAllAttendance = async (req, res) => {
       page: parseInt(page),
       pages: Math.ceil(total / limit),
     });
-  } catch (error) {    res.status(500).json({ error: 'Failed to fetch attendance records' });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch attendance records' });
   }
 };
 
@@ -291,7 +294,8 @@ exports.markAttendance = async (req, res) => {
   } catch (error) {
     if (error.code === 11000) {
       return res.status(400).json({ error: 'Attendance already exists for this date' });
-    }    res.status(500).json({ error: 'Failed to mark attendance' });
+    }
+    res.status(500).json({ error: 'Failed to mark attendance' });
   }
 };
 
@@ -385,7 +389,8 @@ exports.cleanupDuplicateAttendance = async (req, res) => {
       cleaned: cleanedCount,
       details: logs,
     });
-  } catch (error) {    res.status(500).json({ error: 'Failed to cleanup duplicates' });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to cleanup duplicates' });
   }
 };
 
@@ -407,7 +412,8 @@ exports.getDuplicateAttendanceInfo = async (req, res) => {
       duplicateGroups: duplicates.length,
       details: duplicates,
     });
-  } catch (error) {    res.status(500).json({ error: 'Failed to fetch duplicate info' });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch duplicate info' });
   }
 };
 
@@ -477,13 +483,15 @@ exports.manualCheckout = async (req, res) => {
     // Emit real-time update
     try {
       const orgRoom = `org_${req.orgId.toString()}`;
-      getIO().to(orgRoom).emit('attendance_update', { action: 'manual_checkout', record: populated });    } catch (err) {:', err.message); }
+      getIO().to(orgRoom).emit('attendance_update', { action: 'manual_checkout', record: populated });
+    } catch (err) { /* socket emit failed */ }
 
     res.json({
       success: true,
       message: `Checkout processed for ${populated.user.name}`,
       record: populated,
     });
-  } catch (error) {    res.status(500).json({ error: 'Failed to process manual checkout' });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to process manual checkout' });
   }
 };

@@ -70,8 +70,7 @@ const CompanyCalendar = () => {
       const calId = import.meta.env.VITE_GOOGLE_CALENDAR_ID;
       const url = `https://www.googleapis.com/calendar/v3/calendars/${calId}/events?key=${import.meta.env.VITE_GOOGLE_CALENDAR_API_KEY}&timeMin=${encodeURIComponent(startDate)}&timeMax=${encodeURIComponent(endDate)}&singleEvents=true&orderBy=startTime`;
 
-      const response = await fetch(url);
-      if (!response.ok) {);
+      const response = await fetch(url);      if (!response.ok) {
         return [];
       }
       
@@ -98,7 +97,8 @@ const CompanyCalendar = () => {
           isFromGoogle: true,
         };
       });
-    } catch (error) {      return [];
+    } catch (error) {
+      return [];
     }
   };
 
